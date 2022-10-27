@@ -559,7 +559,7 @@ conditionalPanel(condition="input.MSEPanel == 'Sim replicates'",
               4) observe harvest and escapetnt to set and escapement goal. The model incorporates errors
                   associated with each step.  Errors were modeled as independent log-normal"),
                     p("- Preseaon Run prediction: Accuracy +/-  x%"),
-                    p("- Management Imprementation: Accuracy +/-  x%"),
+                    p("- Management Implementation: Accuracy +/-  x%"),
                     p("- Harvest Observation: Accuracy +/-  x%"),
                     p("- Escapement Observation: Accuracy +/-  x%"),
                     p("Observed postseason run size is Observed harvest + escapement"),
@@ -1145,7 +1145,7 @@ lnalphais <-reactive({
 # Get 95% CI  
   cil <- apply(lnalphai,2,function(x) quantile(x, 0.025))
   ciu <- apply(lnalphai,2,function(x) quantile(x, 0.975))
-# Calculate STARS uisng STARS function 
+# Calculate STARS using STARS function 
    names(lnalphai.mm) <- year
    stars <- stars(lnalphai.mm, L=10, p=0.05,  h=2, AR1red="est", prewhitening = F)  
    test <- as.data.frame(stars$starsResult)
@@ -1176,6 +1176,7 @@ lnalphais <-reactive({
       } 
   return(out)
   })
+
 
 output$Plt_lnalphai <- renderPlot({
   if(input$add=='kf'){
@@ -1951,14 +1952,15 @@ output$maxEG <- renderUI({
 output$cyg = renderUI({
   u <- as.numeric(unit())
   mult <- mult(u)
-  v <- numinput((sr.data()$R-sr.data()$S),0.25)/u
+  h <- (data()[,3]-data()[,2])
+  v <- numinput(h,0.25)/u
   numericInput("yg", paste("Min Target Yield",mult), value=v[1],min=0, step=v[2])
 })
 #---- UI Output Minimum Recruit ------------------------------------------------
 output$crg = renderUI({
   u <- as.numeric(unit())
   mult <- mult(u)
-  v <- numinput(sr.data()$R,0.25)/u
+  v <- numinput(data()[,3],0.25)/u
   numericInput("rg", paste("Min Target Recruit",mult), value=v[1],min=0, step=v[2])
 })
 
@@ -2169,7 +2171,7 @@ output$Txt_Rec_cg <- renderPrint({
    dat <- data.frame(c(R,rep(NA, max_length - length(R))),c(R.p, rep(NA, max_length - length(R.p))))
   tex <- ifelse(input$target =='me','Mean','Median')
   names(dat) <- c(tex,'Annual')
-  print(summary(dat),digits=0)
+  print(summary(dat),digits=1)
   })
   
 
@@ -2184,7 +2186,7 @@ output$Txt_Yield_cg <- renderPrint({
   dat <- data.frame(c(Y, rep(NA, max_length - length(Y))),c(Y.p, rep(NA, max_length - length(Y.p))))
   tex <- ifelse(input$target =='me','Mean','Median')
   names(dat) <- c(tex,'Annual')
-  print(summary(dat),digits=0)
+  print(summary(dat),digits=1)
   })
 
 # Calculate Probability meeting target  
@@ -2388,27 +2390,35 @@ output$Plt_risk2 <- renderPlot({riskout$Plt_risk2()})
 
 #---- UI Output-----------------------------------------------------------------
 output$LEG <- renderUI({
-  v <- numinput(data()[,2],0.1)
-  numericInput("LEG", "Lower", value=v[1],step = v[2])
+  u <- as.numeric(unit())
+  mult <- mult(u)
+  v <- numinput(data()[,2],0.25)/u
+  numericInput("LEG", paste("Lower",mult), value=v[1],step = v[2])
 })
 #---- UI Output-----------------------------------------------------------------
 output$UEG <- renderUI({
-  v <- numinput(data()[,2],0.75)
-  numericInput("UEG", "Upper", value=v[1],step = v[2])
+  u <- as.numeric(unit())
+  mult <- mult(u)
+  v <- numinput(data()[,2],0.75)/u
+  numericInput("UEG", paste("Upper",mult), value=v[1],step = v[2])
 })
 
 #---- UI Output-----------------------------------------------------------------
 output$maxH <- renderUI({
-  v <-max(data()[,3]-data()[,2])
-  d <- floor(log10(v))
-  numericInput(inputId="maxH", "Maximum", value=round(v,-d),step=10^(d-1))
+  h <- (data()[,3]-data()[,2])
+  u <- as.numeric(unit())
+  mult <- mult(u)
+  v <- numinput(h,0.75)/u
+  numericInput(inputId="maxH", paste("Max",mult), value=v[1],step=v[2])
 })
 
 #---- UI Output-----------------------------------------------------------------
 output$minH <- renderUI({
-    v <-min(data()[,3]-data()[,2])
-    d <- floor(log10(v))
-  numericInput(inputId="minH", "Minimum", value=round(v,-d),step=10^(d-1))
+  h <- (data()[,3]-data()[,2])
+  u <- as.numeric(unit())
+  mult <- mult(u)
+  v <- numinput(h,0.1)/u
+  numericInput(inputId="minH", paste("Min",mult), value=v[1],step=v[2])
 })
  
 #Bayesian figure page
@@ -2531,6 +2541,7 @@ msesim <- eventReactive(input$SimRun,{
 #-------------------------------------------------------------------------------
 #  Import Error Data 
 #-------------------------------------------------------------------------------  
+
 # Initial Spawners  
   S0 <- MSE.int()$S0
   lage <- length(S0)
@@ -2549,7 +2560,15 @@ msesim <- eventReactive(input$SimRun,{
 # SR parameters
   lnalpha <-SR.post()$lnalpha
   beta <- SR.post()$beta
-  sigma <- SR.post()$sigma
+  sigma <- SR.post()$sigma 
+  if(input$add=='kf'){
+      if(input$alphai != 'None') {
+        lnalpha <- SR.post.i()$lnalpha 
+        beta <- SR.post.i()$beta
+        sigma <- SR.post.i()$sigma      
+     } 
+    }
+  
 # Error is AR1 process
     if(input$add=='ar1'){
     phi <- SR.post()$phi
@@ -2557,21 +2576,22 @@ msesim <- eventReactive(input$SimRun,{
     e0 <- SR.resid()$RD[,Bayesdata()$nyrs]
     }
 # lnalpha is time variant  
-  if (input$add=='kf'){
-    sigmaw <- SR.post()$sigmaw
-    ny <- Bayesdata()$nyrs
-    parname <- paste0('lnalphai[',ny,']')
+#  if (input$add=='kf'){
+#    sigmaw <- SR.post()$sigmaw
+#    ny <- Bayesdata()$nyrs
+#    parname <- paste0('lnalphai[',ny,']')
     # Extract the last year's lnalpha   
-    lnalphai <- SR.post()[,parname]
-  }
+#    lnalphai <- SR.post()[,parname]
+#  }
+  u <- as.numeric(unit())
 # Fishery   
-  FT <- FTA(input$cmode,input$LEG,input$UEG)
+  FT <- FTA(input$cmode,input$LEG*u,input$UEG*u)
   if(input$strType=='Escapement'){
-    mH <- c(0,input$maxH)
+    mH <- c(0,input$maxH*u)
   } else if(input$strType=='Harvest'){
-    mH <- c(input$maxH,input$maxH)
+    mH <- c(input$maxH*u,input$maxH*u)
   } else if(input$strType =='Hybrid'){
-    mH <- c(input$minH,input$maxH)
+    mH <- c(input$minH*u,input$maxH*u)
   }
 #-------------------------------------------------------------------------------
 # Select Parameters 
@@ -2597,12 +2617,12 @@ for(k in 1:input$nsim){
 # Constant alpha
   lnalpha.i <- rep(lnalpha[j],bt)
 # Time Varying alpha  
-  if (input$add=='kf'){
-    w <- rnorm(bt,0,sigmaw[j])
-    lnalpha.i <- numeric(bt)
-    lnalpha.i[1] <- lnalphai[j]
-    for(i in 2:bt){lnalpha.i[i] <- lnalpha.i[i-1]+w[i]}
-  }
+#  if (input$add=='kf'){
+#    w <- rnorm(bt,0,sigmaw[j])
+#    lnalpha.i <- numeric(bt)
+#    lnalpha.i[1] <- lnalphai[j]
+#    for(i in 2:bt){lnalpha.i[i] <- lnalpha.i[i-1]+w[i]}
+#  }
 
 # Set Error (Random, AR1) ------------------------------------------------------
 # Random Error   
@@ -2631,14 +2651,15 @@ for(k in 1:input$nsim){
 MSE.sum <- reactive({
   # Set output as data.frame   
   out <- data.frame()
+  u <- as.numeric(unit())  
   for(i in 1:input$nsim){
     dat <- msesim()[[i]][,c('N','S','H')]
     # Frequency of fishery closure  
     dat$H0 <- ifelse(dat$H==0,1,0)
     # Frequency of not meeting escapement goal  
-    dat$EG <- ifelse(dat$S < input$LEG,1,0)
+    dat$EG <- ifelse(dat$S < input$LEG*u,1,0)
     # Frequency of Harvest below target      
-    dat$Hmin <- ifelse(dat$H < input$minH,1,0)
+    dat$Hmin <- ifelse(dat$H < input$minH*u,1,0)
     # Frequency of Run below 10      
     dat$ND <- ifelse(dat$N > 10,1,0)    
     f.H0 <- e.freq(dat$H0,1,'H0')
@@ -2691,7 +2712,7 @@ if(input$pltmse=='Run')
   polygon(c(years,rev(years)),c(S.sum$uci/u,rev(S.sum$lci/u)),col=tcol('grey',50),border=NA)
   lines(years,S.sum$md/u,lwd=2,lty=1)
   lines(years,S.sum$me/u,lwd=2,lty=2)
-  polygon(c(lyear-1,max(years)+2,max(years)+2,lyear-1),c(input$LEG/u,input$LEG/u,input$UEG/u,input$UEG/u),col=tcol(5,80),border=NA)
+  polygon(c(lyear-1,max(years)+2,max(years)+2,lyear-1),c(input$LEG,input$LEG,input$UEG,input$UEG),col=tcol(5,80),border=NA)
   }
   if(input$pltmse=='Harvest')
   {   
@@ -2700,7 +2721,7 @@ if(input$pltmse=='Run')
   polygon(c(years,rev(years)),c(H.sum$uci/u,rev(H.sum$lci/u)),col=tcol('grey',50),border=NA)
   lines(years,H.sum$md/u,lwd=2,lty=1)
   lines(years,H.sum$me/u,lwd=2,lty=2)
-  abline(h=input$minH/u, col=2,lwd=2)
+  abline(h=input$minH, col=2,lwd=2)
   }
   legend('topright',legend=c('Median','Mean'),lwd=2, lty=c(1,2),box.lty=0)
 })
@@ -2729,8 +2750,8 @@ output$Plt_mse_rep <- renderPlot({
 # Escapement 
   lines (data()[,1],(data()[,2])/u,type='l',lwd=2, col=3)
   lines(years,S/u, col=3,lwd=1)
-  polygon(c(lyear-1,max(years)+2,max(years)+2,lyear-1),c(input$LEG/u,input$LEG/u,input$UEG/u,input$UEG/u),col=tcol(5,80),border=NA)
-  abline(h=input$minH/u, col=2,lwd=2)
+  polygon(c(lyear-1,max(years)+2,max(years)+2,lyear-1),c(input$LEG,input$LEG,input$UEG,input$UEG),col=tcol(5,80),border=NA)
+  abline(h=input$minH, col=2,lwd=2)
   title("MSE Simulation", xlab="Year", ylab=paste('Run / Escapement/Harvest',mult))
   legend('topright',legend=c('Run','Escapement','Harvest'),col = c(1,3,2),lwd=c(1,2,1), box.lty=0)
 })
@@ -2854,7 +2875,7 @@ output$Txt_HE_mse <- renderText({
                 'Min',round(100*min(H0)/input$simy,0),'%','-','Max',round(100*max(H0)/input$simy,0),'%')
   t.Hmin <- paste('Below minimum harvest target:',round(100*mean(Hm)/input$simy,0),'%',
                   'Min',round(100*min(Hm)/input$simy,0),'%','-','Max',round(100*max(Hm)/input$simy,0),'%')
-  t.EG <- paste('Meeting escapement goal:',round(100*mean(EG)/input$simy,0),'%',
+  t.EG <- paste('Below escapement goal:',round(100*mean(EG)/input$simy,0),'%',
                 'Min',round(100*min(EG)/input$simy,0),'%','-','Max',round(100*max(EG)/input$simy,0),'%')
   out <- paste(t.H0,t.Hmin, t.EG,sep='\n')
   return(out)
@@ -2892,7 +2913,7 @@ output$Plt_freq_mse <- renderPlot({
 output$downloadReport <- downloadHandler(
   filename = paste0('SR_Report_',model.name(),'_',Sys.Date(),'.docx'),
   content = function(file) {
-    tempReport <- file.path(tempdir(), "report_officedown.Rmd")
+    tempReport <- file.path(tempdir(), "report.Rmd")
     template <- file.path(tempdir(), "template.docx")
     file.copy(c('report_officedown.Rmd','template.docx'), c(tempReport,template),overwrite = TRUE) # SEE HERE
 # temporarily switch to the temp dir, in case you do not have write
@@ -2915,7 +2936,7 @@ output$downloadReport <- downloadHandler(
                       params = params
                       ,envir = new.env(), intermediates_dir = tempdir()
   )
-  }) # End ownloadReport
+  }) # End downloadReport
 
 })# End of Server 
 

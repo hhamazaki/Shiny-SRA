@@ -221,7 +221,7 @@ ProfPlotServer <- function(id,prof,crit,u){
         ug <- c(BEG.st[,2],BEG[2])
         txt <- c(paste(percent,'%',crit,apercent,'% target:',lg,' - ',ug))
         legend("right", legend= txt, lwd=c(1,1,1,2), lty=c(1,2,4,1),
-               col=c(1,1,1,4),box.lty=0)
+               col=c(1,1,1,6),box.lty=0)
       })
     } # End function 
   ) # End moduleServer

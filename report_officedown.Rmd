@@ -1,0 +1,86 @@
+---
+title: "Escapement goal analysis report"
+author:
+  - name:
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+mainfont: Times New Roman
+output: 
+  output: word_document
+#  officedown::rdocx_document:
+    
+#    mapstyles:
+#      Normal: ['First Paragraph']
+
+params:
+Tbl_sum: NA
+srplot: NA
+yldplot: NA
+MSYprof: NA
+Rmaxprof: NA
+
+
+
+---
+
+```{r,echo=FALSE,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,comment=NULL, dev='png',fig.dim = c(12,8),message=FALSE,background=NULL)
+library(officedown)
+library(officer)
+
+fp <- fp_par(
+  text.align = "center", 
+  padding.bottom = 20, padding.top = 120, 
+  border.bottom = fp_border())
+
+ft <- fp_text(shading.color='#EFEFEF', bold = TRUE)
+```
+
+
+```{r}
+# Run and Escapement time series plot 
+runesc()
+```
+
+
+```{r,fig.cap = paste0("Figure 1.  Spawner-recruit curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
+srplot()
+```
+
+
+
+```{r}
+yldplot()
+cat(paste0("Figure 2.  Yield curve (sold line: mean, dash median).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval."))
+```
+
+```{r}
+smsy.prof()
+
+cat("Figure 3. MSY Profile Analyses plot. ")
+```
+
+
+```{r}
+smax.prof()
+cat("Figure 4. Smax Profile Analyses plot. ")
+```
+
+
+
+```{r,}
+cat("Table 2.  JAGS Model Summary output.")
+print(run.JAGS())
+```
+
+
+```{r,eval=(input$dataType=='Run')}
+kable(round(brood.out()$brood,0),caption = "Table 1. Input brood table .")
+```
+
+
+```{r}
+kable(params$Tbl_sum,caption = "Table 3.  Standard Spawner Recruit Analyses summary.  Note: outliers were removed.",format="pandoc" ) 
+```
+
+
+

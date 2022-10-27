@@ -551,8 +551,8 @@ plot_profile <- function(TN,prof,prof.st,S,mip,tp,u){
   lines(S,prof.st[2,],lty = 2,col=1)
   lines(S,prof.st[3,],lty = 4,col=1)
 #  abline(h = stp,lwd=1,col=1)
-  #  User deflined profile 
-  lines(S,prof,lty = 1,lwd=2,col=4)
+  #  User defined profile 
+  lines(S,prof,lty = 1,lwd=2,col=6)
   # User defined target  
   abline(h = tp,lwd=2,col=2)
 }
