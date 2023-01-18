@@ -1,5 +1,8 @@
 ## Profile Analyses
-Profile Analyses have two profiles: MSY and Rmax profiles that provide basis for Smsy and Smax based escapement goal range. Both profiles are probabilities of producing a **long-term median-mean** yield/recruit greater than q% of MSY/Rmax at given spawner size.  The profile based escapement goal range is determined by setting a target minimum probability (p) of achieving the goal (i.e. intersection of the profile at given p). Standard profiles are q = 90, 80, and 70% and p = 90%.  
+Profile Analyses have two profiles: MSY and Rmax profiles that provide basis for Smsy and Smax based escapement goal range. Both profile analyses are aimed to find a range of $S$ that is expected to produce a **long-term median-mean** yield-recruit greater than q% ($e.g.$, 90%) of MSY-Rmax. The analyses also incorporate model uncertainties ($i.e.$, the model    
+
+
+The profile based escapement goal range is determined by setting a target minimum probability (p) of achieving the goal (i.e. intersection of the profile at given p). Standard profiles are q = 90, 80, and 70% and p = 90%.  
 
 **Note** Value of MSY-Rmax in profile analyses is variable for each Bayesian posterior MCMC simulation sample. For instance MSY and Smsy could be 10000 and 500 in one sample and 5000 in 200 another sample. If management object is attaining **defined** yield or recruitment, use yield and recruitment analyses.  
 

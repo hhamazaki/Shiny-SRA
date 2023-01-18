@@ -34,13 +34,13 @@ Bayesian analyses is based on numerical simulation and sampling. Bayesian statis
 To achieve the stable simulation, every Bayesian models have following 4 controls:
 * **Burn-in**  Initial simulation and highly unstable, so that all samples in this stage is thrown out. (Default: 5000)  
 * **Simulation**  This is the stage when samples can be taken. Ideally this phase should be stable. (Default: 10000) 
-* **Thinning**  Sample every xxth simulation. Length of the simulaiton and thinning will determine the number of samples from which parameter estimates are calculated: samples = simulation/ thinning.   Generally, this should be from 1000 to 10000 (Default 5)
+* **Thinning**  Sample every xxth simulation. Length of the simulation and thinning will determine the number of samples from which parameter estimates are calculated: samples = simulation/ thinning.   Generally, this should be from 1000 to 10000 (Default 5)
 * **Chains**  The number of simulation experiments with different starting points. JAGS selects starting points randomly from the priors. If model is correct, final simulation should reach identical mean-median regardless starting points. The number of chains are generally 1 - 5. (Default 3)  
 
 Under the default settings, a total of (burn-in + simulation)xchains (5000+10000)x3 =45000) simulation is conducted.  Of those, 6000 samples are taken (simulation/thinning = 3x10000/5 = 6000).  Model parameters estimates are based on 6000 samples.  
 
 The default is set to produce **quick and reasonable estimates**. It is **recommended** to increase the length of burn-in and simulations and the number of chains to obtain **better and more stable estimates**.  Generally, **longer burn-in and simulation and moree chains will produce better model parameter estimates.** However, this will also **increase** simulation time significantly. A general direction is run the model with default setting and check trace and density plots. 
-Good model convergence usually indicates: **trace plots look like straight horizontal band** and **density plots have distict single peak**.  If the plots do not look good, increase burn-in and simulation lengths until obtaining good plots. When good model convergence is  not achieved after long simulations, this is an indication that: (1) **data are uninformative**, or (2) **wrong model specifications**.  
+Good model convergence usually indicates: **trace plots look like straight horizontal band** and **density plots have distinct single peak**.  If the plots do not look good, increase burn-in and simulation lengths until obtaining good plots. When good model convergence is  not achieved after long simulations, this is an indication that: (1) **data are uninformative**, or (2) **wrong model specifications**.  
 
 
 ## Median vs. Mean Management Target
@@ -67,7 +67,7 @@ SR-Yield plots, predicted Median (solid) and Mean (Hashed) lines with options of
 
 **Time variant alpha model**
 When Time variant alpha model was selected, the plots shows periods that had similar ln.alpha. 
-None indicate overall average alpha.  Smsy, Smax, and the rest of Escapment goal analyses will be based on selected time-periods. 
+None indicate overall average alpha.  Smsy, Smax, and the rest of Escapement goal analyses will be based on selected time-periods. 
 
 
 ### Credible and Prediction Interval 
@@ -84,3 +84,9 @@ Prediction interval shows distribution of single (annual) recruit at given spawn
 Diagnoses tab will display, distribution of model expected and observed recruits over time, and residual plots.  
 **Time variant alpha model**
 When Time variant alpha model was selected, annual changes of ln.alpha and model selected time periods will be displayed. Time variant alpha model 
+
+## Choosing SR model for Escapement Goal Aanalyses
+Among the three model variants (Standard, AR1, and Time variant alpha), we recommend standard or AR1 model for Escapement Goal Analyses.  Whether to use AR1 or standard can be decided by checking AR1 parameter **phi** at MCMC tab. **When phi at bottom of 5% is negative, there is a strong indication that phi is not statistically different from zero, or that standard model is sufficient.**
+
+
+

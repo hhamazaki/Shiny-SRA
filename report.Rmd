@@ -15,6 +15,8 @@ srplot: NA
 
 ---
 
+
+
 ```{r,echo=FALSE,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,comment=NULL, dev='png',fig.dim = c(9,6),dpi=600,message=FALSE,background=NULL)
 #opts <- options(knitr.kable.NA = "")
@@ -33,9 +35,8 @@ params$srplot
 
 
 
-```{r}
+```{r,echo = FALSE, fig.cap = paste0("Figure 2  Spawner-recruit curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
 yldplot()
-cat(paste0("Figure 2.  Yield curve (sold line: mean, dash median).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval."))
 ```
 
 ```{r}
@@ -61,7 +62,7 @@ cat("Figure 4. Smax Profile Analyses plot. ")
 
 ```{r,}
 cat("Table 2.  JAGS Model Summary output.")
-#print(run.JAGS())
+print(run.JAGS())
 ```
 
 

@@ -5,6 +5,42 @@
 #===============================================================================
 #  1.0  Input data manipulation
 #===============================================================================
+#----- Show multiplier axis ---------------------------------------------------- 
+mult <- function(u){
+  mult <- ifelse(u==1000000,paste0('(x million)'),ifelse(u>1,paste0('(x',u,')'),''))  
+  return(mult)  
+}
+plot_runesc <- function(dat,u){
+  par(yaxs='i',bty='l')
+  plot(R/u~Yr,data=dat,type='l',ylim=c(0,with(dat,max(R,S,na.rm =TRUE)/u)),xlab='',ylab='')
+  lines(S/u~Yr,data=dat,lty=2)
+}
+#plot_runesc <- function(dat,u){
+# ggplot() + ylim(0, 100)+c(0,with(dat,max(R,S,na.rm =TRUE)/u))+     
+# geom_line(data = dat, aes(x=Yr,y=R/u))+geom_line(data = dat, aes(x=Yr,y=S/u),linetype = "dashed")
+#}
+
+add_legend <- function(...) {
+  par(mar=c(0,0,0,0))
+  plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n',xlab='',ylab='')
+  legend(...)
+}
+#----- Show Color Shades -------------------------------------------------------   
+tcol <- function(color, percent = 50, name = NULL) {
+  #	  color = color name
+  #	percent = % transparency
+  #	   name = an optional name for the color
+  ## Get RGB values for named color
+  rgb.val <- col2rgb(color)
+  ## Make new color using input color as base and alpha set by transparency
+  t.col <- rgb(rgb.val[1], rgb.val[2], rgb.val[3],
+               max = 255,
+               alpha = (100-percent)*255/100,
+               names = name)
+  return(t.col)
+}
+
+
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #  1.1  age.out:   Read run data and get age range out 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -117,87 +153,6 @@ make.brood <- function(data,fage){
  }
  
  
-#===============================================================================
-#  2.0  Percentile Method 
-#===============================================================================
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  2.1  Tier definition
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-tier_def <- function(tier){
-  out <- HTML(
-    if(tier =="Tier 1"){
-      paste(paste("Escapement goal criteria"),
-            "High contrast (> 8)",
-            "High measurement error (aerial or foot sruveys)",
-            "Low to moderate average harvest rates (<40%)",
-            "Goal Range: 20th - 60th percentile",sep = '<br/>')
-    } else if(tier == "Tier 2")  {
-      paste(paste("Escapement goal criteria"),
-            "High contrast (> 8)","Low measurement error (weir or tower sruveys)",
-            "Low to moderate average harvest rates (<40%)",
-            "Goal Range: 15th - 65th percentile",sep = '<br/>')
-    } else {
-      paste(paste("Escapement goal criteria"),
-            "Low contrast (< 8)",
-            "Lowe to moderate average harvest rates (<40%)",
-            "Goal Range: 5th - 65th percentile",sep = '<br/>')
-    } 
-   )
-  return(out)
-  }
-
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  2.2  Tier goals 
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-tier_goals <- function(S){
-  # Percentile Analyses in 3 Tiers 
-  e.g.1 <- (quantile(S,c(0.2,0.6)))   #Tier 1
-  e.g.2 <- (quantile(S,c(0.15,0.65))) #Tier 2
-  e.g.3 <- (quantile(S,c(0.05,0.65))) #Tier 3
-  e.g <- data.frame(rbind(e.g.1,e.g.2,e.g.3))
-  names(e.g) <- c('EGL','EGU')
-  return(e.g)
-  }
-
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  2.3  Tier EG 
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-tier_EG <- function(tier,S,EG){
-    contrast <- round(max(S)/min(S),1)
-        if(tier == "Tier 1") { e.g <- EG[1,]
-           } else if(tier == "Tier 2") { e.g <- EG[2,]     
-           } else if(tier == "Tier 3") { e.g <- EG[3,]       
-           }
-  out <- HTML(paste(paste(tier,"Escapement goal range"),
-           paste("Escapement Contrast:",contrast),
-           paste0(round(e.g[1],0)," - ",round(e.g[2],0)),sep = '<br/>'))
- return(out)
-}
-
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  2.4  Plot_prcnt 
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Plot_prcnt <- function(tier,e.data,EG,u){
-  if(tier == "Tier 1") { e.g <- EG[1,]
-  } else if(tier == "Tier 2") { e.g <- EG[2,]     
-  } else if(tier == "Tier 3") { e.g <- EG[3,]       
-  }
-  # Graphics     
-  par(yaxs='i',bty='l')
-  plot(S/u~Yr,data=e.data,type='l',ylim=c(0,max(e.data$S)/u),
-       main = 'Escapement', xlab='Year',ylab=paste('Escapement',mult(u)))
-  # Add Escapement Goal range  
-  # Alternative: 
-  abline(h=EG[1,]/u,col = 3, lty=2)
-  abline(h=EG[2,]/u,col = 4, lty=2)
-  abline(h=EG[3,]/u,col = 5, lty=2)
-  polygon(with(e.data,c(min(Yr),max(Yr),max(Yr),min(Yr))),c(e.g[1],e.g[1],e.g[2],e.g[2]),col=tcol(2,50),border=NA)
-  # EG      
-  abline(h=e.g/u,col=2,lwd=2)
-  txt <- c('Tier 1','Tier 2','Tier 3')
-  legend('topright',legend=txt,col=c(3,4,5), lty=2, bty ='n')  
- }
-
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #  2.5  Summary function  
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -432,57 +387,6 @@ SR.cut <-function(SR.pred,Srange){
 }
 
 
-Plt_prcnt <- function(data,EG,tier,u){
-  mult <- mult(u)
-  x <- data
-  if(tier == "Tier 1") { e.g <- EG[1,]
-  } else if(tier == "Tier 2") { e.g <- EG[2,]     
-  } else if(tier == "Tier 3") { e.g <- EG[3,]       
-  }
-  
-  par(yaxs='i',bty='l',las=1,xpd=TRUE)
-  plot(S/u~Yr,data=x,type='l',ylim=c(0,max(x$S)/u),xlab='',ylab='')
-  title("Escapement", xlab="Year",ylab=paste('Escapement',mult(u))) 
-  # Add Escapement Goal range  
-  polygon(with(x,c(min(Yr),max(Yr),max(Yr),min(Yr))),c(e.g[1]/u,e.g[1]/u,e.g[2]/u,e.g[2]/u),col=tcol(2,50),border=NA)
-  # Alternative: 
-  abline(h=EG[1,]/u,col = ifelse(tier == "Tier 1",2,3), lty=2,lwd=ifelse(tier == "Tier 1",2,1),xpd=FALSE)
-  abline(h=EG[2,]/u,col = ifelse(tier == "Tier 2",2,4), lty=2,lwd=ifelse(tier == "Tier 2",2,1),xpd=FALSE)
-  abline(h=EG[3,]/u,col = ifelse(tier == "Tier 3",2,5), lty=2,lwd=ifelse(tier == "Tier 3",2,1),xpd=FALSE)
-  # EG      
-  #  abline(h=e.g/u,col=2,lwd=2,xpd=FALSE)
-  lines(S/u~Yr,data=x)
-  txt <- c('Tier 1','Tier 2','Tier 3')
-  cols <- c(ifelse(tier == "Tier 1",2,3),ifelse(tier == "Tier 2",2,4),ifelse(tier == "Tier 3",2,5))
-  lwds <- c(ifelse(tier == "Tier 1",2,1),ifelse(tier == "Tier 2",2,1),ifelse(tier == "Tier 3",2,1))
-  legend('topright',legend=txt, inset=c(-0.2,0), col=cols, lwd=lwds,lty=2, box.lty=0)  
-}
-
-
-#===============================================================================
-#  Figure editing functions 
-#===============================================================================
-#----- Show multiplier axis ---------------------------------------------------- 
-mult <- function(u){
-  mult <- ifelse(u==1000000,paste0('(x million)'),ifelse(u>1,paste0('(x',u,')'),''))  
-  return(mult)  
-}
-#----- Show Color Shades -------------------------------------------------------   
-tcol <- function(color, percent = 50, name = NULL) {
-  #	  color = color name
-  #	percent = % transparency
-  #	   name = an optional name for the color
-  ## Get RGB values for named color
-  rgb.val <- col2rgb(color)
-  ## Make new color using input color as base and alpha set by transparency
-  t.col <- rgb(rgb.val[1], rgb.val[2], rgb.val[3],
-               max = 255,
-               alpha = (100-percent)*255/100,
-               names = name)
-  return(t.col)
-}
-
-
 #------ Show two density plots in one fig --------------------------------------
 mult.den.plt <- function(dat.a,dat.m,main.tx,xlab.tx,leg.tx){
   d1 <- density(dat.a)
@@ -522,7 +426,7 @@ profile <- function(S, M.rep, mp,tp) {
   }
   # Mean of temp matrix is a  profile probability  
   M.Rep.prof <- colMeans(temp)
-  # Find range of S that intersect with target probabilty  
+  # Find range of S that intersect with target probability  
   S.prof <- S[M.Rep.prof >= tp]
   # Extract min and max S: Profile determined S range
   S.range <- c(NA,NA)
@@ -544,7 +448,7 @@ plot_profile <- function(TN,prof,prof.st,S,mip,tp,u){
   mult <- mult(u)
   S <- S/u
   #---------------------------------------------------------------------------
-  par(xaxs='i',yaxs='i',bty='l')
+  par(xaxs='i',yaxs='i',bty='l',las=1)
   #  Standard profile plots 
   plot(S,prof.st[1,],type='l',col=1, ylim=c(0,1),ylab = 'Probability',
        xlab=paste('Escapement',mult),main=paste(TN,'Profile')) 
@@ -559,8 +463,8 @@ plot_profile <- function(TN,prof,prof.st,S,mip,tp,u){
 
 
 # Prof_fig  --- Profile summary plot  Function  ---------------------------------   
-
 Prof_fig <- function(prof,crit,u){
+  layout(matrix(1:2, ncol=2),widths=c(2,1))
 # -------Extract Profile data  -------------------------------------------------
   EG <- reactive({prof$EG()})
   EG.st <- reactive({prof$EG.st()})
@@ -576,16 +480,17 @@ Prof_fig <- function(prof,crit,u){
   c.col <- ifelse(crit=='MSY',3,4)
   polygon(c(S,rev(S)),c(c(0,0),c(1,1)),col=tcol(c.col,80),border=NA)
   #  Add legends 
-  percent <- c(100*p.min,90,80,70)
+  percent <- c(90,80,70,100*p.min)
   apercent <- 100*p.t
   BEG.st <- EG.st()$S.Range.st
   BEG <- EG()$S.Range
   lg <- c(BEG[1],BEG.st[,1])
   ug <- c(BEG[2],BEG.st[,2])
   txt <- c(paste(percent,'%',crit,apercent,'% target:',lg,' - ',ug))
-  legend("right", legend= txt, lwd=c(2,1,1,1), lty=c(1,1,2,4),
-         col=c(4,1,1,1),box.lty=0)
-}
+  add_legend("left", legend= txt, lwd=c(1,1,1,2), lty=c(1,2,4,1),
+             col=c(1,1,1,6),text.font = c(1,1,1,2),box.lty=0)
+ }
+
 
 
 #===============================================================================
