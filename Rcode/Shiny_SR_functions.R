@@ -3,7 +3,7 @@
 # Collections of functions used for Shiny SR model apps
 #===============================================================================
 #===============================================================================
-#  1.0  Input data manipulation
+#  Graphical 
 #===============================================================================
 #----- Show multiplier axis ---------------------------------------------------- 
 mult <- function(u){
@@ -219,10 +219,13 @@ sim.out <- function(sim,d,add,model,model.br){
    post$Seq <- br$Seq
    post$Smsy <- br$Smsy
    post$Umsy <- br$Umsy
+   post$Sgen <- br$Sgen
    post$Seq.c <- br.c$Seq
    post$Smsy.c <- br.c$Smsy
    post$Umsy.c <- br.c$Umsy
-   post$Smax <- br$Smax
+   post$Sgen.c <- br.c$Sgen
+   post$Smax <- br$Smax   
+
 #-------------------------------------------------------------------------------
 # Remove outlier  
 #-------------------------------------------------------------------------------
@@ -241,7 +244,7 @@ sim.out <- function(sim,d,add,model,model.br){
 # 4.0  SR.pred.sim:  Read simulation data, and create  
 #   Create predicted Recruit and Yield (CI,PI) at given S
 #-------------------------------------------------------------------------------
-SR.pred.sim <-function(SRpar,D,max.s,srmodel,add){
+SR.pred.sim <-function(SRpar,D,max.s,srmodel,add,len.sim){
 #---------- Extract MCMC SR Model Parameters -----------------------------------
 # Mean or Median prediction-----------------------------------------------------  
   lnalpha.c <- SRpar$lnalpha.c  
@@ -260,14 +263,14 @@ SR.pred.sim <-function(SRpar,D,max.s,srmodel,add){
 # Calculate maximum S in interger 
   maxb <- ceiling(max.s/(10^D))*(10^D)
 # Cut into 201 segments (can be increased)
-# This allows each number be integer   
-  S <- seq(0,maxb, length.out=201) 
+# This allows each number be integer
+  S <- seq(0,maxb, length.out=len.sim) 
 # Get the number of simulation (row)  
   nrow <- length(lnalpha)  
 # Create Expected mean and observed Recruit MCMC matrix    
-  mc.R <- matrix(NA,nrow=nrow,ncol=201)   # Model expected recruit Median -------------
-  mc.R.c <- matrix(NA,nrow=nrow,ncol=201)   # Model expected recruit Mean -------------
-  mc.R.p <- matrix(NA,nrow=nrow,ncol=201) # Model expected observed recruit-----
+  mc.R <- matrix(NA,nrow=nrow,ncol=len.sim)   # Model expected recruit Median -------------
+  mc.R.c <- matrix(NA,nrow=nrow,ncol=len.sim)   # Model expected recruit Mean -------------
+  mc.R.p <- matrix(NA,nrow=nrow,ncol=len.sim) # Model expected observed recruit-----
 #---------- Calculate expected returns from each MCMC ------------------------ 
   for(i in 1:nrow){
     # Calculate expected Returns form each MCMC SR model parameters
@@ -275,7 +278,7 @@ SR.pred.sim <-function(SRpar,D,max.s,srmodel,add){
     mc.R[i,] <- srmodel(lnalpha[i],beta[i],S,D)
     mc.R.c[i,] <- srmodel(lnalpha.c[i],beta[i],S,D)
     # mc.R.p adds observation error (sigma): this case no lognormal correction is needed 
-    mc.R.p[i,] <- exp(rnorm(201,log(srmodel(lnalpha[i],beta[i],S,D)),sigma[i]))
+    mc.R.p[i,] <- exp(rnorm(len.sim,log(srmodel(lnalpha[i],beta[i],S,D)),sigma[i]))
   }  
 # Create expected mean/median (mc.Y) and observed Yield (mc.Y.p) matrix
 #  Expected Median or Mean Yield
@@ -342,6 +345,7 @@ plot_density <- function(sim,D,ar1,model='Ricker',target='md'){
     plot(density(sim$Seq.c), main='Seq.c',xlab='',ylab='')
     plot(density(sim$Smsy.c), main='Smsy.c',xlab='',ylab='')  
     plot(density(sim$Umsy.c), main='Umsy.c',xlab='',ylab='') 
+    plot(density(sim$Sgen.c), main='Sgen.c',xlab='',ylab='') 
   } else {
     plot(density(sim$alpha),main='alpha',xlab='',ylab='')
     plot(density(sim$lnalpha),main='lnalpha',xlab='',ylab='')
@@ -350,6 +354,7 @@ plot_density <- function(sim,D,ar1,model='Ricker',target='md'){
     plot(density(sim$Seq), main='Seq',xlab='',ylab='')
     plot(density(sim$Smsy),main='Smsy',xlab='',ylab='')
     plot(density(sim$Umsy), main='Umsy',xlab='',ylab='')
+    plot(density(sim$Sgen), main='Sgen',xlab='',ylab='') 
   }
   if(model=='Ricker'){plot(density(sim$Smax), main='Smax',xlab='',ylab='')}
 }

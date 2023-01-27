@@ -54,6 +54,7 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
     jagmodel <- Bayesmodel()$jagmodel
     pars <- Bayesmodel()$parameters
     # Run JAGS 
+
     output <- jags(data=datnew,parameters.to.save=pars, model.file= jagmodel,
                             n.chains=nchain, n.iter=titer,n.burnin=nburn,n.thin=nthin)
 #    output <- jags.parallel(data=datnew,parameters.to.save=pars, model.file= jagmodel,
@@ -122,12 +123,23 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
   }
 
 # Estimate Biological Reference for post processing ------------------------------
+# Sgen   
+
+ 
+# Estimate Biological Reference for post processing ------------------------------
   BR.CR <- function(lnalpha,beta,d){
+    get_Sgen.bc <- function(m){
+      fun_Sgen.bc <- function(S,m) {exp(log(S)+m[1]-m[2]*S/(10^d)) - m[3]}
+      Sgen <- try(uniroot(fun_Sgen.bc, interval=c(0.1*m[3],0.8*m[3]),m=m)$root)
+      return(Sgen)
+    }
     Seq <- (10^d)*lnalpha/beta
     Smsy <- Seq*(0.5-0.07*lnalpha)
     Umsy <- lnalpha*(0.5-0.07*lnalpha)
     Smax <- (10^d)/beta
-    out <- data.frame(Seq,Smsy,Umsy,Smax)
+    mat <- cbind(lnalpha,beta,Smsy)
+    Sgen <- as.numeric(apply(mat,1,(get_Sgen.bc)))  
+    out <- data.frame(Seq,Smsy,Umsy,Smax,Sgen)
     return(out)
   }    
   
@@ -180,6 +192,11 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
   }
 # Estimate Biological Reference for post processing ------------------------------
   BR.BH <- function(lnalpha,beta,d){
+  get_Sgen.bc <- function(m){
+      fun_Sgen.bc <- function(S,m) {exp(log(S)+m[1]-log(1+m[2]*S/(10^d))) - m[3]}
+      Sgen <- try(uniroot(fun_Sgen.bc, interval=c(0.1*m[3],0.8*m[3]),m=m)$root)
+      return(Sgen)
+    }
     alpha <- exp(lnalpha)
     Seq <- (10^d)*(alpha-1)/beta
     Smsy <- (10^d)*(sqrt(alpha)-1)/beta

@@ -19,7 +19,7 @@ library(shinyhelper)  # used to add quick help
 library(bslib)
 #library(markdown)     # used to read markdown file
 library(rmarkdown)     # used to get rmarkdown file
-library(knitr)
+library(knitr)         # used to produce word report 
 library(reshape2)     # used for data transpose 
 library(datasets)   
 library(lmtest)       # used for dwtest 
@@ -29,14 +29,15 @@ library(R2jags)       # used to run JAGS
 library(openxlsx)     # used for creating EXCEL output table  
 library(officedown)   # used to create Word doc
 #library(flextable)    # used to make tables
-library(ggplot2)      #ggplot
+#library(ggplot2)      #ggplot
 options(scipen=999)   # Do not show Scientific notation
 source("Rcode/pointLabelBase.R")   # 
 source("Rcode/addNonOverlappingTestLabelsOrPoints.R")   # 
 source("Rcode/Shiny_modules.R")   #  Module codes 
 source("Rcode/Shiny_SR_functions.R")   #  All functions created and used in this app 
 source("Rcode/Shiny_Bayes_modules.R")  #  Modules related to Bayesian model 
-source("Rcode/ggplot_theme.r")  # Include ggplot
+#source("Rcode/ggplot_theme.r")  # Include ggplot
+
 
 #===============================================================================    
 #  UI:  
@@ -78,8 +79,11 @@ checkboxInput(inputId="Sample", "Inport Sample Data", FALSE),
 # Default axis point UI 
  checkboxInput(inputId="autoui", "Defalut axis unit", TRUE),
  conditionalPanel(condition="input.autoui== false",
-    selectInput(inputId="ui","Figure Axis Dislpay Unit", choices = c('1','1000','million'))
-      )
+    selectInput(inputId="ui","Figure Axis Dislpay Unit", choices = c('1','1000','million')),
+    selectInput(inputId="pi","Color Palette", choices = c('default','Okabe-Ito'),
+                selected='default')
+     )
+   
    ), # End sidebarPanel (Data Input)
 
 #=========================MainPanel=============================================
@@ -213,6 +217,7 @@ conditionalPanel(condition="input.dataType == 'Run'",
         checkboxInput(inputId="show.points", "show Years", TRUE), 
         checkboxInput(inputId="show.smsy", "show Smsy", FALSE),
         checkboxInput(inputId="show.smax", "show Smax", FALSE),
+        checkboxInput(inputId="show.sgen", "show Sgen", FALSE),
         checkboxInput(inputId="show.int", "show Interval", TRUE),
         sliderInput("CI", "% Interval", value=90,min=0,max=100,step=5),
         selectInput(inputId="Li","Interval Type", choices = c('credible','prediction'))
@@ -265,7 +270,7 @@ conditionalPanel(condition="input.dataType == 'Run'",
       tabPanel("SR Help",
          withMathJax(includeMarkdown("documents/SR_help.md"))
         ), # End tabPanel: Help
-id = "Panel"
+       id = "Panel"
            )#End tabsetPanel
         )#End mainPanel
       ),#End SR Model tabPanel
@@ -281,10 +286,24 @@ navbarMenu("Escapement Goal Analyses",
 #===============================================================================    
   tabPanel("Smsy & Smax Goal Analyses",      
     sidebarPanel(width = 3,
+      conditionalPanel(condition="input.ProfPanel != 'Custom Range'",           
        ProfileUI('smsy','MSY'),
        hr(),
        ProfileUI('smax','Rmax'),
-          ),#End sidebarPanel
+       hr(),
+       downloadButton('downloaddProf',label='Profile download'),
+       sliderInput(inputId="lensim","S segments", value=200,min=100,max=1000,step=100)
+#       checkboxInput("Prof.custom", label = "Customize", value = FALSE),
+       ), # End conditionalPanel
+      conditionalPanel(condition="input.ProfPanel == 'Custom Range'",
+        p(strong('Custom Profile Range Panek')),
+        p('Select Min % range and Target % range to create escapement goal range'),
+        sliderInput(inputId="ProfM","Min % Range", min=0,max=95, value = c(70,90),step =5),
+        sliderInput(inputId="ProfP","Target % Range", min=0,max=95, value = c(70,90),step =5),
+        downloadButton('downloaddProfSum',label='Profile Summary download'),  
+        )
+       ),#End sidebarPanel
+       
 #=========================MainPanel=============================================       
     mainPanel(
       tabsetPanel(
@@ -298,15 +317,17 @@ navbarMenu("Escapement Goal Analyses",
           plotOutput(height='300px','Plt_yield.pg'),
           plotOutput(height='300px','Plt_rec.pg')
               ), #End tabPanel: YieldRec
-        tabPanel("Goal Ranges",
-                p(strong("Smsy Goal Range")),        
+        tabPanel("Custom Range",
+                 tableOutput('Tbl_prof')
+#                p(strong("Smsy Goal Range")),        
 #          htmlOutput("Txt_Srange.smsy"),
-                p(strong("Smax Goal Range")), 
+#                p(strong("Smax Goal Range")), 
 #          htmlOutput("Txt_Srange.smax")
               ), #End tabPanel: Goal 
         tabPanel("Help",
           withMathJax(includeMarkdown("documents/Profile_help.md"))
-                ) #End tabPanel: Help  
+                ), #End tabPanel: Help 
+              id = "ProfPanel"
             )#End tabsetPanel
         )#End mainPanel
       ),#End tabPanel: Smsy Goal Analyses 
@@ -618,7 +639,8 @@ p(strong("Missed escapement passage estimation:",
 server<-shinyServer(function(input, output, session){
 #-------------------------------------------------------------------------------
 # ggplot theme set 
-#theme_set(theme_simple()) 
+#theme_set(theme_simple())
+
 #-------------------------------------------------------------------------------
   output$note <- reactive({
    HTML(
@@ -1073,7 +1095,7 @@ output$Plt_trace <- renderPlot({
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Data file reading module  
  mcmcdata <- dataInputServer("mcmc.in")
-# SR.post --- Remove outliers
+
 # Create SR parameters: alpha, beta, Seq, Smsy, Umsy, Smax ---------------------
  SR.post <- reactive({
   D <- as.numeric(Bayesdata()$d)
@@ -1094,14 +1116,14 @@ output$Tbl_mcmcdata <- renderDataTable({SR.post()})
 sumbayes <- reactive({
   ci <- input$CIB
   if(input$target =='me'){
-  parname <-c('alpha.c','lnalpha.c','beta','Seq.c','Smsy.c','Umsy.c')
-  if(input$add=='ar1'){parname <-c('alpha.c','lnalpha.c','beta','phi','Seq.c','Smsy.c','Umsy.c')}
+  parname <-c('alpha.c','lnalpha.c','beta','Seq.c','Smsy.c','Umsy.c','Sgen.c')
+  if(input$add=='ar1'){parname <-c('alpha.c','lnalpha.c','beta','phi','Seq.c','Smsy.c','Umsy.c','Sgen.c')}
   } else {
-  parname <-c('alpha','lnalpha','beta','Seq','Smsy','Umsy')    
-  if(input$add=='ar1'){parname <-c('alpha','lnalpha','beta','phi','Seq','Smsy','Umsy')}
+  parname <-c('alpha','lnalpha','beta','Seq','Smsy','Umsy','Sgen')    
+  if(input$add=='ar1'){parname <-c('alpha','lnalpha','beta','phi','Seq','Smsy','Umsy','Sgen')}
   }
   if(input$Model == 'Ricker'){parname <- c(parname,'Smax')}
-  if(input$add=='ar1'){r <- c(3,3,3,3,0,0,3,0)} else {r <- c(3,3,3,0,0,3,0)}
+  if(input$add=='ar1'){r <- c(3,3,3,3,0,0,3,0,0)} else {r <- c(3,3,3,0,0,3,0,0)}
   t(round(t(sum.fun(SR.post()[,parname],ci)),r))
  })
 # print out sumpost 
@@ -1120,7 +1142,7 @@ hist.mc <- reactive({
 output$Plt_hist.mc <- renderPlot({hist.mc()})
 
 #===============================================================================
-#  Time Variant allpha Analyses  
+#  Time Variant alpha Analyses  
 #===============================================================================
 # lnalphais  Extract Time_variant alpha-----------------------------------------
 lnalphais <-reactive({
@@ -1173,7 +1195,7 @@ lnalphais <-reactive({
   })
 
 
-output$Plt_lnalphai <- renderPlot({
+lnalphai.plt <- reactive({
   if(input$add=='kf'){
 # Extract mean lnalpha for each year 
   xa <- lnalphais()$lnalphai
@@ -1188,9 +1210,13 @@ output$Plt_lnalphai <- renderPlot({
   with(xa,polygon(c(year,rev(year)),c(ciu,rev(cil)),col=tcol('grey',50),border=NA)) 
   abline(h=lnalpha,lwd=2,col=2)
   lines(star~year,data=xa,col=4,lwd=2)
+  out <-recordPlot()  
+  return(out)   
   } 
  })
 
+output$Plt_lnalphai <- renderPlot({lnalphai.plt()})
+  
 # yrange --- UI output to determine data year range -----------------------------
 output$astar <- renderUI({
  if(input$add=='kf'){
@@ -1295,12 +1321,12 @@ SR.pred1 <-reactive({
   if(input$add == 'kf') {
     req(input$alphai)
     if(input$alphai == 'None'){
-    out <- SR.pred.sim(SR.post(),D,max.s,srmodel,input$add)
+    out <- SR.pred.sim(SR.post(),D,max.s,srmodel,input$add,input$lensim+1)
     } else {
-    out <- SR.pred.sim(SR.post.i(),D,max.s,srmodel,input$add)     
+    out <- SR.pred.sim(SR.post.i(),D,max.s,srmodel,input$add,input$lensim+1)     
     }
   } else {
-    out <- SR.pred.sim(SR.post(),D,max.s,srmodel,input$add)     
+    out <- SR.pred.sim(SR.post(),D,max.s,srmodel,input$add,input$lensim+1)     
    }
   return(out)
  })  
@@ -1517,8 +1543,27 @@ srplot <- reactive({
     abline(v=mean(SR.post()$Smax)/u,col=1,lty=3)
     t2 <- paste('Smax:',round(mean(SR.post()$Smax),0))
     l2 <- 3
+   }
+#  Add Sgen  
+  t3 <- ''
+  l3 <- 0
+   Sgen <- ifelse(input$target=='me',mean(SR.post()$Sgen.c),mean(SR.post()$Sgen))
+  if(input$show.sgen==TRUE) {
+    if(input$add=='kf'){
+      if(input$target=='me'){
+        kfSgen <- c(mean(SR.post()$Sgen.c),br.c$Sgen)
+      }else{
+        kfSgen <- c(mean(SR.post()$Sgen),br$Sgen)   
+      }
+      abline(v=kfSgen/u,col=c(1:(nstar+1)),lty=4) 
+      t3 <- paste('Sgen:',c('overall',star$txt),':',paste(round(kfSgen)))
+    } else {
+      abline(v=Sgen/u,lty=4)
+      t3 <- paste('Sgen:',round(Sgen,0))
     }
-  legend('topright',c(t1,t2),lty=c(rep(l1,length(t1)),l2),
+    l3 <- 4
+   }
+  legend('topright',c(t1,t2,t3),lty=c(rep(l1,length(t1)),l2,l3),
          lwd=2, col=c(1:(length(t1)),1),box.lty=0)  
   out <-recordPlot()
   return(out)  
@@ -1626,8 +1671,24 @@ yldplot <- reactive({
     t2 <- paste('Smax:',round(mean(SR.post()$Smax),0))
     l2 <- 3
   }
-  legend('topright',c(t1,t2),lty=c(rep(l1,length(t1)),l2),
-         lwd=2, col=c(1:length(t1),1),box.lty=0)    
+  Sgen <- ifelse(input$target=='me',mean(SR.post()$Sgen.c),mean(SR.post()$Sgen))
+  if(input$show.sgen==TRUE) {
+    if(input$add=='kf'){
+      if(input$target=='me'){
+        kfSgen <- c(mean(SR.post()$Sgen.c),br.c$Sgen)
+      }else{
+        kfSgen <- c(mean(SR.post()$Sgen),br$Sgen)   
+      }
+      abline(v=kfSgen/u,col=c(1:(nstar+1)),lty=4) 
+      t3 <- paste('Sgen:',c('overall',star$txt),':',paste(round(kfSgen)))
+    } else {
+      abline(v=Sgen/u,lty=4)
+      t3 <- paste('Sgen:',round(Sgen,0))
+    }
+    l3 <- 4
+  }
+  legend('topright',c(t1,t2,t3),lty=c(rep(l1,length(t1)),l2,l3),
+         lwd=2, col=c(1:(length(t1)),1),box.lty=0)  
   out <-recordPlot()
   return(out)  
   })
@@ -1641,7 +1702,7 @@ output$Plt_yield <- renderPlot({yldplot()})
 #})
 # Plt_residual --- Plot Residual Plot ------------------------------------------
 
-output$Plt_residual <- renderPlot({
+resid.plt <- reactive({
   year <- sr.data()$Yr
   if(input$add=='ar1'){
     resid <-SR.resid()$RD2  
@@ -1656,8 +1717,11 @@ output$Plt_residual <- renderPlot({
        ylim =c(min(cil),max(ciu)))
   abline(h=0)
   polygon(c(year,rev(year)),c(ciu,rev(cil)),col=tcol('grey',50),border=NA)
+        out <-recordPlot()  
+       return(out)   
   })
 
+output$Plt_residual <- renderPlot({resid.plt()})
 
 # Plt_predict --- Plot Predicted Plot ------------------------------------------
 output$Plt_predict <- renderPlot({
@@ -1679,27 +1743,30 @@ output$Plt_predict <- renderPlot({
 #  Panel 5: Escapement Goal Analyses 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #===============================================================================
+#  Profile Analyses 
+#===============================================================================
+#-------------------------------------------------------------------------------
 #  Smsy Goal Analyses: This produces 
 #  EG.Smsy, EG.Smsy.st, SA.BEG, p.msy, p.msy.t
-#===============================================================================
-  smsyprof <- ProfileServer("smsy",SR.pred,'MSY',unit)
+#-------------------------------------------------------------------------------
+smsyprof <- ProfileServer("smsy",SR.pred,'MSY',unit)
   EG.Smsy <- reactive({smsyprof$EG()})
   EG.Smsy.st <- reactive({smsyprof$EG.st()})
   SA.BEG  <- reactive({smsyprof$BEG()})
   p.msy <- reactive({smsyprof$p.min()})
   p.msy.t <- reactive({smsyprof$p.t()})
+
 # Basic smsy profile plot
   plt.msy.prof <- reactive({smsyprof$plt.profile()})  
 # Smsy profile plot with bounds  
   plt.msy.prof.fig <- reactive({smsyprof$plt.prof.fig()})
-
 # Output Smsy profile plot   
   output$Plt_Smsy_prof <- renderPlot({plt.msy.prof.fig()})
 
-#===============================================================================
+#-------------------------------------------------------------------------------
 #  Smax Goal Analyses 
-#===============================================================================
-smaxprof <- ProfileServer("smax",SR.pred,'Rmax',unit)  
+#-------------------------------------------------------------------------------
+  smaxprof <- ProfileServer("smax",SR.pred,'Rmax',unit)  
   EG.Smax <- reactive({smaxprof$EG()})
   EG.Smax.st <- reactive({smaxprof$EG.st()})
   SM.BEG  <- reactive({smaxprof$BEG()})   # Smax based goal range
@@ -1709,10 +1776,68 @@ smaxprof <- ProfileServer("smax",SR.pred,'Rmax',unit)
   plt.max.prof <- reactive({smaxprof$plt.profile()})
 # Smax profile plot with bounds   
   plt.max.prof.fig <- reactive({smaxprof$plt.prof.fig()})
-
-# Output Smax profile plot    
   output$Plt_Smax_prof <- renderPlot({plt.max.prof.fig()})  
+  
+#-------------------------------------------------------------------------------
+#  Custom Profile Range Analyses   
+#-------------------------------------------------------------------------------
+# Create profile Table  
+  T.Prof <- reactive({
+    out <- data.frame(EG.Smsy()$S,t(EG.Smsy.st()$S.prof.st),EG.Smsy()$S.prof,
+                      t(EG.Smax.st()$S.prof.st),EG.Smax()$S.prof)
+    names(out) <- c('S','MSY90','MSY80','MSY70',paste0('MSY',p.msy()),
+                    'MAX90','MAX80','MAX70',paste0('MAX',p.max()))
+    return(out)
+  })
+# Create Summary Table  
+    
+  Prof.sum <- reactive({
+    tprof <- T.Prof()
+      tp <- c(0.7,0.8,0.9)
+      tm <- c(2:4,6:8)
+      tr <- length(tp)*length(tm)
+      target <-vector('character',tr)
+      pt <- vector('integer',tr)
+      pm <- vector('integer',tr)
+      minEG <- vector('integer',tr)
+      maxEG <- vector('integer',tr)
+        for(j in 1:6){
+          for(i in 1:3){
+        S.prof <- tprof$S[tprof[,tm[j]] >= tp[i]]
+        target[i+3*(j-1)] <- substring(names(tprof)[tm[j]],1,3)
+        pt[i+3*(j-1)] <- as.numeric(substring(names(tprof)[tm[j]],4,5))
+        pm[i+3*(j-1)] <- 100*tp[i]
+        minEG[i+3*(j-1)] <- min(S.prof)
+        maxEG[i+3*(j-1)] <- max(S.prof)
+          }
+        }
+       out <- data.frame(Target=target,PercOfTarget=pt,ProbOfAchieving=pm, 
+                         minEG=minEG, maxEG=maxEG)
+       return(out)
+  })  
 
+output$Tbl_prof <- renderTable(Prof.sum(),digits=0)  
+
+# downloadData ---- profile download -------------------------------------------
+  output$downloaddProf <- downloadHandler(
+    filename = function() {
+      paste0('Profile_', model.name(),'_', Sys.Date(),'.csv')
+    },
+    content = function(file) {
+      write.csv(T.Prof(), file,row.names = FALSE)
+    }
+  )
+
+# downloadData ---- Profsummary download -------------------------------------------
+output$downloaddProfSum <- downloadHandler(
+  filename = function() {
+    paste0('Profile_summary_', model.name(),'_', Sys.Date(),'.csv')
+  },
+  content = function(file) {
+    write.csv(Prof.sum(), file,row.names = FALSE)
+  }
+)
+  
 #===============================================================================
 #  Smsy-Smax Goal Analyses Output 
 #===============================================================================
@@ -1753,7 +1878,8 @@ output$Plt_yield.pg <- renderPlot({
   output$Txt_Srange.smsy <-renderUI({ SA.BEG() })
 # Txt_Srange.smax -------- Smax Goal range output table ------------------------
   output$Txt_Srange.smax <-renderUI({ SM.BEG() })
-  
+
+
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #  4.0 Target Yield and Recruit based Escapement Goal
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
@@ -2156,9 +2282,9 @@ output$Txt_Rec_cg <- renderPrint({
     R.p <- as.vector(CG_sim()$R.p)
     max_length <- max(c(length(R), length(R.p)))
    dat <- data.frame(c(R,rep(NA, max_length - length(R))),c(R.p, rep(NA, max_length - length(R.p))))
-  tex <- ifelse(input$target =='me','Mean','Median')
+  tex <- ifelse(input$target =='me','Mean Target','Median Target')
   names(dat) <- c(tex,'Annual')
-  print(summary(dat),digits=1)
+  print(sum.fun(dat,90),digits=1)
   })
   
 
@@ -2171,9 +2297,9 @@ output$Txt_Yield_cg <- renderPrint({
   Y.p <- as.vector(CG_sim()$Y.p)
   max_length <- max(c(length(Y), length(Y.p)))
   dat <- data.frame(c(Y, rep(NA, max_length - length(Y))),c(Y.p, rep(NA, max_length - length(Y.p))))
-  tex <- ifelse(input$target =='me','Mean','Median')
+  tex <- ifelse(input$target =='me','Mean Target','Median Target')
   names(dat) <- c(tex,'Annual')
-  print(summary(dat),digits=1)
+  print(sum.fun(dat,90),digits=1)
   })
 
 # Calculate Probability meeting target  
@@ -2253,7 +2379,7 @@ observeEvent(input$Run,{
 #cg_sums <- reactive({data.frame(gls(),meds(),pcts())})
 #output$Tbl_sim <- renderDataTable({})
 
-output$Tbl_sim <- renderTable(gls(),digits=0)
+output$Tbl_sim <- renderTable(meds(),digits=0)
 
 output$altsim.R <- renderPrint({
   #  par(mfrow=c(1,4),mar = c(2,2,2,2),cex=1.1)
@@ -2571,7 +2697,7 @@ nsims <-sample(1:length(lnalpha),input$nsim)
   progress$set(message = paste(boot.n,'MSE Calculation in progress'),
                detail = 'This will take a while. Be patient please....')
   
-# Set outpit 
+# Set output 
 sim.out <- list()
 
 for(k in 1:input$nsim){
@@ -2678,7 +2804,7 @@ if(input$pltmse=='Run')
   polygon(c(years,rev(years)),c(S.sum$uci/u,rev(S.sum$lci/u)),col=tcol('grey',50),border=NA)
   lines(years,S.sum$md/u,lwd=2,lty=1)
   lines(years,S.sum$me/u,lwd=2,lty=2)
-  polygon(c(lyear-1,max(years)+2,max(years)+2,lyear-1),c(input$LEG,input$LEG,input$UEG,input$UEG),col=tcol(5,80),border=NA)
+  polygon(c(lyear-1,max(years)+2,max(years)+2,lyear-1),c(input$LEG,input$LEG,input$UEG,input$UEG),col=tcol(8,80),border=NA)
   }
   if(input$pltmse=='Harvest')
   {   
@@ -2716,7 +2842,7 @@ output$Plt_mse_rep <- renderPlot({
 # Escapement 
   lines (data()[,1],(data()[,2])/u,type='l',lwd=2, col=3)
   lines(years,S/u, col=3,lwd=1)
-  polygon(c(lyear-1,max(years)+2,max(years)+2,lyear-1),c(input$LEG,input$LEG,input$UEG,input$UEG),col=tcol(5,80),border=NA)
+  polygon(c(lyear-1,max(years)+2,max(years)+2,lyear-1),c(input$LEG,input$LEG,input$UEG,input$UEG),col=tcol(8,80),border=NA)
   abline(h=input$minH, col=2,lwd=2)
   title("MSE Simulation", xlab="Year", ylab=paste('Run / Escapement/Harvest',mult))
   legend('topright',legend=c('Run','Escapement','Harvest'),col = c(1,3,2),lwd=c(1,2,1), box.lty=0)

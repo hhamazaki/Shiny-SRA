@@ -65,6 +65,10 @@ cat("Table 2.  JAGS Model Summary output.")
 print(run.JAGS())
 ```
 
+```{r}
+kable(run.JAGS()$summary,caption = "Table. JAGS summary",format="pandoc" ) 
+```
+
 
 
 ```{r}

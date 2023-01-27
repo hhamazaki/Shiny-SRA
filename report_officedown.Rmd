@@ -45,6 +45,9 @@ srplot()
 yldplot()
 ```
 
+```{r,fig.cap = paste0("Figure 3. Residual plot.")}
+resid.plt()
+```
 
 ```{r,fig.cap = paste0("Figure 3. MSY Profile Analyses plot.")}
 plt.msy.prof.fig()
@@ -56,6 +59,10 @@ plt.max.prof.fig()
 ```
 
 
+```{r,fig.cap = paste0("Figure 4. Time variant alpha.")}
+lnalphai.plt()
+```
+
 
 
 ```{r,eval=(input$dataType=='Run')}
@@ -65,6 +72,7 @@ kable(round(brood.out()$brood,0),caption = "Table 1. Input brood table .")
 ```{r, fig.cap="Table 2.  JAGS Model Summary output."}
 print(run.JAGS())
 ```
+
 
 
 ```{r}

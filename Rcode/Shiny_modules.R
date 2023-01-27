@@ -78,6 +78,7 @@ ProfileUI <- function(id,crit){
     sliderInput(ns("p.min"), paste("Min % of",crit), value=90,min=0,max=100,step=5),
     sliderInput(ns("p.t"), paste("% Meeting",crit,"Target"), value=90,min=0,max=100,step=5)
       )  # End taglist
+    
 } # End SmsypfofUI
 #-------------------------------------------------------------------------------
 #  Server: Generates 
@@ -383,7 +384,7 @@ output$Riskp <- renderUI({
 #  Add custom EG      
       abline(v=input$riskEG, col =4, lty=3,lwd=1)
 #  Add custom Risk Prob 
-      abline(h=input$riskp, col =5, lty=2,lwd=1)      
+      abline(h=input$riskp, col =7, lty=2,lwd=1)      
       pp <- rep(NA,n)
       for(j in 1:n) pp[j] <- round(pi[which(x==e.g[j]),j+1],2)
       txt <- c("Unneeded action", 
@@ -427,7 +428,7 @@ output$Riskp <- renderUI({
 #  3.0 Percentile Based Goal Analyses Module 
 #===============================================================================
 #===============================================================================
-#  PerentileUI Module: Produce Risk analyses and plot results  
+#  PerentileUI Module: Produce percentile analyses and plot results  
 #  Usage: 
 #  UI section 
 #  PerentileUI("ns.name")
@@ -505,15 +506,15 @@ Plt_prcnt <- function(){
   plot(S/u~Yr,data=x,type='l',ylim=c(0,max(x$S,na.rm=TRUE)/u),xlab='',ylab='')
   title("Escapement", xlab="Year",ylab=paste('Escapement',mult))
   # Add Escapement Goal range  
-  polygon(with(x,c(min(Yr),max(Yr),max(Yr),min(Yr))),c(e.g[1]/u,e.g[1]/u,e.g[2]/u,e.g[2]/u),col=tcol(2,50),border=NA)
+  polygon(with(x,c(min(Yr),max(Yr),max(Yr),min(Yr))),c(e.g[1]/u,e.g[1]/u,e.g[2]/u,e.g[2]/u),col=tcol(7,50),border=NA)
   # Alternative: 
-  abline(h=EG[1,]/u,col = ifelse(input$Tiers == "Tier 1",2,3), lty=2,lwd=ifelse(input$Tiers == "Tier 1",2,1))
-  abline(h=EG[2,]/u,col = ifelse(input$Tiers == "Tier 2",2,4), lty=2,lwd=ifelse(input$Tiers == "Tier 2",2,1))
-  abline(h=EG[3,]/u,col = ifelse(input$Tiers == "Tier 3",2,5), lty=2,lwd=ifelse(input$Tiers == "Tier 3",2,1))
+  abline(h=EG[1,]/u,col = ifelse(input$Tiers == "Tier 1",7,2), lty=2,lwd=ifelse(input$Tiers == "Tier 1",2,1))
+  abline(h=EG[2,]/u,col = ifelse(input$Tiers == "Tier 2",7,3), lty=2,lwd=ifelse(input$Tiers == "Tier 2",2,1))
+  abline(h=EG[3,]/u,col = ifelse(input$Tiers == "Tier 3",7,4), lty=2,lwd=ifelse(input$Tiers == "Tier 3",2,1))
   # EG      
   lines(S/u~Yr,data=x)
   txt <- c('Tier 1','Tier 2','Tier 3')
-  cols <- c(ifelse(input$Tiers == "Tier 1",2,3),ifelse(input$Tiers == "Tier 2",2,4),ifelse(input$Tiers == "Tier 3",2,5))
+  cols <- c(ifelse(input$Tiers == "Tier 1",7,2),ifelse(input$Tiers == "Tier 2",7,3),ifelse(input$Tiers == "Tier 3",7,4))
   lwds <- c(ifelse(input$Tiers == "Tier 1",2,1),ifelse(input$Tiers == "Tier 2",2,1),ifelse(input$Tiers == "Tier 3",2,1))
   fonts <- c(ifelse(input$Tiers == "Tier 1",2,1),ifelse(input$Tiers == "Tier 2",2,1),ifelse(input$Tiers == "Tier 3",2,1))
   add_legend('left',legend=txt, col=cols, lwd=lwds,lty=2, text.font=fonts, box.lty=0)  
