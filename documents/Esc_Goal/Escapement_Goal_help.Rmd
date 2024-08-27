@@ -1,0 +1,39 @@
+# Escapement Goal
+
+### What is an escapement goal in a nutshell?
+
+Annually a salmon population returning to a natal river is subject to fisheries.  Fish that **escaped** from the fisheries migrate to spawning grounds, mate, and lay eggs. They are **spawners** for the next generation. Intuitively, we know that (1) a salmon population is the healthiest when they are not fished at all (i.e., all fish escapes to spawning grounds), and (2) too much fisheries (i.e., too few spawners on spawning grounds) will drive the salmon population to extinction (i.e. kill the goose that lays the golden eggs). The main management idea is setting a range of spawners (i.e., escapement goal ranges) large enough to produce offspring (i.e., recruits) sufficient to sustain the salmon population and to allow fisheries harvests. Setting an escapement goal is a scientific, as well as a human dimensional (e.g, economy, culture, tradition). Science estimates spawner-recruit relationships that ensures biological sustainability of a salmon population (e.g., On average how many fish will return at given escapement?). But, setting a **goal** requires human dimensional consideration (e.g., what much fish is needed? What are desired harvests level?).  
+
+Escapement goal is one of fisheries management strategies used primarily for salmon stocks in Alaska. Under this management strategy, fisheries opens only when a projected run size exceeds an escapement goal, and fisheries target is set below run minus escapement.     
+
+
+## Escapement Goals: State of Alaska formal definition  
+(from [5 AAC 39.223](https://casetext.com/regulation/alaska-administrative-code/title-5-fish-and-game/part-1-commercial-and-subsistence-fishing-and-private-nonprofit-salmon-hatcheries/chapter-39-general-provisions/article-2-general/section-5-aac-39223-policy-for-statewide-salmon-escapement-goals))
+
+The Alaska Department of Fish and Game(ADF&G) is responsible for establishing escapement goals: biological escapement goals (BEG), sustainable escapement goals (SEG), or sustained escapement thresholds (SET). Major distinctions among those goals are based based on scientific certainties of estimating spawner-recruit relationships.   
+
+
+### Biological escapement goals (BEG) 
+  Established for salmon stocks for which the department can reliably enumerate salmon escapement levels, as well as total annual returns. 
+  
+### Sustainable escapement goals (SEG) 
+  Established for salmon stocks for which the department can reliably estimate escapement levels when there is not sufficient information to enumerate total annual returns and the range of escapements that are used to develop a BEG.
+
+### Sustainable escapement thresholds (SET)   
+  Established for salmon stock stocks of management or conservation concern,  below which the ability of the salmon stock to sustain itself is jeopardized.
+  
+The ADF&G recommends BEG, SEG, and SET, and the Board of Fisheries (BOF) the main body that determine setting a goal.  The BOF also can set Optimal escapement goals (OEGs) with considering allocation factors, such as specific harvest privileges among various user groups.
+
+
+#### Official Definition
+(from [5 AAC 39.222(f)](https://casetext.com/regulation/alaska-administrative-code/title-5-fish-and-game/part-1-commercial-and-subsistence-fishing-and-private-nonprofit-salmon-hatcheries/chapter-39-general-provisions/article-2-general/section-5-aac-39222-policy-for-the-management-of-sustainable-salmon-fisheries))).
+
+**Escapement AAC 39.222(f)(10)**: The annual estimated size of the spawning salmon stock; quality of the escapement may be determined not only by numbers of spawners, but also by factors such as sex ratio, age composition, temporal entry into the system, and spatial distribution within the salmon spawning habitat;
+
+**Biological Escapement Goal (BEG) 5AAC 39.222(f)(3)**: The escapement that provides the greatest potential for maximum sustained yield; BEG will be the primary management objective for the escapement unless an optimal escapement goal or inriver run goal has been adopted; BEG will be developed from the best biological information, and should be scientifically defensible on the basis of available biological information; BEG will be determined by the department and will be expressed as a range based on factors such as salmon stock productivity and data uncertainty; the department will seek to maintain evenly distributed salmon escapements within the bounds of the BEG.
+
+**Sustainable Escapement Goal (SEG) 5AAC 39.222(f)(36)**: A level of escapement, indicated by an index or an escapement estimate, that is known to provide for sustained yield over a 5 to 10 year period, used in situations where a BEG cannot be estimated due to the absence of a stock specific catch estimate; the SEG is the primary management objective for the escapement, unless an optimal escapement goal or inriver run goal has been adopted by the board, and will be developed from the best biological information; the SEG will be determined by the department and will be stated as a range that takes into account data uncertainty; the department will seek to maintain escapements within the bounds of the SEG.
+
+**Optimal Escapement Goal (OEG) 5AAC 39.222(f)(25)**: A specific management objective for salmon escapement that considers biological and allocative factors and may differ from the SEG or BEG; an OEG will be sustainable and may be expressed as a range with the lower bound above the level of Sustainable Escapement Threshold, and will be adopted as a regulation by the board; the department will seek to maintain evenly distributed escapements within the bounds of the OEG.
+
+**Sustained escapement threshold (SET) 5AAC 39.222(f)(39)**: A threshold level of escapement, below which the ability of the salmon stock to sustain itself is jeopardized; in practice, SET can be estimated based on lower ranges of historical escapement levels, for which the salmon stock has consistently demonstrated the ability to sustain itself; the SET is lower than the lower bound of the BEG and lower than the lower bound of the SEG; the SET is established by the department in consultation with the board, as needed, for salmon stocks of management or conservation concern;.

@@ -1,48 +1,20 @@
-#===============================================================================
+#'===============================================================================
 # Shiny_SR_function.R 
 # Collections of functions used for Shiny SR model apps
-#===============================================================================
-#===============================================================================
-#  Graphical 
-#===============================================================================
-#----- Show multiplier axis ---------------------------------------------------- 
+#'===============================================================================
+#'===============================================================================
+#  General
+#'===============================================================================
+## Show multiplier axis ---------------------------------------------------- 
 mult <- function(u){
   mult <- ifelse(u==1000000,paste0('(x million)'),ifelse(u>1,paste0('(x',u,')'),''))  
   return(mult)  
 }
-plot_runesc <- function(dat,u){
-  par(yaxs='i',bty='l')
-  plot(R/u~Yr,data=dat,type='l',ylim=c(0,with(dat,max(R,S,na.rm =TRUE)/u)),xlab='',ylab='')
-  lines(S/u~Yr,data=dat,lty=2)
-}
-#plot_runesc <- function(dat,u){
-# ggplot() + ylim(0, 100)+c(0,with(dat,max(R,S,na.rm =TRUE)/u))+     
-# geom_line(data = dat, aes(x=Yr,y=R/u))+geom_line(data = dat, aes(x=Yr,y=S/u),linetype = "dashed")
-#}
-
-add_legend <- function(...) {
-  par(mar=c(0,0,0,0))
-  plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n',xlab='',ylab='')
-  legend(...)
-}
-#----- Show Color Shades -------------------------------------------------------   
-tcol <- function(color, percent = 50, name = NULL) {
-  #	  color = color name
-  #	percent = % transparency
-  #	   name = an optional name for the color
-  ## Get RGB values for named color
-  rgb.val <- col2rgb(color)
-  ## Make new color using input color as base and alpha set by transparency
-  t.col <- rgb(rgb.val[1], rgb.val[2], rgb.val[3],
-               max = 255,
-               alpha = (100-percent)*255/100,
-               names = name)
-  return(t.col)
-}
-
-
+#'===============================================================================
+#  1.0 Data Modification ---- 
+#'===============================================================================
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  1.1  age.out:   Read run data and get age range out 
+## 1.1  age.out:   Read run data and get age range out ----
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 age.out <- function(agedata){
   eage <- names(agedata)[substr(names(agedata),1,1) =='a']
@@ -58,7 +30,7 @@ age.out <- function(agedata){
 }
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  1.1  make.age:   Read run data and create age data 
+#  1.2  make.age:   Read run data and create age data 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 make.age <- function(agedata,min.age,max.age,combine=TRUE){
   eage <- names(agedata)[substr(names(agedata),1,1) =='a']
@@ -76,49 +48,51 @@ make.age <- function(agedata,min.age,max.age,combine=TRUE){
 # Combine of eliminate age   
   if(isTRUE(combine)){ 
     ac$age <- with(ac, ifelse(age<min.age,min.age,ifelse(age >max.age,max.age,age)))
-    
    } else {
     ac <- ac[which(ac$age>=min.age & ac$age<=max.age),]
-  } 
-    
+   } 
+# change NA to 0  
+  ac[is.na(ac)] <- 0  
   # combine age 
   t.ac <- aggregate(.~age,sum,data=ac[,names(ac) != 'eage'])
   age <- t.ac$age
   t.ac <-data.frame(t(t.ac[,names(t.ac) != 'age']))
   names(t.ac) <- paste0('A',age)
+  t.ac <- data.frame(proportions(as.matrix(t.ac),margin=1))
   return(t.ac)
 }
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  1.1  maake.brood:   Read run data and create brood table and SR data
+##  1.3  make.brood:   Read run data and create brood table and SR data -----
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-make.brood <- function(data,fage){
-  # fage is the first return age
-  fage <- as.numeric(fage)
-  # nage is the number of return ages 
-  # Specifying that first age starts from 4th column and the last column is the 
-  # last age, number of ages are the number of columns from 4th col to the last col
-  nages <- dim(data)[2]-3
-  # lage is the lastreutn ages  
+make.brood <- function(data,p){
+  # Extract name of age data (A2,A3,etc)
+  A.age <- names(data)[substr(names(data),1,1) =='A']
+  # Convert the name to to numeric age
+  N.age <- as.numeric(substr(A.age,2,2))
+# fage is the first age 
+    fage <- min(N.age)
+  # nages is the number of return ages
+    nages <- length(N.age)
+  # lage is the last reutn ages  
   lage <- fage+nages-1
   # Calculate maximum brood year range: 
-  # Minimum year is first year return 
-  yr <- seq(min(data[,1])-lage,max(data[,1]))
-  # Set up brood year matrix    
-  brood <- matrix(0,ncol=nages+2,nrow = length(yr))
+  byr <- seq(min(data$Year)-lage,max(data$Year))
+  # Set up brood year matrix  
+  brood <- matrix(0,ncol=nages+2,nrow = length(byr))
   # First column is year 
-  brood[,1] <- yr
-  # Second column is Escapment by year   
-  brood[,2] <- c(rep(NA,lage),data[,2])
+  brood[,1] <- byr
+  # Second column is Escapement by year   
+  brood[,2] <- c(rep(NA,lage),data$S)
   # 3rd to the last columns are brood year return by age    
-  # Standardize the run age proporiton, so that sum of proportion is exactly 1    
+  # Age comp data 
+  if(isTRUE(p)) {data[,A.age] <- data$N*data[,A.age]}
+# Case: only 1 age (Pink Salmon)
   if(nages ==1){
-    p <- data[,-c(1:3)]/data[,-c(1:3)]  
-    brood[,3] <- c(rep(NA,lage-fage),p*data[,3],rep(NA,fage))
+    brood[,3] <- c(rep(NA,lage-fage),data[,3],rep(NA,fage))
     } else { 
-    p <- data[,-c(1:3)]/rowSums(data[,-c(1:3)])
     for(i in 1:nages){
-      brood[,i+2] <- c(rep(NA,lage-fage+1-i),p[,i]*data[,3],rep(NA,fage+i-1))
+      brood[,i+2] <- c(rep(NA,lage-fage+1-i),data[,i+3],rep(NA,fage+i-1))
     }
     }
   # Change to data.frame 
@@ -129,33 +103,61 @@ make.brood <- function(data,fage){
   if(nages==1){
     brood$Recruit <- brood[,-c(1:2)]
   } else {
-  brood$Recruit <- rowSums(brood[,-c(1:2)])
+    brood$Recruit <- rowSums(brood[,-c(1:2)])
   }
   # Create SR data 
   SR <- brood[complete.cases(brood),c('b.Year','Spawner','Recruit')]
-  out <- list(brood=brood,SR=SR,N = data)
+  out <- list(brood=brood,SR=SR)
   # Output data is a list data    
   return(out)
 }
 
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  1.2  cut.data: Cut data based on specified years
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+#'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+##  1.4  cut.data: Cut data based on specified years -----
+#'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  cut.data <- function(data, years){
    x <- data[data$Yr>=years[1] & data$Yr<=years[2],]
    return(x)
  }
 
-# Cut raw data based on brood years   
+### Cut raw data based on brood years -----  
  cut.N.data <- function(data, years,lyear){
    x <- data[data[,1]>=years[1] & data[,1]<=(years[2]+lyear),]
    return(x)
  }
- 
- 
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  2.5  Summary function  
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  
+#'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+##  1.5  Text functions -----  
+#'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#' function extract right 
+substrRight <- function(x, n){
+  substr(x, nchar(x)-n+1, nchar(x))
+}
+
+  
+#'==============================================================================
+#  2.0  Data Summmary functions  -----  
+#'==============================================================================
+#'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+##  2.1  sum.ci -----  
+#   Get summary from MCMC matrix
+#'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+sum.ci <- function(x,ci){
+  p <- (100-ci)/200
+  min <- apply(x,2,min, na.rm=TRUE)
+  max <- apply(x,2,max, na.rm=TRUE)
+  lci <- apply(x,2, function(x) quantile(x,prob=p,na.rm=TRUE))
+  uci <- apply(x,2, function(x) quantile(x,prob=1-p,na.rm=TRUE))
+  mean <- apply(x,2,mean, na.rm=TRUE)
+  median <- apply(x,2,median, na.rm=TRUE)
+  sd <-  apply(x,2,sd, na.rm=TRUE)
+  out <- data.frame(min=min, max=max, sd=sd, mean=mean,median=median,lci=lci,uci=uci)
+ }
+#'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+##  2.2  sum.fun -----  
+#   Get summary from MCMC data.frame
+#'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 sum.fun <- function(x,ci){
   p <- (100-ci)/200
   min <- sapply(x,min, na.rm=TRUE)
@@ -171,39 +173,58 @@ sum.fun <- function(x,ci){
  }
 
 
-#===============================================================================
+#'===============================================================================
 # 3.0  Simulation functions: Read model specification and simulation data, 
 #      calculate simulated SEQ, Smsy, Umsy, Smax
 #      Clean up simulation results
-#===============================================================================
-#-------------------------------------------------------------------------------
-# remove.out: remove outliers   
-#-------------------------------------------------------------------------------
-remove.out <- function(x){
+#'===============================================================================
+
+#'-------------------------------------------------------------------------------
+# Id.outliers: Identify outliers ---
+#'-------------------------------------------------------------------------------
+outliers <- function(x){
   out <- boxplot(x, plot=FALSE)$out
-  r <- -which(x %in% out)
+  r <- which(x %in% out)
   return(r)
 }
 
-#-------------------------------------------------------------------------------
+Id.outliers <- function(dat,target){ 
+# Remove obvious outlier data 
+# Assign 1 when beta or lnalpha are less than 0   
+  dat$Remove <- ifelse(dat$beta<=0,1,NA)
+#  temp <- ifelse(dat$beta>0,log(0.01*dat$beta/(1-0.01*dat$beta)),NA)
+#  temp[which(dat$Remove>=1)] <- NA
+#  if(length(outliers(temp)>0)) dat$Remove[outliers(temp)] <- 2
+  pars <- c('beta','lnalpha')
+  if(target=='me'){pars <- c('beta','lnalpha.c')}
+  for(i in 1:2){
+  temp <-dat[,pars[i]]
+  temp[which(dat$Remove>=1)] <- NA
+  temp <- ifelse(temp>0,log(0.001*temp/(1-0.001*temp)),NA)
+    if(length(outliers(temp)>0)) dat$Remove[outliers(temp)] <- (i+1) 
+  }
+  return(dat)
+ }
+
+#'-------------------------------------------------------------------------------
 # sim.out: Read MCMC data, remove outliers, and calculate biological reference 
 # sim:  JAG MCMC 
 # d:  multiplier 
 # model:  SR model specification 
 # add:  model addition (AR1, TVA)
-# model.br: biological reference calculation funciton
-#-------------------------------------------------------------------------------
+# model.br: biological reference calculation function
+#'-------------------------------------------------------------------------------
 sim.out <- function(sim,d,add,model,model.br){
 #D is multiplier.   
   D <- as.numeric(d)
 # sim should include followings: 'lnalpha','beta', lnalphai
   post <- as.data.frame(sim)
 # 
-    if(add=='kf'){
+  if(add=='kf'){
 # for TVA model calculate median lnalphai and simga.lnalpha
     post$lnalpha <- apply(post[,grep(pattern='lnalphai',names(post),value=TRUE)],1, FUN=median, na.rm=TRUE)
     post$sigma.lnalpha <- apply(post[,grep(pattern='lnalphai',names(post),value=TRUE)],1, FUN=sd, na.rm=TRUE)
-    }
+  }
     post$alpha <- exp(post$lnalpha)
 # Calculate Mean R adjustment     
   if(add=='ar1'){
@@ -211,9 +232,9 @@ sim.out <- function(sim,d,add,model,model.br){
     } else {post$lnalpha.c <- post$lnalpha+0.5*post$sigma^2}
     post$alpha.c <- exp(post$lnalpha.c)
   
-#-------------------------------------------------------------------------------
+#'-------------------------------------------------------------------------------
 # Create Biological reference points
-#-------------------------------------------------------------------------------
+#'-------------------------------------------------------------------------------
    br <- with(post,model.br(lnalpha,beta,D))
    br.c <- with(post,model.br(lnalpha.c,beta,D))
    post$Seq <- br$Seq
@@ -225,32 +246,20 @@ sim.out <- function(sim,d,add,model,model.br){
    post$Umsy.c <- br.c$Umsy
    post$Sgen.c <- br.c$Sgen
    post$Smax <- br$Smax   
-
-#-------------------------------------------------------------------------------
-# Remove outlier  
-#-------------------------------------------------------------------------------
-  # Remove obvious outlier data   
-  post <- post[post$beta>0,]
-  post <- post[post$Umsy>0,]
-  if(length(remove.out(post$beta))>0) post <- post[remove.out(post$beta),] 
-  if(length(remove.out(post$alpha))>0) post <- post[remove.out(post$alpha),] 
-  if(length(remove.out(post$alpha.c))>0) post <- post[remove.out(post$alpha.c),] 
-  if(length(remove.out(post$Seq))>0) post <- post[remove.out(post$Seq),] 
-  if(length(remove.out(post$Smax))>0) post <- post[remove.out(post$Smax),] 
   return(post)
 }  # End sim.out
 
-#-------------------------------------------------------------------------------
-# 4.0  SR.pred.sim:  Read simulation data, and create  
+#'-------------------------------------------------------------------------------
+# 4.0  SR.pred.sim:  Read simulation data, and create  ----
 #   Create predicted Recruit and Yield (CI,PI) at given S
-#-------------------------------------------------------------------------------
-SR.pred.sim <-function(SRpar,D,max.s,srmodel,add,len.sim){
-#---------- Extract MCMC SR Model Parameters -----------------------------------
-# Mean or Median prediction-----------------------------------------------------  
+#'-------------------------------------------------------------------------------
+SR.pred.sim <-function(SRpar,D,S,srmodel,add){
+#'---------- Extract MCMC SR Model Parameters -----------------------------------
+#' Mean or Median prediction-----------------------------------------------------  
   lnalpha.c <- SRpar$lnalpha.c  
   lnalpha <- SRpar$lnalpha 
   beta <- SRpar$beta
-# Extract sigma-----------------------------------------------------------------  
+#' Extract sigma-----------------------------------------------------------------  
   if(add == 'ar1'){
     sigma <- with(SRpar, sqrt(sigma^2/(1-phi^2)))
   } else if(add == 'kf'){
@@ -259,33 +268,40 @@ SR.pred.sim <-function(SRpar,D,max.s,srmodel,add,len.sim){
   } else {
     sigma <- SRpar$sigma
   }
-  
-# Calculate maximum S in interger 
-  maxb <- ceiling(max.s/(10^D))*(10^D)
-# Cut into 201 segments (can be increased)
+#' Cut into 201 segments (can be increased)
 # This allows each number be integer
-  S <- seq(0,maxb, length.out=len.sim) 
+#  S <- seq(0,max.s, length.out=len.sim)
+  len.sim <- length(S)
 # Get the number of simulation (row)  
   nrow <- length(lnalpha)  
 # Create Expected mean and observed Recruit MCMC matrix    
-  mc.R <- matrix(NA,nrow=nrow,ncol=len.sim)   # Model expected recruit Median -------------
-  mc.R.c <- matrix(NA,nrow=nrow,ncol=len.sim)   # Model expected recruit Mean -------------
-  mc.R.p <- matrix(NA,nrow=nrow,ncol=len.sim) # Model expected observed recruit-----
+  mc.R <- matrix(NA,nrow=nrow,ncol=len.sim)   # Model expected recruit Median 
+  mc.R.c <- matrix(NA,nrow=nrow,ncol=len.sim)   # Model expected recruit Mean 
+  mc.R.p <- matrix(NA,nrow=nrow,ncol=len.sim) # Model expected observed recruit
 #---------- Calculate expected returns from each MCMC ------------------------ 
   for(i in 1:nrow){
-    # Calculate expected Returns form each MCMC SR model parameters
+# Calculate expected Returns form each MCMC SR model parameters
 # mc.R is Median Recruit when target is Median, and Mean Recruit when target is Mean
     mc.R[i,] <- srmodel(lnalpha[i],beta[i],S,D)
     mc.R.c[i,] <- srmodel(lnalpha.c[i],beta[i],S,D)
-    # mc.R.p adds observation error (sigma): this case no lognormal correction is needed 
-    mc.R.p[i,] <- exp(rnorm(len.sim,log(srmodel(lnalpha[i],beta[i],S,D)),sigma[i]))
+# mc.R.p adds observation error (sigma): this case no lognormal correction is needed
+    mc.R.p[i,] <- exp(rnorm(len.sim,log(mc.R[i,]),sigma[i]))
   }  
 # Create expected mean/median (mc.Y) and observed Yield (mc.Y.p) matrix
 #  Expected Median or Mean Yield
-  mc.Y <-  t(t(mc.R)-S) 
-  mc.Y.c <-  t(t(mc.R.c)-S) 
+#  mc.Y <-  t(t(mc.R)-S) 
+  mc.Y <- sweep(mc.R,MARGIN = 2,S,'-')
+#  mc.Y.c <-  t(t(mc.R.c)-S) 
+  mc.Y.c <- sweep(mc.R,MARGIN = 2,S,'-')
 #  Expected Annual Yield
-  mc.Y.p <-  t(t(mc.R.p)-S) 
+#  mc.Y.p <-  t(t(mc.R.p)-S) 
+  mc.Y.p <- sweep(mc.R.p,MARGIN = 2,S,'-')
+#  Expected SR 
+  mc.lnRS <- log(sweep(mc.R,MARGIN = 2,S,'/'))
+  mc.lnRS.p <- log(sweep(mc.R.p,MARGIN = 2,S,'/'))
+  mc.lnRS[is.nan(mc.lnRS)] <- NA
+  mc.lnRS.p[is.nan(mc.lnRS.p)] <- NA  
+   
 #------  Create Output list file -----------------------------------------------  
   out <- list()
   out$S <- S
@@ -295,6 +311,8 @@ SR.pred.sim <-function(SRpar,D,max.s,srmodel,add,len.sim){
   out$Y <- mc.Y
   out$Y.c <- mc.Y.c
   out$Y.p <- mc.Y.p
+  out$lnRS <- mc.lnRS
+  out$lnRS.p <- mc.lnRS.p
   return(out)
 }
 
@@ -311,9 +329,10 @@ pred_CI<- function(SR.pred, CI) {
 # Model used S
   S <- Pred$S
 # Median RS 
-  RS.md <- apply(Pred$R.p,2,median)
+  RS.md <- apply(Pred$R.p,2,function(x) median(x,na.rm=TRUE))
 # Mean RS (Trim mean)
-  RS.me <- apply(Pred$R.p,2,function(x) mean(x, trim=0.01))
+  RS.me <- apply(Pred$R.p,2,function(x) mean(x, trim=0.01,na.rm=TRUE))
+
 # Calculate Lower and upper CI-PI
   Rl <- apply(Pred$R,2,function(x) quantile(x, pci))
   Ru <-  apply(Pred$R,2,function(x) quantile(x, 1-pci))    
@@ -321,7 +340,6 @@ pred_CI<- function(SR.pred, CI) {
   Rl.p <- apply(Pred$R.p,2,function(x) quantile(x, pci))
 # Upper PI    
   Ru.p <- apply(Pred$R.p,2,function(x) quantile(x, 1-pci))
-# Create dataframe   
   out <- data.frame(cbind(S,RS.md,RS.me,Rl,Ru,Rl.p,Ru.p))
 # Name 
   names(out) <- c('S','RS.md','RS.me','Rl','Ru','Rl.p','Ru.p')
@@ -329,41 +347,52 @@ pred_CI<- function(SR.pred, CI) {
 }  
 
 #===============================================================================
-# 4.0  plotting functions: 
+# 3.0  plot density distribution of MCMC results -----
 #===============================================================================
-#-------------------------------------------------------------------------------
-# plot_density 
-# plot density distribution of MCMC results 
-#-------------------------------------------------------------------------------
-plot_density <- function(sim,D,ar1,model='Ricker',target='md'){
-  par(mfrow=c(2,4),mar = c(1.75,1.5,1.5,1.75),xaxs='i',yaxs='i',bty='l')
+plot_density_gg <- function(sim,D,ar1,model='Ricker',target='md',u){
+   p <- ggplot(sim)+
+     theme(axis.title.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
   if(target =='me'){
-    plot(density(sim$alpha.c),main='alpha.c',xlab='',ylab='')
-    plot(density(sim$lnalpha.c),main='lnalpha.c',xlab='',ylab='')
-    plot(density(sim$beta),main=paste0('beta',' x 10^(',-D,')'),xlab='',ylab='')
-    if(ar1==TRUE){plot(density(sim$phi),main='Phi',xlab='',ylab='')}
-    plot(density(sim$Seq.c), main='Seq.c',xlab='',ylab='')
-    plot(density(sim$Smsy.c), main='Smsy.c',xlab='',ylab='')  
-    plot(density(sim$Umsy.c), main='Umsy.c',xlab='',ylab='') 
-    plot(density(sim$Sgen.c), main='Sgen.c',xlab='',ylab='') 
+  p1 <- p+geom_density(aes(x=alpha.c))+ggtitle("alpha.c")+xlim(range(sim$alpha.c,na.mr=TRUE))
+  p2 <- p+geom_density(aes(x=lnalpha.c))+ggtitle("lnalpha.c")+xlim(range(sim$lnalpha.c,na.mr=TRUE))
+  p4 <- p+geom_density(aes(x=Seq.c))+ggtitle("Seq.c")+xlim(range(sim$Seq.c,na.mr=TRUE))
+  p5 <- p+geom_density(aes(x=Smsy.c))+ggtitle("Smsy.c")+xlim(range(sim$Smsy.c,na.mr=TRUE))
+  p6 <- p+geom_density(aes(x=Umsy.c))+ggtitle("Umsy.c")+xlim(range(sim$Umsy.c,na.mr=TRUE))
+  p7 <- p+geom_density(aes(x=Sgen.c))+ggtitle("Sgen.c")+xlim(range(sim$Sgen.c,na.mr=TRUE))
   } else {
-    plot(density(sim$alpha),main='alpha',xlab='',ylab='')
-    plot(density(sim$lnalpha),main='lnalpha',xlab='',ylab='')
-    plot(density(sim$beta),main=paste0('beta',' x 10^(',-D,')'),xlab='',ylab='')
-    if(ar1==TRUE){plot(density(sim$phi),main='Phi',xlab='',ylab='')}    
-    plot(density(sim$Seq), main='Seq',xlab='',ylab='')
-    plot(density(sim$Smsy),main='Smsy',xlab='',ylab='')
-    plot(density(sim$Umsy), main='Umsy',xlab='',ylab='')
-    plot(density(sim$Sgen), main='Sgen',xlab='',ylab='') 
+  p1 <- p+geom_density(aes(x=alpha))+ggtitle("alpha")+xlim(range(sim$alpha,na.mr=TRUE))
+  p2 <- p+geom_density(aes(x=lnalpha))+ggtitle("lnalpha")+xlim(range(sim$lnalpha,na.mr=TRUE))
+  p4 <- p+geom_density(aes(x=Seq))+ggtitle("Seq")+xlim(range(sim$Seq,na.mr=TRUE))
+  p5 <- p+geom_density(aes(x=Smsy))+ggtitle("Smsy")+xlim(range(sim$Smsy,na.mr=TRUE))
+  p6 <- p+geom_density(aes(x=Umsy))+ggtitle("Umsy")+xlim(range(sim$Umsy,na.mr=TRUE))
+  p7 <- p+geom_density(aes(x=Sgen))+ggtitle("Sgen")+xlim(range(sim$Sgen,na.mr=TRUE))
   }
-  if(model=='Ricker'){plot(density(sim$Smax), main='Smax',xlab='',ylab='')}
-}
+  p3 <- p+geom_density(aes(x=beta))+ggtitle(paste0('beta',' x 10^(',-D,')'))
+  if(isTRUE(ar1)){
+     p8 <- p+geom_density(aes(x=phi))+ggtitle("phi")+xlim(range(sim$phi,na.mr=TRUE))
+     pout <- plot_grid(p1,p2,p3,p8,p4,p5,p6,p7)  
+    } else {
+     pout <- plot_grid(p1,p2,p3,p4,p5,p6,p7)
+    }
+  if(model=='Ricker'){
+  p9 <- p+geom_density(aes(x=Smax))+ggtitle("Smax")+xlim(range(sim$Smax,na.mr=TRUE))
+    theme(axis.title=element_blank(),axis.text.y=element_blank())
+    if(isTRUE(ar1)){
+    pout <- plot_grid(p1,p2,p3,p8,p4,p5,p6,p7,p9)      
+    } else {
+    pout <- plot_grid(p1,p2,p3,p4,p5,p6,p7,p9)  
+    }
+  }
+  return(pout)
+  }
 
+#'===============================================================================
+# 5.0 Profile Analyses ----
+#'===============================================================================
 
-
-#===============================================================================
-# 4.1 Prop range:  Create 
-#===============================================================================
+#'===============================================================================
+## 4.1 Prob.calc: Create Profile Probability of achieving target ----
+#'===============================================================================
 Prob.calc <- function(Y,gl){
   # Import MCMC Expected mean Yields 
   # Mean yields    
@@ -371,6 +400,46 @@ Prob.calc <- function(Y,gl){
   Ypm <- colMeans(as.matrix(Yb))  # mean yield
   return(Ypm)
  }
+
+#'===============================================================================
+## 4.2 S.intersect: Find value of S that intersect target  Probability ----
+#'===============================================================================
+S.intersect <- function(S,prof,tp){
+    b.p <- S[prof > tp]
+    if(length(b.p)>0) {sect <- c(min(b.p),max(b.p))} else {sect <- c(NA,NA)}
+    return(sect)
+ }
+
+#'===============================================================================
+## 4.3 prof_sim: for Targe Yield and Recruit Analyses ----
+#' Calculate probability of exceeding target (tg)at given S and 
+#'  find S ranges that intersects with target probability of achieving (tpg) 
+#'  Create probability profile plot 
+#'===============================================================================
+
+prof_sim <- function(S,pred.m,pred.a,tg,tpg,u,target){
+# Calculate probability profile  
+  prof.m <- Prob.calc(pred.m,tg*u)
+  prof.a <- Prob.calc(pred.a,tg*u)
+  prof.ma <- data.frame(S=S,prof.m=prof.m, prof.a=prof.a)
+# Calculate intersect S range   
+  b.p <- S.intersect(S,prof.m,tpg)
+  b.pa <- S.intersect(S,prof.a,tpg)
+  range <- data.frame(b.p,b.pa)
+# Create profile plot 
+  tex <- ifelse(target =='me','Mean','Median')
+  srange <- as.numeric(range$b.p)
+  p1 <- ggplot(prof.ma)+
+    geom_line(aes(x=S,y=prof.m,linetype=tex))+
+    geom_line(aes(x=S,y=prof.a,linetype='Annual'))+
+    geom_hline(yintercept=tpg, col=2)+
+    scale_x_continuous(expand=c(0,0),limits=c(0,NA),labels = label_number(scale = 1/u),n.breaks = 10,oob=oob_keep)+
+    scale_y_continuous(expand=c(0,0),limits=c(0,1),n.breaks = 10,oob=oob_keep)+
+    labs(x=paste('Escapement',mult(u)),y='Probability')+
+annotate('rect', xmin = srange[1], xmax = srange[2], ymin = 0, ymax =1, alpha=0.1, fill=3,na.rm = TRUE)+
+  scale_linetype_manual(name ="", values=c(2,1))
+  return(list(prof.ma=prof.ma,range=range,fig=p1))  
+ }  
 
 #===============================================================================
 # 4.2  Cut out simulation output by specific range 
@@ -392,37 +461,37 @@ SR.cut <-function(SR.pred,Srange){
 }
 
 
-#------ Show two density plots in one fig --------------------------------------
-mult.den.plt <- function(dat.a,dat.m,main.tx,xlab.tx,leg.tx){
-  d1 <- density(dat.a)
-  d2 <- density(dat.m)
-  plot(d1,xlim =c(min(d1$x),max(d1$x)),main=main.tx,xlab=xlab.tx,ylab='',lty=2)
-  par(new = TRUE)  
-  plot(d2 ,lty=1,xlim =c(min(d1$x),max(d1$x)),axes = FALSE,xlab='',ylab='',main='')
-  legend('topright',leg.tx, lty=c(2,1),bty='n')
+
+mult.den.plt.gg <- function(dat.a,dat.m,xlab.tx,leg.tx,u){
+  df <- rbind(data.frame(x=as.vector(dat.m),a=leg.tx),data.frame(x=as.vector(dat.a),a='Annual'))
+     p1 <- ggplot()+theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.line.y = element_blank(),axis.ticks.y=element_blank())+  
+  stat_density(data=df,aes(x=x, y=..scaled..,linetype=a), position="dodge", geom="line")+
+   scale_linetype_manual(name ="", values=c(2,1))+  
+   scale_x_continuous(expand=c(0, 0),labels = label_number(scale = 1/u),n.breaks = 10,oob=oob_keep) + xlab(paste(xlab.tx,mult(u)))+
+   scale_y_continuous(expand=c(0, 0),limits=c(0,NA))
+  return(p1)  
+
 }
 
+
 #===============================================================================
-#  Profile Analyses functions 
+#  5.0 Profile Analyses functions ---- 
 #===============================================================================
 #-------------------------------------------------------------------------------    
 # profile --- Profile Calculation Function  
 # This function calculated probability of meeting specific target at S range 
 # Calculate lower and upper end of S that meeting the target achievement criteria 
-#-------------------------------------------------------------------------------    
-profile <- function(S, M.rep, mp,tp) {
   #	S: Spawner 
   #	M.rep: Yield, Run, simulation matrix
-  # M.rep: nrow:  number of simulation replicated 
-  # M.rep: ncol:  number of S  nocl = length(S)
   # mp: Target criteria: mp < 1, Percentage of max, mp > 1, specific target 
   # tp: Target percentage  (0-1)
-  # Determine the dimention of temporal matrix  
-  nrows <- dim(M.rep)[1]
-  ncols <- dim(M.rep)[2]
+#-------------------------------------------------------------------------------    
+profile <- function(S, M.rep, mp,tp) {
+  nrows <- dim(M.rep)[1]   # The number of simulation replicated
+  ncols <- dim(M.rep)[2]   # The number of S = length(S)
   # Create an empty matrix  
   temp <-  matrix(0,nrow = nrows,ncol=ncols) 
-  # For each simulation, assign 1 if value of M.rep is > minimum % M.rep
+  # For each simulation, assign 1 if value of M.rep is > minimum M.rep
   # Assign 0  0 if not
   if(mp > 1){
     for(j in 1:nrows){temp[j,] <- ifelse(M.rep[j,] > mp,1,0) } 
@@ -441,64 +510,8 @@ profile <- function(S, M.rep, mp,tp) {
   return(out)
 }
 
-# plot_profile  --- Profile plotting  Function  ---------------------------------   
-plot_profile <- function(TN,prof,prof.st,S,mip,tp,u){
-  # TN: Profile Target name 
-  # prof: user defined Profile 
-  # profst: standard Profile
-  # S: Spawner 
-  # mip: user defined min p 
-  # tp: user defined target p 
-  # u: user defined multiplier output  
-  mult <- mult(u)
-  S <- S/u
-  #---------------------------------------------------------------------------
-  par(xaxs='i',yaxs='i',bty='l',las=1)
-  #  Standard profile plots 
-  plot(S,prof.st[1,],type='l',col=1, ylim=c(0,1),ylab = 'Probability',
-       xlab=paste('Escapement',mult),main=paste(TN,'Profile')) 
-  lines(S,prof.st[2,],lty = 2,col=1)
-  lines(S,prof.st[3,],lty = 4,col=1)
-#  abline(h = stp,lwd=1,col=1)
-  #  User defined profile 
-  lines(S,prof,lty = 1,lwd=2,col=6)
-  # User defined target  
-  abline(h = tp,lwd=2,col=2)
-}
 
-
-# Prof_fig  --- Profile summary plot  Function  ---------------------------------   
-Prof_fig <- function(prof,crit,u){
-  layout(matrix(1:2, ncol=2),widths=c(2,1))
-# -------Extract Profile data  -------------------------------------------------
-  EG <- reactive({prof$EG()})
-  EG.st <- reactive({prof$EG.st()})
-  p.min <- reactive({prof$p.min()})   # Minimum goal 
-  p.t <- reactive({prof$p.t()})       # % achievement target
-  plt.profile <- reactive({prof$plt.profile()})
-  # Import minimum Smsy %
-  p.min <- as.numeric(p.min())/100
-  # Import minimum % achieving 
-  p.t <- as.numeric(p.t())/100  
-  replayPlot(plt.profile())
-  S <- EG()$S.Range/u
-  c.col <- ifelse(crit=='MSY',3,4)
-  polygon(c(S,rev(S)),c(c(0,0),c(1,1)),col=tcol(c.col,80),border=NA)
-  #  Add legends 
-  percent <- c(90,80,70,100*p.min)
-  apercent <- 100*p.t
-  BEG.st <- EG.st()$S.Range.st
-  BEG <- EG()$S.Range
-  lg <- c(BEG[1],BEG.st[,1])
-  ug <- c(BEG[2],BEG.st[,2])
-  txt <- c(paste(percent,'%',crit,apercent,'% target:',lg,' - ',ug))
-  add_legend("left", legend= txt, lwd=c(1,1,1,2), lty=c(1,2,4,1),
-             col=c(1,1,1,6),text.font = c(1,1,1,2),box.lty=0)
- }
-
-
-
-#===============================================================================
+#'===============================================================================
 # Management Strategy Evaluation simulation function 
 # MSE.sim  
 # This function run MSE : Input data
@@ -508,10 +521,10 @@ Prof_fig <- function(prof,crit,u){
 # S0: Actual recent observed escapement that were not used for SR analyses
 # e.Rec: Annual recruitment deviation   
 # First years of recruits and run are generated by actual observed escapement 
-#===============================================================================
-#-------------------------------------------------------------------------------
-# Fishery opening trigger 
-#-------------------------------------------------------------------------------  
+#'===============================================================================
+#'------------------------------------------------------------------------------
+# Fishery opening trigger-----
+#'------------------------------------------------------------------------------ 
 # Low: Fishery opens when expected run exceeds lower goal
 # Middle: Fishery opens when expected run exceeds Mid goal points 
 # Upper:  Fishery opens when expected run exceeds Upper goal 
@@ -523,11 +536,34 @@ FTA <-function(cmode,LEG,UEG){
   ))
   return(FT)
   }
+# Low: Fishery opens when expected run exceeds lower goal
+# Middle: Fishery opens when expected run exceeds Mid goal points 
+# Upper:  Fishery opens when expected run exceeds Upper goal 
+#'------------------------------------------------------------------------------
+# Harvest Control -----
+# MSST: Minimum Stock Size Threshold
+#'------------------------------------------------------------------------------ 
+H.control <-function(Npred,MSP,FMIN,FMSY,ABCP){
+# Calculate FABC 
+  FABC <- ABCP*FMSY
+# Calculate Smsy 
+  Smsy <- Npred*(1-FMSY)
+# Calculate MSST
+  MSST <- MSSTP*Smsy
+# NL: Critical low abundance
+  NL <- MSST/(1-FMIN)
+#  Catch <- ifelse(
+    # Case 1: Npred < MSST 
+#    Npred < NL, FMIN,
+#    # Case 2: Npred > MSST 
+#    ifelse(,,),
+#    )
+}
 
 MSE.sim <- function(srmodel,lnalpha.i,beta,S0,D,e.Rec,e.p,e.pred,e.imp,FT,mH){
-#-------------------------------------------------------------------------------
+#'-------------------------------------------------------------------------------
 #  Create Brood Ages 
-#-------------------------------------------------------------------------------  
+#'-------------------------------------------------------------------------------  
 # lage: last age, nages: number of adult return age, fage: first adult return age
   lage <- length(S0)
   nages <- dim(e.p)[2]
@@ -539,7 +575,7 @@ MSE.sim <- function(srmodel,lnalpha.i,beta,S0,D,e.Rec,e.p,e.pred,e.imp,FT,mH){
 # Brood Year Recruit: R0: straight from model, R: R0 with error 
   R0 <- numeric(nyrs+lage)
   R <- numeric(nyrs+lage)
-# Annual Run: N: True , N.pred: Assessed run with error 
+# Annual Run: N: True Run , N.pred: Predicted Run: Assessed run with error 
   N <- numeric(nyrs)
   N.pred <- numeric(nyrs)
 # Annual Run by age 
@@ -567,22 +603,23 @@ MSE.sim <- function(srmodel,lnalpha.i,beta,S0,D,e.Rec,e.p,e.pred,e.imp,FT,mH){
   for (a in 1:nages){N.ta[b.y+fage+a-1,a] <- R[b.y]*e.p[b.y,a]}
   }  # Expected return   
   
-  #-------------------------------------------------------------------------------
-  #  Population Dynamics: Management Strategies (y is calendar year) 
-  #-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+#  Population Dynamics: Management Strategies (y is calendar year) 
+#-------------------------------------------------------------------------------
   for (y in 1:nyrs){
-    # Brood year b.y is y + lage
+# Brood year b.y is y + lage
     b.y <-y+lage
-    # Annual Run is sum of all ages
+# Annual Run is sum of all ages
     N[y] <- sum(N.ta[b.y,])
-    # Predicted Run with error 
+# Predicted Run with error 
     N.pred[y] <- N[y]*(e.pred[y])
-    # Management based on Escapement goal 
+    
+# Harvest Target----------------------------------------------------------------
+    PY <- N.pred[y] - FT   # Predicted Yield  
     H.target[y] <- ifelse(
-      # Case 1 assessed run is less than FT, Fishery is minimum harvest
-      # minimum harvest = 0 for Escapement priority or defined for other strategy     
-      N.pred[y] < FT, mH[1], 
-      # Case 2 assessed run is greater than FT, 
+      # Case 1: Predicted Yield is negative: Fishery target is minimum harvest
+      PY < 0, mH[1], 
+      # Case 2: Predicted Yield is positive: 
       # fishery target is surplus or min harvest whichever bigger  
       # fishery target is also between surplus and the max harvest (fishing capacity) whichever smaller 
       min(mH[2],max(mH[1],(N.pred[y]-FT)))
@@ -677,7 +714,7 @@ MSE.sim2 <- function(srmodel,lnalpha.i,beta,S0,D,e.Rec,e.p,e.pred,e.imp,LEG,UEG,
 
 
 #===============================================================================
-#  Stars function:  
+#  Stars function----- 
 #===============================================================================
 # Modified from Sergei Rodionov's VBA and Andrew Gardner's Matlab codes to produce an R version of STARS. 
 # Go to http://www.climatelogic.com/overview for more information, or see the Rodionov (2004; 2006) references in the paper.

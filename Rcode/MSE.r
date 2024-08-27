@@ -235,8 +235,8 @@ names(p.N.age.ea) <- c('Age.1','Age.2','Age.3','Age.4','Age.5','Age.6','Age.7','
 
 barplot(t(p.N.age.na),ylim=c(0,1))
 
-df.bar <- barplot(t(p.N.age.na)
-points(df.bar,p.N.age.ea$Age.1pch=19)
+df.bar <- barplot(t(p.N.age.na))
+#points(df.bar,p.N.age.ea$Age.1pch=19)
 points(df.bar,rowSums(p.N.age.ea[,1:2]),pch=19)
 points(df.bar,rowSums(p.N.age.ea[,1:3]),pch=19)
 points(df.bar,rowSums(p.N.age.ea[,1:4]),pch=19)

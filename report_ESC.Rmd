@@ -1,0 +1,43 @@
+---
+title: "Escapement Goal Analysis Report"
+author:
+  - name:
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+#output: officedown::rdocx_document
+output: word_document
+reference_docx: template.docx
+
+
+params:
+Tbl_sum: NA
+srplot: NA
+---
+
+```{r,echo=FALSE,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,comment=NULL, dev='png',fig.dim = c(9,6),dpi=600,message=FALSE,background=NULL)
+#opts <- options(knitr.kable.NA = "")
+```
+
+
+```{r,echo = FALSE, fig.cap = paste0("Figure 1. Annyak Escapment times (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
+runesc()
+```
+
+
+
+
+```{r,echo = FALSE, fig.cap = paste0("Figure 2. Percentile Analyses")}
+
+```
+
+
+```{r,echo = FALSE, fig.cap = paste0("Figure 3.  Risk Analyses")}
+
+```
+
+```{r}
+kable(,caption = "Table 1.  Annual Escapement",format="pandoc" ) 
+```
+
+
+

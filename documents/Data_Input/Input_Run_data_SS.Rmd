@@ -1,0 +1,50 @@
+# State-Space Model Data Input
+
+Running State-Space model requires additional data **CV and efn** 
+In addition to the Run data, columns with required name cv_N, cv_E, cv_H, and efn are required.
+
+---
+
+| Year | | ....| | cv_N    | | cv_E  | |  cv_H | | efn  |
+|-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|---:|
+|_____|_|_______|_|______|_|_____|_|_____|_|_____|_|_____|
+|1966  | |.... | |0.27  | | 0.48 | | 0.02 | | 100 |
+|1967  | |....  | |0.35  | | 0.49 | | 0.02 | | 100 | 
+|1968  | |....  | |0.24  | | 0.37 | | 0.02 | | 100 |
+|1969  | |....  | |0.34  | | 0.57 | | 0.02 | | 100 |
+|1970  | |....  | |0.49  | | 0.67 | |	0.02 | | 100 | 
+|1971  | |.... | |0.33  | | 0.51 | |	0.02 | | 100 |
+|1972  | |....   | |0.14  | | 0.54 | |	0.02 | | 100 | 
+|_____|_|_______|_|______|_|_____|_|_____|_|_____|_|_____|
+
+   
+* cv_N: CV of Run size (usually large: 0.1 ~ 0.8)
+* cv_E: CV of Escapement size (usually large: 0.1 ~ 0.8)
+* cv_H: CV of Harvest size (usually small: 0.01 ~ 0.1)
+* efn: Effective sample size (usually: 50 - 100)
+
+---
+The model allows blank (NA) for one of the 3 cv columns, and estimate the missing cv as follows:  
+
+When run size is estimated by summing Escapement and Harvest: **Run = Escapement + Harvest**, run cv is not available. 
+In this case, keep cv_N column blank.  The app will estimate run CV as  
+$$run CV = \frac{\sqrt{(eCV\times Esc)^{^{2}}+(hCV\times H)^{^{2}}}}{Run}$$
+
+When Escapement is estimated by subtracting Harvest from Run: **Escapement = Run - Harvest**, escapement cv is not available.   
+
+In this case, keep cv_E column blank.  The app will estimate run CV as  
+$$esc CV = \frac{\sqrt{(runCV\times Run)^{^{2}}-(hCV\times H)^{^{2}}}}{Esc}$$
+
+$$harv CV = \frac{\sqrt{(runCV\times Run)^{^{2}}-(eCV\times Esc)^{^{2}}}}{H}$$
+
+**efn: Effective sample size**
+The efn is **NOT** an actual (e.g. scale) sample size to estimate run age composition, but **modeling weights** (i.e.,uncertainties about age composition).  efn of 100 usually indicates 90% CI of +/- 0.1-0.15.  
+**efn: Rule of thumb** 
+* 100: Default: average confidence   
+* <100: Less confident
+* >100: Highly confident  
+. 
+
+
+
+

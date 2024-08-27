@@ -1,0 +1,24 @@
+# Risk Analysis: 
+Risk analysis method method is developed by [Bernad et al. 2009](http://www.adfg.alaska.gov/FedAidPDFs/SP09-09.pdf). This analysis is aimed to develop an escapement goal for a non-targeted stocks that are harvested **incidentally**.  In this case, management objective of the non-targeted stock is providing setting a precautionary reference points (PRPs): a spawning abundance that has low probability of management concern. 
+
+The Risk analysis assess probability that series of low escapements occur in a row (and thus cause management concern) given that **(1) the stock productivity remained the same** and **(2) the stock productivity is reduced.**
+
+Fishery management risk has two sides: 
+
+* **Risk of action when the action is unwarranted** 
+  * This is a risk of activating management concern actions when a stock productivity did not decline. 
+  * Series of low escapement events occurred. 
+
+* **Risk of inaction when the action is warranted** 
+  * This is a risk of NOT activating management concern actions when a stock productivity declined. 
+  * Series of low escapement events did not occur. 
+
+At a given escapement level, the risk analyses method conducts a forward simulation and estimates (1) a probability of a stock getting below the escapement for **consecutive X years**  given that the stock productivity  did not change (i.e., the probability of unwarranted action) and  (2) a probability of a stock **NOT** getting below the escapement for **consecutive X years**  given that the stock productivity is **reduced by Y%** (i.e., the probability of inaction).
+
+To use the risk analyses you must have some management objectives:
+* Level of % drop productivity: How much % drop of productivity warrants management action?
+* Years of consecutive failures: What is a criteria for an action? 
+* Level of acceptable risks: How much risks are you willing to take? (risk of action and inaction?)
+* Balance of the two risks: You may not find no escapement level that meet both risks perfectly. Which risks are more concerning for management? 
+
+

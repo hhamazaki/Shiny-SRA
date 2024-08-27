@@ -1,0 +1,27 @@
+# Choosing SR model
+Running SR model is not limited for an escapement goal analyses. The model is useful for understanding biological profile of the stock. 
+
+## Ricker vs. Beverton-Holt SR models
+The major difference between the two models is density dependence characteristics.
+The Ricker model assumes **Overcompensation**:Recruits will diminish at higher escapement. The model assumes that recruit will reach the highest at a spawning level (Smax).  
+The B-H model assumes **Compensation**: Recruits will be asymptotic at higher escapement. B-H model does not have Smax.  
+
+## Standard, AR1, TVA Options
+Among the three model variants (Standard, AR1, and Time variant alpha), the difference between Standard and AR1 model is just assumption of error properties.  AR1 model assumes that error (deviation from the prediction) is serially correlated (i.e., if this year's error is positive, next year's error will also be positive).  Whether to use AR1 or standard can be decided by checking AR1 parameter **phi** at MCMC tab. **When phi at bottom or top of 5% includes 0, there is a strong indication that phi is not statistically different from zero, or that standard model is sufficient.**
+
+Time variant alpha model is useful to examine changes in productivity (ln.alpha) over time. The information can be used to assess biological reasoning for data truncation and difference between long-term and recent mean-median return-yield, but it is not recommended for setting an escapement goal.
+
+## State-Space Modeling
+Ordinary spawner-recruit modeling approach assumes that escapement data are accurate and precise (e.g., fish returns to single channel and escapement is observed by weir-tower). In this case, you are certain about escapement numbers.  However, in other cases, escapement data may not be accurate or precise. Escapment is observed by aerial survey, 
+
+The State-Space modeling is an alternative model running option.  The model is useful when there is a great uncertainties about data (Run, Escapement, Age composition).  The ordinary spawner-recruit model assumes that escapement data are accurate and precise (i.e., small CV).  However, when this not the case (e.g., escapement is reconstructed), state-space model takes into account of the uncertainties for estimation of SR model parameters.  State-Space model is also useful in the case of **missing data**.  However, running the state-space model takes more time. 
+
+
+## Considerataion SR model and data for setting an escapement goal. 
+
+Ideally, escapement goal should be based on long-term productivity. So that standard or AR1 model using all data is preferred. Trimming data should be based on significant biological justifications, such as apparent changes in spawning-rearing habitat.       
+unning time variant alpha model to check if there is a strong changes in productivity (ln.alpha). When recent productivity greatly differs from overall long-term productivity, the model will help inform how much recent expected return-yield will differ from long-term mean-median expected return-yield. 
+
+
+
+

@@ -19,9 +19,14 @@ knitr::opts_chunk$set(echo = FALSE,comment=NULL, dev='png',fig.dim = c(9,6),dpi=
 #opts <- options(knitr.kable.NA = "")
 ```
 
+```{r}
+# Run and Escapement time series plot 
+#runesc()
+```
+
 
 ```{r,echo = FALSE, fig.cap = paste0("Figure 1.  Spawner-recruit curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
-srplot()
+params$srplot
 ```
 
 
@@ -29,14 +34,14 @@ srplot()
 yldplot()
 ```
 
-```{r,echo = FALSE}
+```{r}
 #smsy.prof()
 #params$Plt_MSY_Prof
 cat("Figure 3. MSY Profile Analyses plot. ")
 ```
 
 
-```{r,echo = FALSE}
+```{r}
 #smax.prof()
 #params$Plt_MSR_Prof
 cat("Figure 4. Smax Profile Analyses plot. ")
@@ -44,23 +49,23 @@ cat("Figure 4. Smax Profile Analyses plot. ")
 
 
 
-```{r,echo = FALSE,eval=(input$dataType=='Run')}
-kable(round(brood.out()$brood,0),caption = "Table 1. Input brood table .")
+```{r,eval=(input$dataType=='Run')}
+#kable(round(brood.out()$brood,0),caption = "Table 1. Input brood table .")
 ```
 
 
-```{r,echo = FALSE,fig. }
+```{r,fig. }
 cat("Table 2.  JAGS Model Summary output.")
 print(run.JAGS())
 ```
 
-```{r,echo = FALSE}
+```{r}
 kable(run.JAGS()$summary,caption = "Table. JAGS summary",format="pandoc" ) 
 ```
 
 
 
-```{r,echo = FALSE}
+```{r}
 kable(params$Tbl_sum,caption = "Table 3.  Standard Spawner Recruit Analyses summary.  Note: outliers were removed.",format="pandoc" ) 
 ```
 

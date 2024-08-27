@@ -1,0 +1,91 @@
+# SR Model Outputs 
+
+After running the model, the model will produce following posteriors: 
+
+|Outputs  |   |    Note  |
+|  ------- |---:|-------:|
+|_________|__|________________________|
+| $ln(\alpha)$  |  | All models   | 
+| $\beta$    |   | All models   | 
+| $\sigma$    |  | All models    | 
+| $\phi$    |    |**AR1 option**  | 
+| $\varepsilon_{0}$ |   |**AR1 option**  | 
+| $\sigma _{\omega}$|    |**TVA option**| 
+| $ln(\alpha)_{y}$ |    |**lnalpha for each brood year: TVA option**| 
+| $N_{y}$ |    |**Model estimated: run SS model**| 
+| $H_{y}$ |    |**Model estimated harvest SS: model**| 
+| $E_{y}$ |    |**Model estimated escapement SS: model**| 
+| $p_{y}$ |    |**Model estimated Run by age proportion**|
+| $q_{y}$ |    |**Model estimated Brood by age proportion**|
+|_________|_|________________|_|________________________|
+---
+
+
+## SR and Yield Plots 
+SR and Yield plots show standard SR and Yield plots with options of displaying Smsy, Smax, and Sgen.
+* Smsy: spawner size that produces the maximum sustainable yield (MSY)
+* Smax: spawner size that produces the maximum recruitment (Ricker SR model only)
+* Sgen: spawner size that produces recruit that equals to Smsy in on generation in the absence of fishing mortality. (A Canadian biological benchmark)
+
+**Time variant alpha model**
+When Time variant alpha model is selected, the plots show periods that had similar ln.alpha. Smsy, Smax, and the rest of Escapement goal analyses will be based on the selected time-periods. Selection of None is overall average lnalpha. 
+
+**State-Space model**
+When State-Space model is selected, the plots also show the model predicted SR points, 95% CI, and direction of shrinkage. 
+
+
+### Credible and Prediction Interval 
+On the SR and Yield panel, user can choose to show **credible** of **Prediction** interval of user chosen upper and lower percent interval.
+
+#### Credible Interval
+Credible interval is similar to Confidence Interval.  The interval shows distribution of median or mean recruits overtime at given spawner size.   
+
+#### Prediction Interval
+Prediction interval shows distribution of single (annual) recruit at given spawner size. 
+
+
+### Interactive SR Plots 
+* **Single click on SR points**
+This will show SR value 
+
+* **Brush area and double click**
+Zoom plots.  Double click again to go back default.
+
+
+
+## Median vs. Mean Management Target
+The model provides two management target options: Median and Mean target. Major difference between the two targets are part statistical and part managerial. 
+
+* **Statistical Explanation**
+
+Normally, the **mean** is considered as the **expected value** that is the **unbiased** center of a population. When the population is normally distributed, the mean is the center (i.e., **Mean = Median**). However, when the population is **NOT** normally distributed, the mean is not always the center of the population. 
+Traditionally, the Ricker and the Beverton-Holt spawner-recruit model assumes that On the other hand, the spawner-recruit model assumes that the recruit is log-normally distributed ($R \sim LN(ln(\mu),{\sigma}^{2})$ or $ln(`R) \sim N(\mu,{\sigma}^{2})$).  In this case, the $\mu$ derived from the model is **NOT E(`R)**, but the **Median Recruit** (median(`R) = $\mu$). The expected recruit(E(`R)),the **Mean Recruit**,is $mean(`R) = exp(ln(\mu) + {\sigma}^{2}/2)$.  This is called as the **bias of an estimator**.  The **bias corrected** spwaner-recruit model replaces **alpha** with **alpha.c** (See SR model section for details).  This **statistical bias correction** does NOT indicate that the bias uncorrected is wrong. Both bias corrected and uncorrected models are correct, just expected values are different.
+
+
+* **Managerial Explanation**
+
+Major difference between the two target options are **whether fishery  recruit or yield management target is based on median (bias uncorrected) or mean (bias corrected).** Fisheries Science community is not settled regarding the choice.  
+Simultaneously however, this have many consequences.  Model expected R,productivity (lnalpha), Seq, and Smsy are greater for bias-corrected than bias-uncorrected, while Sgen is greater for bias-uncorrected than bias corrected. 
+
+| Lists| |  Uncorrected |  |    Corrected   | | Note |
+|  ------- |---:| -------:|---:|-------:|---:|-------:|
+|_________|_|________________|_|________________________|_|________________________|
+| Expected R  | | Median | | Mean    | | Median < Mean |
+| Probability of expected R  | | 50% | | < 50%   | |  |
+| lnalpha   |  |   lnalpha  | | lnalpha.c   | | lnalpa < lnalapha.c |
+| beta    |   |   beta  | | beta    | | Same |
+| Seq  |   |Seq  |  | Seq.c  |  | Seq < Seq.c |
+| Smsy  |   |Smsy  |  | Smsy.c  |  | Smsy < Smsy.c |
+| Smax    |   |   Smax  | | Smax    | | Same | 
+| Sgen  |   |Sgen  |  | Sgen.c  |  | Sgen > Sgen.c |
+|_________|_|________________|_|________________________|_|________________________|
+---
+
+Perhaps the biggest difference is a probability of achieving target yield. At any given spawner (escapement) size, the probability of recruit/yield achieving above expected mean is under 50%. For instance, let's consider that expected recruitment at given escapement is 100 for median (bias uncorrected) and 130 for mean (bias corrected), and we achieved the escapement goal for 6 years and recruits were 90, 80, 120, 100, 360, and 70.  The median and mean recruit over 6 years were 95 and 137.  Thus, the mean target goal was achieved but not the median goal was not achieved.  However, the number of years recruit is above the target is 1 year for the mean target and 3 years for the median target. 
+
+
+
+
+
+
+

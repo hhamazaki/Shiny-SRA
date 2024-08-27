@@ -1,0 +1,31 @@
+# Bayesian SR model in nutshell
+Bayesian SR Analysis model is coded in **JAGS** (see Model Codes Tab). The major difference between traditional (Frequent) and Bayesian statistics is the concept of point estimate. Traditional (Frequent) statistics assumes that observed data are derived from **single TRUE** parameters (e.g., mean) with observation error. In contrast, Bayesian statistic assumes that observed data can be derived from **a range of TRUE** parameters (e.g., range of means) that have underlined **distribution** (prior distribution). 
+
+Frequent statistics produces two estimates: Point (e.g., sample mean) and Interval (e.g., 95% confidence interval) estimate.  Bayesian statistics produces single estimate: Posterior distribution (e.g., posterior distribution of mean) that is summarized to point (e.g., posterior mean, median) and interval (e.g., 95% credible interval) estimates.  
+
+SR models included are **Ricker** and **Beverton-Holt** with options of
+**AR(1) Error** and **Time varying alpha (TVA)**  
+When escapement CV (CV_E) is provided, the model also has an option of **Measurement Error Model**
+
+---
+## Running Bayesian SR model 
+
+### Model Running Steps    
+* **Select SR Model :**   Ricker or Beverton-Holt
+* **Model Addition :**  None (Standard), AR(1) Error, or Time varying alpha  (See SR Help for details )
+* **State-Space Model :**  Only when data are available. Check to run State-Space SR model.  **Note: Running State-Space model takes more time**  
+* **Set Simulation:** Use default numbers or increase numbers
+* **Click Run** Wait until Trace plots and Summary show up.  After that, click other tabs. 
+* **Click MCMC download** To save Bayesian model MCMC results as .csv file. **Do not change column names if you are planning to use it for Escapement Goal Analyses.**  
+
+---
+### Reading MCMC  and conduct Escapement gaol analyses. 
+
+The app has an option of reading the saved MCMC results and conduct escapement goal analyses.  This option is useful when you want to share escapement goal analyses with others. 
+
+* **Upload input data and set SR Model setting the same conditions as the model results were generated:**  
+
+* **Click Import MCMC data **   File upload data interface will show up.  Choose file and upload. 
+
+
+

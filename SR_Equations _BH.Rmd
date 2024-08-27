@@ -1,0 +1,76 @@
+\newpage
+# Methods
+## Spawner Recruit Model
+The spawner-recruit data are fitted to the **Beverton-Holt (1958)** model. 
+
+### Beverton-Holt model 
+$$R = \frac{\alpha S}{1+\beta S}e^{\varepsilon}$$
+**Log-linear form**
+$$R=ln.\alpha -ln(1+\beta S)+ln(S) + \varepsilon$$
+
+where 
+$$\varepsilon_{iid} \sim N(0,\sigma ^{2})$$
+## Model data fitting
+
+In data fitting of the model, recruit ($R_{y}$) derived from the y-th brood year spawner ($S_{y}$) is assumed to be log-normally distributed with mean $\mu_{y}$ and variance ${\sigma}^{2}$
+ 
+$$ln(R_{y}) \sim N(\mu_{y},{\sigma}^{2})$$
+where $\mu_{y}$ is a log-linearlized Beverton-Holt spawner-recruit model 
+
+
+$$\mu_{y}=ln.\alpha -ln(1+\beta s_{y})+ln(S_{y})$$
+where $ln.\alpha = ln(\alpha)$, $s_{y} = S_{y}\cdot{10}^{-d}$ and $d = Int(log(\bar{S}))$.   
+
+
+In the above equations, the conversion from $S$ to $s$ makes $\beta$ to a range similar to the range of $ln.\alpha$.  This is numerically more efficient to estimate parameters. 
+
+
+## Model priors 
+Model priors were set to be uniform (Table 1)
+
+|Parameter |   Prior    |    Note  |
+|  ------- | -------:|-------:|
+| $ln(\alpha)$  |  $ln(\alpha) \sim U(0,10)$ |  All models   | 
+| $\beta$    |     $\beta \sim U(0,10)$  |  All models   | 
+| $\sigma$    |      $\sigma \sim U(0,10)$  |  All models    | 
+| $\phi$    |    $\phi \sim U(-1,1)$   |  **AR1 option**  | 
+| $\varepsilon_{0}$ |     $\varepsilon_{0} \sim N(0,100)$     |**AR1 option**  | 
+| $\sigma _{\omega}$|     $\sigma _{\omega} \sim U(0,10)$     |**TVA option**| 
+
+Table 1.  Priors for the Ricer/Beverton-Holt spawner recruit model parameters.
+
+
+                                                                      
+## Model Output Parameters based on expected mean vs. median recruit 
+
+**statistical bias corrected alpha parameters**  
+$$ln(\alpha_{c}) = ln(\alpha) + \frac{\sigma^{2}}{2}$$ 
+and $$\alpha.c = \alpha e^{\frac{\sigma^{2}}{2}}$$
+
+
+AR1 model, 
+$$ln(\alpha_{c}) = ln(\alpha)+ \frac{\sigma^{2}}{2(1-\phi^{2})}$$ 
+and 
+$$\alpha_{c} = \alpha e^{\frac{\sigma^{2}}{2(1-\phi^{2})}}$$
+$$Median(R) = \frac{\alpha S}{1+\beta S}$$
+$$Mean(R) = \frac{\alpha_{c} S}{1+\beta S}$$
+$$Predicted(R) = \frac{\alpha S}{1+\beta S}e^{\sigma}$$
+## Biological Reference Parameters
+Following biological reference parameters are generated from the model 
+* Seq   Spawner abundance expected to produce the same number of recruits
+* Smsy  Spawner abundance expected to produce the maximum number of yield (MSY) 
+* Umsy  Exploitation rate expected to produce MSY
+* Sgen  Spawner abundance expected to produce recruitment size of Smsy. Sgen is a conservation benchmark used by Department of Ocean Canada (DFO)
+
+$$S_{eq} =  \frac{\alpha -1}{\beta}$$
+
+$$S_{msy} =  \frac{\sqrt{\alpha} -1}{\beta}$$
+
+$$U_{msy} = 1- \sqrt{\frac{1}{\alpha}}$$
+**Sgen** is approximated by numerically solving $S$ in following equation  
+
+$$ln.\alpha - ln(1+\beta S_{gen}) + ln(S_{gen}) - ln(S_{msy}) = 0$$
+
+**When using lognormal bias corrected model, replace $\alpha$ and $ln.\alpha$ with $\alpha_{c}$ and $ln.\alpha_{c}$.**
+
+

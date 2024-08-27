@@ -1,0 +1,18 @@
+# Model Setting 
+Bayesian analyses is based on numerical simulation and sampling. Bayesian statistical quantities (e.g., model parameters estimates, CI) are simple summary of samples from the simulation. To obtain good statistics, samples needs to be taken from the simulation should be stable.  When the simulation reaches stable state, trace plots should look flat bands, and density plots should have a single defined peak.  **Note** Bayesian model is based on simulation with pseudo-random number generator.  The app selects seed numbers at random (instead of using default seed number 123). Consequently, parameter estimate will change every time model is run. **Save MCMC file to save model results.**
+
+To achieve the stable simulation, every Bayesian models have following 4 controls:
+* **Burn-in**  Initial simulation and highly unstable.  All samples in this stage is thrown out. (Default: 5000)  
+* **Simulation**  This is the stage when samples can be taken. Ideally this phase should be stable. (Default: 10000) 
+* **Thinning**  Sample every xxth simulation. Length of the simulation and thinning will determine the number of samples: samples = simulation/ thinning.   Generally, you want to have  1000 to 10000 samples (Default 5)
+* **Chains**  The number of simulation experiments with different starting points. JAGS selects starting points randomly from the priors. If model is correct, final simulation should reach identical mean-median regardless starting points. The number of chains are generally 1 - 5. (Default 3)  
+
+Under the default settings, a total of (burn-in + simulation)xchains (5000+10000)x3 =45000) simulation is conducted.  Of those, 6000 samples are taken (simulation/thinning = 3x10000/5 = 6000).  Model parameters estimates are based on 6000 samples.  
+
+The default is set to produce **quick and reasonable estimates**. It is **recommended** to increase the length of burn-in and simulations and the number of chains to obtain **better and more stable estimates**.  Generally, **longer burn-in and simulation and more chains will produce better model parameter estimates.** However, this will also **increase** simulation time significantly. A general direction is run the model with default setting and check trace and density plots. 
+Good model convergence usually indicates: **trace plots look like straight horizontal band** and **density plots have distinct single peak**.  If the plots do not look good, increase burn-in and simulation lengths until obtaining good plots. When good model convergence is  not achieved after long simulations, this is an indication that: (1) **data are uninformative**, or (2) **wrong model specifications**.  
+
+
+
+
+

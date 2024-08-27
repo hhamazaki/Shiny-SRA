@@ -1,0 +1,32 @@
+# Biological Reference Parameters
+
+Following biological reference points are generated from the model 
+* Seq   Spawner abundance expected to produce the same number of recruits
+* Smsy  Spawner abundance expected to produce the maximum number of yield (MSY) 
+* Umsy  Exploitation rate at Rmax that is expected to produce MSY
+* Smax  Spawner abundance expected to produce the maximum number of recruits.  
+* Sgen  Spawner abundance expected to produce recruitment size of Smsy. Sgen is a conservation benchmark used by Department of Ocean Canada (DFO)
+
+**Ricker model** 
+$$Seq =  \frac{ln(\alpha)}{\beta}$$
+Smsy and Umsy of Riker model is an approximate where 0 < $ln(\alpha)$ < 3  (Hilbon 1985) $$Smsy =  Seq(0.5-0.07ln(\alpha))$$
+$$Umsy =  ln(\alpha)(0.5-0.07ln(\alpha))$$
+$$Smax =  \frac{1}{\beta}$$
+Note: Smax does not practically exist when $ln(\alpha) < 1$.
+
+**Sgen** is approximated by numerically solving $S$ in following equation
+$$ln(\alpha)-\beta Sgen + ln(Sgen) - ln(Smsy) = 0$$
+
+
+**Beverton-Holt model** 
+$$Seq =  \frac{\alpha -1}{\beta}$$
+$$Smsy =  \frac{\sqrt{\alpha} -1}{\beta}$$
+$$Umsy = 1- \sqrt{\frac{1}{\alpha}}$$
+**Beverton-Holt model does not have Smax**
+$$Smax = NA$$
+
+**Sgen** is approximated by numerically solving $S$ in following equation  
+
+$$ln(\alpha) - ln(1+\beta Sgen) + ln(Sgen) - ln(Smsy) = 0$$
+
+**When using lognormal bias corrected model, replace $\alpha$ and $ln(\alpha)$ with $\alpha.c$ and $ln(\alpha.c)$.**

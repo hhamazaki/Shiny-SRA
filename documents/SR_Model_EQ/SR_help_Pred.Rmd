@@ -1,0 +1,44 @@
+# Predicted Recruit 
+Bayesian Analyses estimates **distribution** of model parameters and biological reference points. Those are summarized in mean, median, and x% credible interval.
+
+#### Parameters based on expected mean recruit 
+Under the assumption of lognormal distribution of recruit (R), $`R \sim LN(ln(\mu),{\sigma}^{2})$ or $ln(`R) \sim N(\mu,{\sigma}^{2})$, $\mu$ is an expected **Median R**, and expected **Mean R** is $\mu = exp(ln(\mu) + {\sigma}^{2}/2)$.
+**statistical bias corrected alpha parameters**  $ln(\alpha.c) = ln(\alpha) + {\sigma}^{2}/2$ and $\alpha.c = \alpha e^{{\sigma}^{2}/2}$
+
+
+**Ricker model**
+$$Mdian(`R) = \alpha Se^{-\beta S}$$
+$$Mean(`R) = \alpha.c Se^{-\beta S}$$
+
+**Beverton-Holt model** 
+$$Median(`R) = \frac{\alpha S}{1+\beta S}$$
+$$Mean(`R) = \frac{\alpha.c S}{1+\beta S}$$
+
+
+#### Credible and Prediction Interval 
+On the SR and Yield panel, user can choose to show **credible** of **Prediction** interval of user chosen upper and lower percent interval.
+
+Credible Interval is a summary of predicted $R$ from posterior samples parameters (i) at given $S$.  
+
+Ricker Model 
+$$R_{i}^{'}=e^{ln(\alpha_{i}^{'} )-\beta_{i}^{'} S +ln(S)}$$
+
+Beverton_Holt Model
+
+$$R_{i}^{'}=e^{ln(\alpha_{i}^{'} )-ln(1+\beta_{i}^{'} S) +ln(S)}$$
+
+
+Prediction Interval is a summary of $R$ predicted from posterior samples parameters (i) **with error** at given $S$.  
+
+Ricker Model
+$$R_{i}^{'}=e^{ln(\alpha_{i}^{'} )-\beta_{i}^{'} S +ln(S) +\varepsilon_{i}^{'}}$$
+
+Beverton_Holt Model
+
+$$R_{i}^{'}=e^{ln(\alpha_{i}^{'} )-ln(1+\beta_{i}^{'} S)+ln(S)+\varepsilon_{i}^{'}}$$
+
+
+where $\varepsilon_{i}^{'}$ is a random sample from posterior samples (i) $\varepsilon_{i}^{'}\sim N(0,\sigma_{i}^{'} )$
+
+Generally, credible interval indicates a range of mean (over many years) recruits at given $S$ whereas prediction interval indicates a range of (annual) recruits at given $S$.
+

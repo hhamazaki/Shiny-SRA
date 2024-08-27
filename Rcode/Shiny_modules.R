@@ -1,16 +1,48 @@
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  Shiny Modules  
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#===============================================================================
-#  dataInput Module: Upload data file to Shiny  
-#===============================================================================
+#'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Shiny Modules 
+#  Shiny Modludes consists of nameUI and nameServer functions 
+#'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#'==============================================================================
+# Info: add show info section  ----
+#'==============================================================================
+#'  UI ----------------------- 
+InfoUI <- function(id,info.name) {
+  ns <- NS(id)
+    p(strong(HTML(
+    paste0(info.name,
+      as.character(actionLink(ns('info'),"", icon = icon("circle-info")))
+      )
+     )
+    )
+  )
+}
+#'  Server  ----------------------- 
+InfoServer <- function(id,info.name,info.texts){
+  moduleServer(
+    id,
+    function(input, output, session){
+observeEvent(input$info, {
+  showModal(modalDialog(
+    title = info.name,
+    footer = NULL, info.texts
+          ,
+        easyClose = TRUE
+      ) # End modalDialog
+    ) # End showModal
+    }
+    )# End ObserverEvent
+    } # End function 
+  ) # End moduleServer
+} # End InfoServer
+
+#'==============================================================================
+#  dataInput: Upload data file to Shiny  ---------------
+#'==============================================================================
 #  Usage: UI section 
 #  dataInputUI("ns.name", "User data (.csv format)")
 #  Usage: Server section: dataInputServer("datain")
-#===============================================================================
-#-------------------------------------------------------------------------------
-#  UI 
-#-------------------------------------------------------------------------------
+#'==============================================================================
+#' UI  ------------------------------------------------
 dataInputUI <- function(id, label = "CSV file") {
   # Create a namespace function using the provided id
   ns <- NS(id)
@@ -22,15 +54,12 @@ dataInputUI <- function(id, label = "CSV file") {
                          ".csv")),
     # Input: Checkbox if file has header ----
     checkboxInput(ns("header"), "Header", TRUE),
-    
     # Input: Select separator ----
     radioButtons(ns("sep"), "Separator",
                  choices = c(Comma = ",", Tab = "\t"), selected = ",")
     ) # End taglist
 } # End dataInputUI
-#-------------------------------------------------------------------------------
-#  Server 
-#-------------------------------------------------------------------------------
+#' Server ---------------------------------------------------------------------
 dataInputServer <- function(id){
   moduleServer(id,
   function(input, output, session) {
@@ -58,18 +87,16 @@ dataInputServer <- function(id){
   ) # End moduleServer
 } # End dataInputServer
 
-#===============================================================================
-# MSY-Rmax Profile Based Goal Analyses Module 
-#===============================================================================
-#===============================================================================
-#  ProfileUI Module: 
+#'===============================================================================
+#  Profile MSY-Rmax Profile Based Goal Analyses Module ----- 
+#'===============================================================================
+#'===============================================================================
+#  ProfileUI ---- 
 #  UI section: SmsyprofRUI("ns.name")
 #  Server section: Smsyprofserver("ns.name",SR.pred)
 #  Output:  EG.Smsy, EG.Smsy.st, Srange.st,  
-#===============================================================================
-#-------------------------------------------------------------------------------
-#  UI 
-#-------------------------------------------------------------------------------
+#'===============================================================================
+#'  UI -------------------------------------------------------------------
 ProfileUI <- function(id,crit){
   # Display choice of Run vs S-R
   ns <- NS(id)
@@ -80,19 +107,18 @@ ProfileUI <- function(id,crit){
       )  # End taglist
     
 } # End SmsypfofUI
-#-------------------------------------------------------------------------------
-#  Server: Generates 
+#'  Server ----------------------------------------------------------------------
 #   EG: Escapement Goal based on User defined Profile Analyses
 #   EG.st: Escapement Goal based on Standard Profile Analyses
 #   BEG: Escapement Goal table based on Profile Analyses
 #   Plt.profile: Profile plot without intersections 
 #   BEG: Escapement Goal table based on Profile Analyses
-#-------------------------------------------------------------------------------
-ProfileServer <- function(id,SR.pred,crit,u){
+#'-------------------------------------------------------------------------------
+ProfileServer <- function(id,SR.pred,crit,unit){
   moduleServer(
     id,
     function(input, output, session){
-# EG  ----------------  User defined profile based goal data -------------------
+## EG:  User defined profile based goal data -------------------
   EG <- reactive({
         # Import MCMC Expected Mean Yield 
         if(crit == 'MSY'){mc.Y <- SR.pred()$Y}
@@ -112,7 +138,7 @@ ProfileServer <- function(id,SR.pred,crit,u){
         return(S.prof)  
   }) # End EG
       
-# EG.st  ------- Standard profile based goal data ------------------------------
+## EG.st: Standard profile based goal data ------------------------------
   EG.st <- reactive({
         # Import MCMC Expected Mean Yield
         if(crit == 'MSY'){mc.Y <- SR.pred()$Y}
@@ -123,7 +149,7 @@ ProfileServer <- function(id,SR.pred,crit,u){
         # Import S 
         S <- SR.pred()$S
         # Standard min Smsy probability 
-        st <- c(0.9,0.8,0.7)
+        st <- c(0.7,0.8,0.9)
         # Create a dummy matrics 
         ncols <- length(S)
         # Create Standard probability matrix 
@@ -140,51 +166,55 @@ ProfileServer <- function(id,SR.pred,crit,u){
         return(out)   
   }) # End EG.st
       
-# BEG  -------  Create EG goal table -------------------------------------------
+## BEG: Create EG goal table -------------------------------------------
   BEG <- reactive({
         BEG.st <- EG.st()$S.Range.st
         BEG <- EG()$S.Range
-        percent <- c(90,80,70,input$p.min)
+        percent <- c(input$p.min,70,80,90)
         apercent <- input$p.t
-        lg <- c(BEG.st[,1],BEG[1])
-        ug <- c(BEG.st[,2],BEG[2])
-#        t.BEG <- HTML(paste0(percent,'% ',crit,' achieving ',apercent,'% Probability:',lg,' - ',ug,sep = '<br/>'))
-        t.BEG <- c(paste(percent,'%',crit,apercent,'% target:',lg,' - ',ug))
+        lg <- c(BEG[1],BEG.st[,1])
+        ug <- c(BEG[2],BEG.st[,2])
+#        t.BEG <- c(paste(percent,'%',crit,apercent,'% target'))
+        t.BEG <- data.frame(percent,apercent, lg,ug)
+        names(t.BEG) <- c(paste(crit,'%'),'Target %','Lower','Upper')
         return(t.BEG)
       }) # SA.BEG
       
-# plt.profile ------- Basic Profile fig without frills  ------------------------
-  plt.profile <- function(){
+## plt.profile:  Basic Profile fig without frills  ------------------------
+  plt.profile <- reactive({
+     u <- unit()
       p.min <- input$p.min/100
-    # Import minimum target %   
-      p.t <- input$p.t/100
+      percent <- c(input$p.min,70,80,90)
+      txt <- c(paste(percent,'%',crit))
     # Generate profile 
-      S <- SR.pred()$S
+      S <- (SR.pred()$S)
       Y.prof <- EG()$S.prof
-      Y.prof.st <- EG.st()$S.prof.st
-      plot_profile(crit,Y.prof,Y.prof.st,S,p.min,p.t,as.numeric(u()))
-      out <- recordPlot()
-      return(out)
-   }
+      Y.prof.st <- data.frame(t(EG.st()$S.prof.st))
+      names(Y.prof.st) <- c('p90','p80','p70')
+      df <- data.frame(S=SR.pred()$S,Med=EG()$S.prof,Y.prof.st )
+      df1.melt <- melt(df,id.vars ='S',variable.name='prof.type',value.name='prob')
+      p1 <- ggplot()+
+      geom_line(data = df1.melt[which(df1.melt$prof.type != 'Med'),],aes(x=S,y=prob,linetype =prof.type),color=1)+
+      geom_line(data = df1.melt[which(df1.melt$prof.type == 'Med'),],aes(x=S,y=prob,linetype = prof.type),color=6)+  
+      scale_linetype_discrete(name ="",labels=txt,guide=guide_legend(override.aes=list(color=c(6,1,1,1))))+
+     scale_x_continuous(expand=c(0,0),limits=c(0,NA),labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep)+  
+     scale_y_continuous(expand=c(0,0),limits=c(0,1),n.breaks = 10,oob=oob_keep)+
+     labs(title = paste0(crit,'Profile Analyses'), x=paste('Escapement',mult(u)),y='Probability')      
+      return(p1)
+   })
   
-# plt.profile ------- Profile fig with intersections  --------------------------
-  plt.prof.fig <- function(){
-# Set layout     
-    layout(matrix(1:2, ncol=2),widths=c(2,1))
-#   Plot profile 
-    par(mar=c(4,4,4,1))
-    replayPlot(plt.profile())  
-#  Add Range 
-    S <- BEG <- EG()$S.Range/as.numeric(u())
-    c.col <- ifelse(crit=='MSY',3,4)
-    polygon(c(S,rev(S)),c(c(0,0),c(1,1)),col=tcol(c.col,80),border=NA)
-# -------Extract Profile data  -------------------------------------------
-      txt <- BEG()
-      add_legend("left", legend= txt, lwd=c(1,1,1,2), lty=c(1,2,4,1),
-                 col=c(1,1,1,6),text.font = c(1,1,1,2),box.lty=0)
-      out <- recordPlot()
-      return(out)
-    }
+## plt.pro.fig:  Profile fig with intersections  --------------------------
+  plt.prof.fig <- reactive({
+     txt <- BEG()
+     # Import minimum target %   
+      p.t <- input$p.t/100
+     c.col <- ifelse(crit=='MSY',3,4)
+     eg <- as.numeric(EG()$S.Range)
+     p1 <- plt.profile()+
+     geom_hline(yintercept = p.t,lwd=1,col=2)+     
+     annotate('rect', xmin = eg[1], xmax = eg[2], ymin = -Inf, ymax = Inf, alpha=0.1, fill=c.col)
+     return(p1)
+    })
     
   p.min <- reactive({input$p.min})
   p.t <- reactive({input$p.t})      
@@ -197,9 +227,9 @@ ProfileServer <- function(id,SR.pred,crit,u){
 } # End ProfServer
 
 
-#===============================================================================
-#  2.0 Risk Based Goal Analyses Module 
-#===============================================================================
+#'===============================================================================
+#  2.0 Risk Based Goal Analyses Module---- 
+#'===============================================================================
 #===============================================================================
 #  RiskUI Module: Produce Risk analyses and plot results  
 #  Usage: 
@@ -226,17 +256,17 @@ RiskServer <- function(id,e.data,u){
     id,
     function(input, output, session){
  
-  output$RiskEG <- renderUI({
+output$RiskEG <- renderUI({
     ns <- session$ns
-     if(input$RiskC==TRUE){
+     if(input$RiskC){
         mult <- mult(u)
-        numericInput(ns("riskEG"), paste("Escapement",mult), value=NULL,min=0, step= 1)
+        numericInput(ns("riskEG"), paste("Escapement",mult), value=1,min=0, step= 1)
         }
       })
       
 output$Riskp <- renderUI({
   ns <- session$ns
-  if(input$RiskC==TRUE){
+  if(input$RiskC){
   sliderInput(ns("riskp"), "Acceptable Risk",value = 0, min=0,max=1,step=0.05)
   }
   })
@@ -286,7 +316,7 @@ output$Riskp <- renderUI({
         k <- input$risk.k
         p <- input$risk.p/100
         st <- c(0.5, 0.80, 0.9)
-        delta <- c(st,p)
+        delta <- c(p,st)
         phi <- Risk_sim_base()$phi
         mu <- Risk_sim_base()$mu
         cc <- Risk_sim_base()$cc
@@ -328,8 +358,8 @@ output$Riskp <- renderUI({
         return(out)   
       })
 
-  Risk_custom <- reactive({
-    if(input$RiskC==TRUE){
+Risk_custom <- reactive({
+    if(input$RiskC){
     Spi <- Risk_sim()$pi
     S <- Risk_sim()$S
   # custom EG goal
@@ -362,7 +392,7 @@ output$Riskp <- renderUI({
 #-------------------------------------------------------------------------------
 # Plt_risk:  Risk analyses plot 
 #-------------------------------------------------------------------------------
-    Plt_risk <- function(){
+ Plt_risk <- function(){
       layout(matrix(1:2, ncol=2), widths=c(3,1))   
       mult <- mult(u)
       x <-Risk_sim()$S
@@ -396,6 +426,37 @@ output$Riskp <- renderUI({
       out <- recordPlot()
       return(out)
     }
+ Plt_risk_gg <- function(){
+      mult <- mult(u)
+      x <-Risk_sim()$S
+      pi <- data.frame(Risk_sim()$pi)
+      names(pi) <- c('a','c','d','e','b')
+      delta <- Risk_sim()$delta
+      n <- length(delta)
+      e.g <- Risk_sim()$int.S
+      txt <- c("Unneeded action", 
+                paste(100*delta,"% drop" )
+               )
+# create a data.frame 
+df <- melt(data.frame(S=x,pi),id.vars=('S'),value.name='p')
+ p1 <- ggplot()+
+  geom_line(data=df, aes(x=S,y=p,linetype=variable,color=variable, linewidth=variable))+
+  scale_linetype_manual(labels=txt,values=c(1,1,2,3,4))+   
+  scale_linewidth_manual(labels=txt,values=c(1,1,0.5,0.5,0.5))+
+  scale_color_manual(labels=txt,values=c(1,2,3,4,5))+
+  scale_x_continuous(expand=c(0, 0), limits=c(0, NA), 
+          labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep) +
+  scale_y_continuous(expand=c(0, 0), limits=c(0, 1),n.breaks = 10)+
+  xlab(paste('Escapement',mult(u))) + ylab('Proabbility')
+  if(input$RiskC){
+    p1 <- p1+
+#  Add custom EG      
+   geom_vline(xintercept=input$riskEG*u, color =4, linetype=2,linewidth=1)+
+#  Add custom Risk Prob 
+   geom_hline(yintercept = input$riskp, color =7, linetype=2,linewidth=1)      
+   }
+    return(p1)
+    }
 #-------------------------------------------------------------------------------
 # Plt_risk2:  Time series  
 #-------------------------------------------------------------------------------
@@ -412,29 +473,39 @@ output$Riskp <- renderUI({
       abline(h=input$riskEG, col =4, lty=3,lwd=2)
       out <- recordPlot()
       return(out)
+  }
+   Plt_risk2_gg <- function(){
+      x <- e.data()      
+      ggplot(x)+
+        geom_line(aes(x=Yr,y=S))+
+        geom_hline(yintercept = input$riskEG*u, color =4, linetype=2,linewidth=1)+         
+  scale_y_continuous(expand=c(0, 0), limits=c(0, NA), 
+          labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep) +
+  scale_x_continuous(expand=c(0, 0.5),n.breaks = 10)+
+  ylab(paste('Escapement',mult(u))) + xlab('Year')      
     }
 #-------------------------------------------------------------------------------
 # Module Outputs: Risk_sim_base, Risk_sim, Plt_Risk, Plt_Risk2 
 #-------------------------------------------------------------------------------
     outdata <- list(Risk_sim_base =Risk_sim_base, Risk_sim = Risk_sim, 
-                    Plt_risk=Plt_risk,Plt_risk2=Plt_risk2,Risk_custom=Risk_custom)
+                    Plt_risk=Plt_risk,Plt_risk_gg=Plt_risk_gg,Plt_risk2=Plt_risk2,Plt_risk2_gg=Plt_risk2_gg,Risk_custom=Risk_custom)
     return(outdata)      
     } # End function 
   ) # End moduleServer
 } # End prcntoutServer
 
 
-#===============================================================================
-#  3.0 Percentile Based Goal Analyses Module 
-#===============================================================================
-#===============================================================================
+#'===============================================================================
+#  3.0 Percentile Based Goal Analyses Module ----
+#'===============================================================================
+#'===============================================================================
 #  PerentileUI Module: Produce percentile analyses and plot results  
 #  Usage: 
 #  UI section 
 #  PerentileUI("ns.name")
 #  Server section
 #  PerentileUIServer("ns.name",e.data,u)
-#===============================================================================
+#'===============================================================================
 PercentileUI <- function(id){
   # Display choice of Run vs S-R
   ns <- NS(id)
@@ -444,14 +515,14 @@ PercentileUI <- function(id){
     )  
   }
 
-# Output Module ----------------------------------------------------------------
+#' Output Module ----------------------------------------------------------------
 PercentileServer <- function(id,e.data,u){
   moduleServer(
     id,
     function(input, output, session){
-#-------------------------------------------------------------------------------
+#'-------------------------------------------------------------------------------
 # Txt_Tier:  Explanation of Tiers 
-#-------------------------------------------------------------------------------  
+#'-------------------------------------------------------------------------------  
 Txt_Tier <- reactive({
   txt<- HTML(
       if(input$Tiers =="Tier 1"){
@@ -475,9 +546,9 @@ Txt_Tier <- reactive({
     )
   return(txt)
   })
-#-------------------------------------------------------------------------------
+#'-------------------------------------------------------------------------------
 # EGS:  Perecentile goals   
-#-------------------------------------------------------------------------------  
+#'-------------------------------------------------------------------------------  
 EGS <- reactive({
   S <- e.data()$S
   # Percentile Analyses in 3 Tiers 
@@ -489,9 +560,9 @@ EGS <- reactive({
   return(e.g)
  })
 
-#-------------------------------------------------------------------------------
+#,-------------------------------------------------------------------------------
 # Plt_prcnt:  Plot Percentile  
-#-------------------------------------------------------------------------------  
+#,-------------------------------------------------------------------------------  
 Plt_prcnt <- function(){
   mult <- mult(u)
   EG <- EGS()
@@ -522,13 +593,32 @@ Plt_prcnt <- function(){
   return(out)
   }
 
-#-------------------------------------------------------------------------------
+Plt_prcnt_gg <- function(){
+  EG <- EGS()
+  x <- e.data()
+  if(input$Tiers == "Tier 1") { e.g <- (as.numeric(EG[1,]))
+  } else if( input$Tiers == "Tier 2") { e.g <- (as.numeric(EG[2,]))     
+  } else if(input$Tiers == "Tier 3") { e.g <- (as.numeric(EG[3,]))       
+  }
+  # Graphics
+  ggplot()+
+    geom_line(data=x, aes(x=Yr, y=S))+
+    annotate("rect", ymin=(e.g[1]),ymax=e.g[2],xmax=Inf,xmin=-Inf,fill=2,alpha = 0.1)+
+    
+    scale_y_continuous(expand=c(0, 0), limits=c(0, NA), 
+          labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep) +
+  scale_x_continuous(expand=c(0, 0.5),n.breaks = 10)+
+  ylab(paste('Escapement',mult(u))) + xlab('Year')      
+   
+  }
+
+#,-------------------------------------------------------------------------------
 # Txt_Note:  Explanation of Tiers 
-#-------------------------------------------------------------------------------  
+#,-------------------------------------------------------------------------------  
 Txt_Note <- reactive({
     x <- e.data()
     EG <- EGS()
-    contrast <- round(max(x$S)/min(x$S),1)
+    contrast <- round(max(x$S,na.rm=TRUE)/min(x$S,na.rm=TRUE),1)
     if(input$Tiers == "Tier 1") { e.g <- EG[1,]
     } else if(input$Tiers == "Tier 2") { e.g <- EG[2,]     
     } else if(input$Tiers == "Tier 3") { e.g <- EG[3,]       
@@ -542,11 +632,11 @@ Txt_Note <- reactive({
   })
 
  Tier <- reactive({input$Tiers})
-#-------------------------------------------------------------------------------
+#,-------------------------------------------------------------------------------
 # Module Outputs: Txt_Tier, Txt_Note, Plt_prcnt 
-#-------------------------------------------------------------------------------
+#,-------------------------------------------------------------------------------
 outdata <- list(Txt_Tier =Txt_Tier, Tier=Tier, EGS = EGS, 
-                Txt_Note=Txt_Note, Plt_prcnt=Plt_prcnt)
+                Txt_Note=Txt_Note, Plt_prcnt=Plt_prcnt_gg)
 return(outdata)      
 
     } # End function 
@@ -556,17 +646,17 @@ return(outdata)
 
 
 
-#===============================================================================
+#'===============================================================================
 #  4.0 MSE Analyses Module 
-#===============================================================================
-#===============================================================================
+#'===============================================================================
+#'===============================================================================
 #  MSEUI Module: Produce Risk analyses and plot results  
 #  Usage: 
 #  UI section 
 #  MSEUI("ns.name")
 #  Server section
 #  MSEUIServer("ns.name",e.data,u)
-#===============================================================================
+#'===============================================================================
 MSEUI <- function(id){
   # Display choice of Run vs S-R
   ns <- NS(id)
@@ -733,122 +823,6 @@ return(outdata)
 } # End MSEServer
 
 
-#===============================================================================
-#  dataType Module: Define Datat Type SR vs Run 
-#===============================================================================
-#  Usage: 
-#  UI section 
-#  dataTypeUI("ns.name")
-#  Server section
-#  callModule(dataType, "ns.name")
-#===============================================================================
-#dataTypeUI <- function(id){
-# Display choice of Run vs S-R
-#  ns <- NS(id)
-#  tagList( 
-#    selectInput(inputId=ns("dataType"),"Data Type", choices = c('S-R','Run')),
-# If data is "Run" select first age 
-#    conditionalPanel(
-#      sprintf("input['%s'] == 'Run'", ns("dataType")),
-#      p("Select First age of run"),
-#      # Input: Select what to display
-#      numericInput(ns("fage"), "First Return Age", value=4,min=1,max=20,step=1)
-#    )  
-#  )
-#}
-
-#dataType <- function(input, output, session, datafile){
-# note: output note to screen  -------------------------------------------------
-#  note <- reactive({
-#    if(input$dataType== "S-R"){
-#      paste("S-R Data file column orders: Year, Spawner (Escapement), Recruit")
-#    } else if (input$dataType== "Run"){
-#      paste("Run Data file column orders: Year, Escapement, Run,
-#                  Run by age (or proportion) from youngest to oldest")
-#    }
-#  })
-#}  
-#===============================================================================
-#broodSR <- function(input, output, session, datafile){
-# brood.table create brood table -----------------------------------------------
-  
-#  brood.table <- reactive({
-#    if(input$dataType== "Run"){
-#      x <- datafile()
-      # sum first run age: if p   
-#      p <- round(sum(x[1,-c(1:3)]),0)
-#      fage <- input$fage
-#      nages <- dim(x)[2]-3
-#      lage <- fage+nages-1
-#      yr <- c(min(x[,1])-seq(lage,1),x[,1])
-#      brood <- matrix(0,ncol=nages+2,nrow = length(yr))
-#      brood[,1] <- yr
-#      brood[,2] <- c(rep(NA,lage),x[,2])
-#      for(i in 1:nages){
-#        if(p==1){
-#          brood[,i+2] <- c(rep(NA,lage-fage+1-i),x[,3+i]*x[,3],rep(NA,fage+i-1))
-#        }
-#        else{
-#          brood[,i+2] <- c(rep(NA,lage-fage+1-i),x[,3+i],rep(NA,fage+i-1))  
-#        }
-#      }
-#      brood.c <- data.frame(brood)
-#      names(brood.c) <- c('b.Year','Spawner',paste0('b.Age',seq(fage,lage)))
-#      brood.c$Recruit <- rowSums(brood.c[,-c(1:2)])
-#      return(brood.c)
-#    } else {NA}
-#  }) 
-  
-# sr.data.0 --- Original sr dataset --------------------------------------------
-#  sr.data.0 <- reactive({
-#    if(input$dataType== "Run"){
-#      x <- brood.Table()
-#      x <- x[complete.cases(x),c('b.year','Spawner','Recruit')]
-#    } else if (input$dataType== "S-R"){
-#      x <- datafile()
-#    }
-#    names(x) <- c('Yr','S','R')
-#    return(x)     
-#  })
-  
-#  outdata <- list(brood.table=brood.table, sr.data.0 = sr.data.0,note=note)
-#  return(outdata)
-#}
-
-
-#-------------------------------------------------------------------------------
-#  Year selecting module  
-#-------------------------------------------------------------------------------
-#yrangeOUTUI <- function(id) {
-  # Create a namespace function using the provided id
-#  ns <- NS(id)
-#  tagList(
-#    p(strong("Choose brood year range")),
-#    uiOutput(ns("yrange"))
-#  )
-#}
-
-#yrangeOUT <- function(input, output, session,sr.data.0) {
-  
-#  output$yrange = renderUI({
-#    year <- sr.data.0()$Yr   # Extract brood year data range 
-#    fyear <- min(year)       # First brood year 
-#    lyear <- max(year)       # Last brood year
-    #  Slider input UI 
-#    sliderInput(("sryears"), label = "year range", min = fyear, max = lyear, value = c(fyear, lyear),step=1,sep = "")
-#  })
-  
-  # sr.data --- final dataset used for SR analyses -------------------------------
-#  sr.data <- reactive({
-#    x <- sr.data.0()
-#    fyear <- input$sryears[1]
-#    lyear <- input$sryears[2]    
-#    x <- x[x$Yr>=fyear & x$Yr<=lyear,]
-#    return(x)     
-#  })
-  
-#  return(sr.data)
-#}
 
 #===============================================================================
 #   SR Figure EG, SMSY, SMX, etc Module  

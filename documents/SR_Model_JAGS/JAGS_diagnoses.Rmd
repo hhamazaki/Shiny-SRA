@@ -1,0 +1,34 @@
+# SR Model Diagnoses 
+
+When an analysis is based on a model, it is important to examine if the model is fit well to data. In this model following Diagnositic plots will be provided.
+
+## Bayese Moddel Diagnostic plot (Bayese Model Tab)
+After the model run, the App will produce trace and density plots of SR parameters (lnalpha, beta, phi).   
+A good model estimates would show 
+* **straight horizontal band trace plot** 
+* **a distinct single peak density plot**  
+If the plots do not look good, increase burn-in and simulation lengths until obtaining good plots. When good model convergence is  not achieved after long simulations, this is an indication that: (1) **data are uninformative**, or (2) **wrong model specifications**.  
+
+
+## Model Diagnostic Plots (Residuals, ln(R/S) Plot Tab )
+In the following plots solid black line and gray shade indicates model predicted mean (solid line) and 95% credible interval (gray shade).   Red points indicate observed. 
+
+### Predicted and Residual plots
+* Predicted vs. observed ln(recruit) plot
+* Residual ln(recruit) plot  
+
+Majority of observed (red) points should be aligned with predicted mean (solid line).  In residual plots, residuals should have no discernible patterns.  
+
+
+### State-Space Model Only ##
+* Predicted vs. observed Run plot 
+* Predicted vs. observed Escapement (Spawner) plot   
+* Predicted vs. observed Harvest plot
+* Predicted vs. observed Run age proportion plot
+* Predicted brood age proportion plot
+
+A well fitted model show 
+* All observed red points fall within the gray shade bounds. 
+* All residual bounds include zero.
+
+

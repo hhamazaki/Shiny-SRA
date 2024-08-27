@@ -1,0 +1,56 @@
+# S-R data
+S-R data type consists of **Brood Year**, Spawner (Escapement) size and  Recruit (Brood year return) size.    
+
+| Year  | | Spawner|| Recruit| 
+|-------:|---:|-------:|---:|-------:|
+|____|_|______|_|______|
+| 1966 |  | 1000|   | 2500   |
+| 1967|   | 1200|   | 7300   |
+| 1968 |  | 2500 |  | 4250   |
+| 1969|   | 3500|   | 5250   |
+| 1970|   |  900|   | 3280   |
+| 1971|   | 1500|   | 14250 |
+| 1972|   | 500|    | 2500  |
+| 1973|   | 4500|   | 2250  |
+|____|_|______|_|______|
+---
+
+**S-R data with measurement error**
+When measurement error associated with Spawner (escapement) is available, calculate CV and name as  **CV_E** as 
+
+| Year  | | Spawner|| Recruit|| CV_E| 
+|-------:|---:|-------:|---:|-------:|---:|-------:|
+|____|_|______|_|______|
+| 1966 |  | 1000|   | 2500   | | 0.25   |
+| 1967|   | 1200|   | 7300   | | 0.21   |
+| 1968 |  | 2500 |  | 4250   | | 0.15   |
+| 1969|   | 3500|   | 5250   | | 0.53   |
+| 1970|   |  900|   | 3280   | | 0.10   |
+| 1971|   | 1500|   | 14250 | | 0.23   |
+| 1972|   | 500|    | 2500  | | 0.05   |
+| 1973|   | 4500|   | 2250  | | 0.25   |
+|____|_|______|_|______|_|______|
+---
+
+
+
+Analyses methods available for this data type are: 
+* SR Analyses and Escapement Goal Analyses 
+
+
+# Escapement Only data 
+Escapement only data type consists of **Calendar Year** and Spawner (Escapement) size. Only Percentile and Risk Analyses are available for this data type.  Please see Escapement Only Data Analyses section for more information.     
+
+| Year  | | Escapement| 
+|-------:|---:|-------:|
+| 1966|   | 1000   |
+| 1967|   | 1200   |
+| 1968|   | 2500   |
+| 1969|   | 3500   | 
+| 1970|   | 2400 |   
+| 1971|   | 1500|  
+| 1972|   | 500|   
+| 1973|   | 4500|  
+|____|_|______|
+
+---

@@ -1,0 +1,33 @@
+# S-R data
+
+S-R data type consists of **Brood Year**, Spawner (Escapement) size and  Recruit (Brood year return) size.    
+
+
+| Year  | | Spawner|| Recruit| 
+|-------:|---:|-------:|---:|-------:|
+|____|_|______|_|______|
+| 1966 |  | 1000|   | 2500   |
+| 1967|   | 1200|   | 7300   |
+| 1968 |  | 2500 |  | 4250   |
+| 1969|   | 3500|   | 5250   |
+|____|_|______|_|______|
+---
+Analyses methods available for this data type are: 
+* SR Analyses Ordinary 
+* Escapement Goal Analyses 
+
+# Escapement Only data 
+
+Escapement only data type consists of **Calendar Year** and Spawner (Escapement) size. Only Percentile and Risk Analyses are available for this data type.    
+
+| Year   | Spawner| 
+|-------:|-------:|
+| 1966   | 1000   |
+| 1967   | 1200   |
+| 1968   | 2500   |
+| 1969   | 3500   | 
+
+Analyses methods available for this data type are: 
+* Escapement Only Analyses 
+  * Percentile Analyses 
+  * Risk Analyses 

@@ -1,0 +1,101 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+# Standard vs. State-Space model 
+
+The biggest difference between standard and state-space model is a treatment of spawner and recruit and SR model.   
+Standard model considers that spawners and recruit are observed and independent quantity, and SR model is a primary process that generates SR relationship. However, except few cases (e.g., pink salmon) recruit is not observed and independent.  Recruit is a reconstructed from run size and run age composition over multiple years.  State-space model, on the other hand, considers that SR model is a latent process that generates observed quantities of that produces run, and run age composition.  As such, state-space model constructs and estimates entire process that generate annual run by age as follows:
+* Spawner generates recruits (via SR model process)
+* A portion of recruit return at an age 
+* Multiple ages 
+
+# Bayesian State-Space Model 
+
+A Bayesian state-space spawner-recruit model consists of process sub-model and likelihood sub-model.  The process sub-model creates observed quantities: Annual run size by age (or run size and run by age proportion), harvest, and escapement. The likelihood sub-model fits the model predicted quantities to observed quantities. 
+
+## Process sub-model
+**NOTE**  Here **t** indicates brood year, and **y** indicates annual calendar year. 
+Spawners of brood year t  ($S_{t}$) produces brood year recruits ($R_{t}$).  The $R_{t}$ is produced based on Ricker of Beverton-Holt SR function
+
+$$R_{t}=f(S_{t}) where f() is SR function$$  
+
+Turning recruit to annual run, the number of fish returning in calendar year y ($N_{y}$) is harvested by fisheries 
+
+$$H_{y}=(1-e^{-F})\cdot N_{y}$$
+
+and the remaining fish will become spawners 
+
+$$S_{y}=N_{y} - H_{y}$$
+
+The relation between brood year (t) and calender year (y) is as follows 
+
+From Brood year perspective, recruits of brood year t ($R_{t}$) will return to natal stream in multiple ages classes (a) (a: $a_{min},,,a,,,a_{max}$} in brood year t+a {a: $t+a_{min},,,t+a,,,t+a_{max}$}
+
+$$R_{t}=\sum_{a}^{A}R_{t,a}$$
+and 
+$$R_{t,a}=q_{t,a}\cdot R_{t}$$ 
+
+where  $q_{t,a}$ is a **maturity schedule** or a proportion of recruit of brood year t that will return in year t+a at age a.  
+
+From Calender year perspective, fish returning in calendar year y ($N_{y}$) consists of multiple ages from $a_{min}$ to $a_{max}$ 
+
+$$N_{y}=\sum_{a}^{}N_{y,a}$$
+
+The age a fish returning in calendar year y (($N_{y,a}$) is a recruit from spawners of the year y-a ($R_{y-a,a}$) that corresponds to the recruit of brood year t spawners that return in brood year a+t.
+
+$$N_{y,a} = R_{y-a,a} = R_{t,a}$$
+
+For instance an age 4 fish returning in a calendar year y=1 (1980) is an recruit from a spawner of calendar year -3 (y= 1-4)(1976) that corresponds to a recruit of brood year t=1 (1976) that returns as age 4 in brood year 5 (t=1+4).
+
+### Maturity schedule 
+
+The maturity schedule $q_{t,a}$ was modeled to be Dirichlet distribution,implemented by generating independent random variables from a gamma distribution $g_{t,a}\sim \Gamma(\gamma_{a},1)$. 
+$$g_{t,a}\sim \Gamma(\gamma_{a},1)$$ 
+
+
+## Observation Submodel
+
+Observation submodels consist of run, harvest, escapement sizes, and run age composition. 
+
+Run, harvest, escapement sizes are assumed to have lognormal distribution with mean is model log of predicted size, and sigma is observed cv.   
+
+**Run** 
+$$N_{obs,y}\sim LN(ln(N_{pred,y},\sigma_{N,y}^{2})$$ 
+where 
+$$\sigma_{N,y}^{2}=\ln(cv_{N,y}^{2}+1)$$
+
+**Harvest** 
+$$H_{obs,y}\sim LN(ln(H_{pred,y},\sigma_{H,y}^{2})$$ 
+where 
+$$\sigma_{H,y}^{2}=\ln(cv_{H,y}^{2}+1)$$
+
+**Escapement** 
+$$S_{obs,y}\sim LN(ln(S_{pred,y},\sigma_{S,y}^{2})$$ 
+where 
+$$\sigma_{S,y}^{2}=\ln(cv_{S,y}^{2}+1)$$
+
+
+**Run age composition**   
+Run age composition is assumed to have a multinomial distribution. 
+$$x_{obs,y,a}=int(p_{obs,y,a}\cdot n_{ef,y})$$
+
+$$X_{y}\sim mult(n_{y},\theta_{y})$$
+where 
+$X_{y}=\left \{x_{y,a_{min}},...,x_{y,a},...,x_{y,a_{max}} \right \}$ and $n_{y}=\sum x_{obs,y,a}$
+$\theta_{y}=\left \{p_{y,a_{min}},...,p_{y,a},...,p_{y,a_{max}} \right \}$ $p_{y,a}=\frac{N_{y,a}}{N_{y}}$
+
+
+
+
+
+
+
+
+
+
+
+
+
+

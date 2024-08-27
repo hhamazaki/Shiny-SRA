@@ -1,31 +1,11 @@
-
-# Data input file
-
-This application accepts **CSV** and **TXT** format data files.  When converting files from EXCEL, make sure that numbers are converted to general format.  **No thousand comma "," s.**
-
-
-# Data type
-
-The application accepts 3 data types
-* Run
-* S-R
-* Escapement
-
 # Run data type 
 
+Analyses methods available for this data type are: 
+* SR Analyses : **Ordinary** and **State-Space** 
+* Escapement Goal Analyses 
+* MSE (Management Strategy Evaluation) Analyses 
+
 Run data type consists of **Calendar Year**, Spawner (Escapement) size, Run size, and run or run proportion by age.  Age notation should be either run age, starting "A" (A3),or European scale age fw age.sw age starting from "a" (a1.1).  Run age is freshwater + saltwater scale age +1.  For example, run age of scale age 1.1 = 3. 
-
-When input data are European scale age, the app convert them to run age.  
-Default is making brood table based on all agegs.  User also have an option of set minimum and maximum age using **Select Run Age** slider.
-
-* Pool option (check **Pool Ages**) : Pool  minor age to next age (e.g. combine age 3 and age 4)  
-* Drop option (uncheck **Pool Ages**): Drop minor age and recalculate proportion (e.g. drop age 3)  
-
-For instance when run age proportion of ages 3,4,5,6,7, and 8 are 0.01,0.42,0.52,0.03,0.01, and 0.01. 
-When you want to limit ages to 4,5, and 6
-
-* Pool Age option will combine the proportion of age 3 with 4, and 7 and 8 with 6.  The resulting ages 4,5,6 proportion would be 0.43,0.52,0.05.  
-* Drop option will be drop ages 3,7, 8 and re-scale run proportion as: 0.42/(0.97 = 0.42+0.62+0.03), 0.52/0.97, and 0.03/0.97.  The resulting ages 4,5,6 proportion would be 0.43,0.54,0.03.
 
 
 **Run input table example** 
@@ -33,7 +13,7 @@ When you want to limit ages to 4,5, and 6
 | Year | |  Spawner| | Run    | | A3  | |  A4 | | A5  | | A6  | 
 |-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|
 |_____|_|_______|_|______|_|_____|_|_____|_|_____|_|_____|
-|1966  | |1000   | |4500  | | 0.01 | | 0.45 | | 0.43 | |  0.06  |
+|1966  | |1000   | |4500  | | 0.06 | | 0.45 | | 0.43 | |  0.06  |
 |1967  | |1200   | |6000  | | 0.03 | | 0.48 | | 0.42 | |  0.07  |
 |1968  | |2500   | |8250  | | 0.01 | | 0.42 | | 0.52 | |  0.06  |
 |1969  | |3500   | |12500 | | 0.05 | | 0.56 | | 0.38 | |  0.01  |
@@ -48,7 +28,7 @@ or
 | Year | |  Spawner| | Run    | | a1.1  | |  a1.2 | | a1.3  | | a1.4  | 
 |-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|
 |_____|_|_______|_|______|_|_____|_|_____|_|_____|_|_____|
-|1966  | |1000   | |4500  | | 0.01 | | 0.45 | | 0.43 | |  0.06  |
+|1966  | |1000   | |4500  | | 0.06 | | 0.45 | | 0.43 | |  0.06  |
 |1967  | |1200   | |6000  | | 0.03 | | 0.48 | | 0.42 | |  0.07  |
 |1968  | |2500   | |8250  | | 0.01 | | 0.42 | | 0.52 | |  0.06  |
 |1969  | |3500   | |12500 | | 0.05 | | 0.56 | | 0.38 | |  0.01  |
@@ -79,15 +59,54 @@ From the input table, the app creates a brood table starting the first calendar 
 | 1971| | 1600  | |	    | |     | |	    | |    | |        |
 | 1972| |  900  | |	    | |     | |	    |	|    | |        |
 |______|_|_______|_|_______|_|______|_|______|_|______|_|______|
+---
+
+**Reduce minor age classes**
+
+Default is making brood table based on all ages.  User can also have an option of set minimum and maximum age with  **Select Run Age** slider.
+
+Minor age classes reduction has two options: 
+
+* Pool option (check **Pool Ages**) : Pool  minor age to next age (e.g. combine ages 3 and 4, and ages 5 and 6)  
+* Drop option (uncheck **Pool Ages**): Drop minor age and recalculate proportion (e.g. drop ages 3 and 6)  
+
+**Original age composition**  
+
+| Year | |  Spawner| | Run    | | A3  | |  A4 | | A5  | | A6  | 
+|-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|
+|_____|_|_______|_|______|_|_____|_|_____|_|_____|_|_____|
+|1966  | |1000   | |4500  | | 0.06 | | 0.45 | | 0.43 | |  0.06  |
+|1967  | |1200   | |6000  | | 0.03 | | 0.48 | | 0.42 | |  0.07  |
+|_____|_|_______|_|______|_|_____|_|_____|_|_____|_|_____|
+
+  
+  
+**Pool Option** 
+
+| Year | |  Spawner| | Run    | | A4  | |  A5 |  
+|-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|
+|_____|_|_______|_|______|_|_____|_|_____|
+|1966  | |1000   | |4500  | | 0.51 | | 0.49 | 
+|1967  | |1200   | |6000  | | 0.51 | | 0.49 | 
+|_____|_|_______|_|______|_|_____|_|_____|
+**1966:  0.06+0.45 = 0.51   0.43+0.06 = 0.49**  
+**1967:  0.03+0.48 = 0.51   0.42+0.07 = 0.49**  
 
 
-**Additional CV efn data for running State-Space model** 
-To run a state-space SR model, 
-Additional column cv_N, cv_E, cv_H, and efn should be entered. 
-* cv_N: observed or estimated Run size CV (usually large: 0.1 ~ 0.8)
-* cv_E: observed or estimated Escapement size CV (usually large: 0.1 ~ 0.8)
-* cv_H: observed or estimated Harvest size CV (usually small: 0.01 ~ 0.25)
-* efn:  Assumed effective sample size (usually: 50 - 100)
+**Drop Option**   
+
+| Year | |  Spawner| | Run    | | A4  | |  A5 |  
+|-------:|---:|-------:|---:|-------:|---:|-------:|---:|-------:|
+|_____|_|_______|_|______|_|_____|_|_____|
+|1966  | |1000   | |4500  | | 0.51 | | 0.49 | 
+|1967  | |1200   | |6000  | | 0.53 | | 0.47 | 
+|_____|_|_______|_|______|_|_____|_|_____|
+**1966:  0.45/(0.45+0.43) = 0.51   0.43/(0.45+0.43) = 0.49**  
+**1967:  0.48/(0.48+0.42) = 0.53   0.42/(0.48+0.42) = 0.47**  
+
+## State-Space Model    
+Running State-Space model requires additional data **CV and efn** 
+Additional columns cv_N, cv_E, cv_H, and efn should be entered when running a state-space SR model. 
 
 ---
 
@@ -103,21 +122,25 @@ Additional column cv_N, cv_E, cv_H, and efn should be entered.
 |1972  | |....   | |0.14  | | 0.54 | |	0.02 | | 100 | 
 |_____|_|_______|_|______|_|_____|_|_____|_|_____|_|_____|
 
+Generally   
+* cv_N: CV of Run size (usually large: 0.1 ~ 0.8)
+* cv_E: CV of Escapement size (usually large: 0.1 ~ 0.8)
+* cv_H: CV of Harvest size (usually small: 0.01 ~ 0.1)
+* efn: Effective sample size (usually: 50 - 100)
+
 ---
 The model allows blank (NA) for one of the 3 cv columns, and estimate the missing cv as follows:  
-* Missing Run CV  
-The app will estimate run CV as  
+
+When run size is estimated by summing Escapement and Harvest: **Run = Escapement + Harvest**, run cv is not available. 
+In this case, keep cv_N column blank.  The app will estimate run CV as  
 $$run CV = \frac{\sqrt{(eCV\times Esc)^{^{2}}+(hCV\times H)^{^{2}}}}{Run}$$
 
 When Escapement is estimated by subtracting Harvest from Run: **Escapement = Run - Harvest**, escapement cv is not available.   
 
-* Missing Escapement or Harvest CV   
-
-The app will estimate escapement CV as  
+In this case, keep cv_E column blank.  The app will estimate run CV as  
 $$esc CV = \frac{\sqrt{(runCV\times Run)^{^{2}}-(hCV\times H)^{^{2}}}}{Esc}$$
 
 $$harv CV = \frac{\sqrt{(runCV\times Run)^{^{2}}-(eCV\times Esc)^{^{2}}}}{H}$$
-
 
 **efn: Effective sample size**
 The efn is **NOT** an actual (e.g. scale) sample size to estimate run age composition, but **modeling weights** (i.e.,uncertainties about age composition).  efn of 100 usually indicates 90% CI of +/- 0.1-0.15.  
@@ -126,12 +149,11 @@ The efn is **NOT** an actual (e.g. scale) sample size to estimate run age compos
 * <100: Less confident
 * >100: Highly confident  
 
-
-
 ## Trouble shooting and Special cases 
 
 **Don't have complete data**
 The app excludes years of missing data (see brood table), and SR analyses will be conducted using complete data set. 
+
 
 **Want to use Escapement data years before complete run data were collected.**
 The input data calculates brood year recruit several ages before the calendar year.  In the above example, a complete brood year starts from **1966**, but brood year recruit data are available starting from **1963**.  When you **DO** have escapement data starting 1963, you arranged the input data by inserting  **Real** escapement and **Dummy** run and age data. 
@@ -151,48 +173,6 @@ The input data calculates brood year recruit several ages before the calendar ye
 | 1972  ||  900  ||	2000  || 0.01|  |	0.42| | 0.52|  |  0.06  |
 |_____|_|_______|_|______|_|_____|_|_____|_|_____|_|_____|
 
+**NOTE: This trick does not work for State-Space Model**
 
 
----
-Analyses methods available for this data type are: 
-* Escapement Only Analyses 
-  * Percentile Analyses 
-  * Risk Analyses 
-  
-* SR Analyses 
-* MSE (Management Strategy Evaluation) Analyses 
-
-
-# S-R data type 
-
-Run data type consists of **Brood  Year**, Spawner (Escapement) size and  Recruit (Brood year return) size.    
-
-
-| Year  | | Spawner|| Recruit| 
-|-------:|---:|-------:|---:|-------:|
-|____|_|______|_|______|
-| 1966 |  | 1000|   | 2500   |
-| 1967|   | 1200|   | 7300   |
-| 1968 |  | 2500 |  | 4250   |
-| 1969|   | 3500|   | 5250   |
-|____|_|______|_|______|
----
-Analyses methods available for this data type are: 
-* SR Analyses 
-
-
-# Escapement Only data type 
-
-Escapement only data type consists of **Calendar Year** and Spawner (Escapement) size. Only Percentile and Risk Analyses are available for this data type.    
-
-| Year   | Spawner| 
-|-------:|-------:|
-| 1966   | 1000   |
-| 1967   | 1200   |
-| 1968   | 2500   |
-| 1969   | 3500   | 
-
-Analyses methods available for this data type are: 
-* Escapement Only Analyses 
-  * Percentile Analyses 
-  * Risk Analyses 

@@ -1,203 +1,237 @@
 ---
-title: "Escapement Goal Analysis Report"
+title: "Spawner-Recruit Model Escapement Goal Analysis Report"
 author:
   - name:
 date: '`r format(Sys.time(), "%d %B, %Y")`'
-mainfont: Times New Roman
+
 output: 
-  output: word_document
-  reference_docx: template.docx
-#  officedown::rdocx_document:
-    
-#    mapstyles:
-#      Normal: ['First Paragraph']
-
-
+  word_document:
+    fig_caption: true
+    toc: true
+    number_sections: true
+#   mainfont: Times New Roman
+    reference_docx: template.docx
+params:
+  add: NA
+  data: NA
+  JAGS: NA
+  Tbl_sum: NA
+  plt_runesc: NA
+  plt_bsr: NA
+  plt_sr: NA
+  plt_yld: NA
+  plt_lnRS: NA
+  plt_pred: NA
+  plt_resid: NA
+  plt_msy_prof: NA
+  plt_max_prof: NA
 ---
 
-```{r,echo=FALSE,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,comment=NULL, dev='png',fig.dim = c(12,8),message=FALSE,background=NULL)
-library(officedown)
-library(officer)
-
-fp <- fp_par(
-  text.align = "center", 
-  padding.bottom = 20, padding.top = 120, 
-  border.bottom = fp_border())
-
-ft <- fp_text(shading.color='#EFEFEF', bold = TRUE)
+```{r,setup, echo=FALSE,include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  fig.cap = TRUE,
+  comment=NULL, dev='png',message=FALSE,background=NULL)
 ```
 
+\newpage
+# Analyses Methods
+## Data
+```{r,datadesciption, echo=FALSE,include=FALSE}
+  nyr <- input$sryears[2]-input$sryears[1]+1
+  o.yrs <- paste(min(sr.data.0()$Yr),'to',max(sr.data.0()$Yr))
+  yrs <- paste(input$sryears[1],'to',input$sryears[2])
+  o.age <- c(min(o.age()),max(o.age()))
+  pool  <- ifelse(params$data =='Run',
+            ifelse(input$combage,
+                   'combined to the next nearest age.',
+                   'dropped and the remaining run age proportions were rescaled.'),
+             '')
+    
+Run <- paste('The brood table (Table 1) and spawner-recruit data were constructed from the input run and age table. The original run ages were trimmed from',o.age[1],'to',o.age[2],'to from',input$rage[1],'to',input$rage[2],'(Table 2). The run proportions of the trimmed ages were',pool)
+run <- ifelse(params$data =='Run',Run,'')
+brood <- paste0(length(sr.data.0()$Yr),'years, ranging from ',o.yrs)
+spr <- ifelse(params$data =='Run','The constructed','The input')
+ trim <- paste('In this model analysis, the original data were trimmed to',nyr,'years, ranging from',yrs,'.')
+yy <- ifelse(nyr !=length(sr.data.0()$Yr),trim,'')
+```
 
+`r run` `r spr` spawner-recruit data consists of `r brood`. `r yy`
 
+## Model Run 
+```{r,modeldesciption, echo=FALSE,include=FALSE}
+# Add parameters for data and model descriptions--------------------------------
+  jpar <- params$JAGS
+  madd <- ifelse(params$add=='ar1','AR(1) error',ifelse(params$add=='kf','time-variant alpha','standard'))
+  ss <- ifelse(input$SS,'state-space','')
+# Model priors 
+  change.prior <- paste('The default alpha and beta prior ranges were modified to', input$lnapha[1],'-',input$lnapha[2],'for ln.alpha and',input$beta[1],'-',input$beta[2],'for beta,respectively.')
+  cp <- ifelse(input$Priors,change.prior,'')
+```  
+
+A Bayesian `r madd` `r input$Model` `r ss` Spawner-Recruit model was run using JAGS. The model was run in `r jpar$n.chains` chains.  In each chain, a total of `r jpar$n.iter` iterations was run, of which the first `r jpar$n.burnin` were discarded (burn-in).  From the latter `r jpar$n.iter-jpar$n.burnin` iterations, posterior samples were taken at every `r jpar$n.thin`  iterations.  A total of `r jpar$n.sims` samples were saved for the posterior data analyses.   
+Uniform priors with default rages were used (see Method section Table 1). `r cp`  For each chain the starting value were randomly selected from the prior ranges.
+
+## Model Parameters 
 ```{r}
+kable(jpar$summary,caption = "JAGS parameters summary.", digits = c(rep(3,8),0))
+```
+For each parameter, n.eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor (at convergence, Rhat=1).  
+
+DIC info (using the rule, pD = var(deviance)/2)
+pD = `r round(jpar$pD,2)` and DIC = `r round(jpar$DIC,2)` 
+DIC is an estimate of expected predictive error (lower deviance is better).
+
+
+## Biological Reference Parameters 
+From the posteriors key biological reference parameters were calculated (See Method section). 
+
+```{r }
+kable(sumbayes(),caption = paste0("Spawner Recruit model parameters summary.")) 
+```
+
+
+```{r,results='asis',eval = (input$Remove_out)}
+cat('## Outliers Removal')
+```
+```{r,results='asis',eval = (input$Remove_out)}
+total <- sum(Ref_data_sum()$n,na.rm= TRUE)
+sn <- Ref_data_sum()$n[dim(Ref_data_sum())[1]]
+cat('Out of the total',total,'posterior samples ',sn,'samples were used for the escapement goal analyses')
+kable(Ref_data_sum(),caption = paste0("Summary of posterior samples removed."))
+
+```
+
+\newpage
+# Figures 
+## Spawner and Recruit timeseries 
+
+```{r,fig.dim = c(16,8),fig.cap = paste0("Figure 1. Spawner(Escapement) and brood year recruit, and Recruit per Spawner (R/S) ")}
 # Run and Escapement time series plot 
-runesc()
+#params$plt_bsr
+plt_srt()
+```
+
+```{r, results='asis', eval=(params$data=='Run')}
+cat('## Run and Escapement')
+```
+
+```{r,echo=FALSE,eval=(params$data=='Run'),fig.dim = c(16,8),fig.cap = paste0("Figure 1. Run and escapement")}
+# Run and Escapement time series plot 
+#params$plt_runesc
+plt_runesc()
+```
+
+\newpage
+
+```{r, results='asis', eval=(input$SR_plt)}
+cat('## Spawner-Recruit Plot')
+```
+```{r,fig.dim = c(12,8),eval=(input$SR_plt),fig.cap = paste0("Spawner-recruit curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
+#params$plt_sr
+plt_SR()
+```
+
+```{r, results='asis', eval=(input$YLD_plt)}
+cat('## Yield Plot')
+```
+```{r,echo=FALSE, eval=(input$YLD_plt),fig.dim = c(12,8),fig.cap = paste0("Yierld curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval."),fig.id = "Spawner and Yield"}
+#params$plt_yld
+plt_yield()
 ```
 
 
-```{r,fig.cap = paste0("Figure 1. Spawner-recruit curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
-srplot()
+\newpage
+
+# Model Diagnoses 
+```{r, results='asis', eval=(input$lSR_plt)}
+cat('## ln(R/S) Plot')
+```
+```{r,echo=FALSE,eval=(input$lSR_plt),fig.dim = c(12,8),fig.cap = paste0("ln(R/S)-Spawner linear plot.  Gray shade and dash lines indicate 95% Bayesian credible and prediction interval.")}
+#params$plt_lnRS
+plt_lnRS()
 ```
 
 
-```{r,fig.cap = paste0("Figure 2. Yierld curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
-yldplot()
+
+```{r, results='asis', eval=(input$Res_plt)}
+cat('## Prediction Plot')
+```
+```{r,echo=FALSE,eval=(input$Res_plt),fig.dim = c(16,8),fig.cap = paste0("Figure . Predicted and observd recruit.")}
+#params$plt_pre
+plt_predict()
 ```
 
-```{r,fig.cap = paste0("Figure 3. Residual plot.")}
-resid.plt()
+```{r, results='asis', eval=(input$Res_plt)}
+cat('## Residual Plot')
 ```
-
-```{r,fig.cap = paste0("Figure 3. MSY Profile Analyses plot.")}
-plt.msy.prof.fig()
-```
-
-
-```{r,fig.cap = paste0("Figure 4. Smax Profile Analyses plot.")}
-plt.max.prof.fig()
+```{r,echo=FALSE,eval=(input$Res_plt),fig.dim = c(16,8),fig.cap = paste0("Figure . Residual plot."),fig.id = "Residual Plot"}
+#params$plt_resid
+plt_residual()
 ```
 
 
-```{r,fig.cap = paste0("Figure 4. Time variant alpha.")}
+```{r, results='asis', eval=(params$add=='kf')}
+cat('## Time variant alpha')
+```
+
+```{r,echo=FALSE,eval=(params$add=='kf'),fig.dim = c(18,8),fig.cap = paste0("Figure 8. Time variant alpha."),fig.id = "Time variant allpha plot"}
 lnalphai.plt()
 ```
 
 
+\newpage
 
-```{r,eval=(input$dataType=='Run')}
-kable(round(brood.out()$brood,0),caption = "Table 1. Input brood table .")
+
+```{r, results='asis', eval= (input$MSY_prof)}
+#cat('\\newoage')
+cat('## MSY Profile')
 ```
-
-```{r, fig.cap="Table 2.  JAGS Model Summary output."}
-print(run.JAGS())
-```
-
-
-
-```{r}
-kable(sumbayes(),caption = paste0("Table 3. ",model.name(),"Spawner Recruit model parameters summary.","beta x 10^-",Bayesdata()$d," Outliers were removed.") ) 
+```{r,echo=FALSE,eval = (input$MSY_prof),fig.dim = c(16,8),fig.cap = paste0("MSY Profile Analyses plot. The lines indicate the probability of a specified escapement producing yield greater than x percent of the MSY.")}
+#params$plt_msy_prof
+plt.msy.prof.fig()
 ```
 
 
-## Spawner-Recruit model 
-
-Two Spawner-Recruit models are available:**Ricker** and **Beverton-Holt** 
-
-### Ricker model 
-$$R = \alpha Se^{-\beta S}e^{\varepsilon}$$
-
-### Beverton-Holt model 
-$$R = \frac{\alpha S}{1+\beta S}e^{\varepsilon}$$
-where 
-$$\varepsilon_{iid} \sim N(0,\sigma ^{2})$$
+```{r, results='asis', eval=(input$MSR_prof)}
+cat('## RMAX Profile')
+```
+```{r,echo=FALSE,eval = (input$MSR_prof) ,fig.dim = c(18,8),fig.cap = paste0("RMAX Profile Analyses plot. The lines indicate the probability of a specified escapement producing recruit greater than x percent of the RMAX.")}
+#params$plt_max_prof
+plt.max.prof.fig()
+```
 
 
-In fitting the model to data, the model was log-linearlized as 
-
-**Ricker Model**
-$$ln(R)= ln.\alpha -\beta s+ln(S)+\varepsilon$$
-
-**Beverton-Holt Model**
-$$ln(R)=ln.\alpha -ln(1+\beta s)+ln(S)+\varepsilon$$
-where $ln.\alpha = ln(\alpha)$, $s = S\cdot{10}^{-d}$ and $d = Int(log(S))$.   
-
-The data were fitted to 
-$$ln(R) \sim N(\mu,{\sigma}^{2})$$
-where $\mu$ is Ricker or Beverton-Holt Spawner-Recruit equations. In the equation the conversion of $S$ to $s$ makes $\beta$ to a range similar to the range of $ln.\alpha$,which is numerically more efficient to estimate parameters. 
+```{r, results='asis', eval=(input$T_Yld_prof)}
+cat('## Target Yield Profile')
+```
+```{r,echo=FALSE,eval = (input$T_Yld__prof) ,fig.dim = c(18,8),fig.cap = paste0("Target Yield Profile Analyses plot. The line indicate probability of a specified escapement producing yield greater than the target yield.")}
+#params$plt_max_prof
+```
 
 
-#### AR(1) model option 
-AR(1) model (First-order autoregression model) assumes that error is serially correlated or that the value of residual at time *t* is a linear function of the residual at time *t-1*.  
-
-This is modeled as 
-${\varepsilon_{t}}=\phi {\varepsilon_{t-1}}+{\nu_{t}}$ where ${\nu_{t}} \sim N(0,{\sigma _{\nu }}^{2})$
-
-#### Time variant alpha model option  
-Time variant alpha model assumes that alpha takes random walk process. 
-$${ln(\alpha )_{t}}={ln(\alpha )_{t-1}}+{\omega_{t}}$$ 
-where ${\omega_{t}} \sim N(0,{\sigma _{\omega }}^{2})$
-
-#### Model Parameters and Priors 
-
-|Parameter |   Prior    |    Note  |
-|  ------- | -------:|-------:|
-| $ln(\alpha)$  |  $ln(\alpha) \sim U(0,10)$ |  All models   | 
-| $\beta$    |     $\beta \sim U(0,10)$  |  All models   | 
-| $\sigma$    |      $\sigma \sim U(0,10)$  |  All models    | 
-| $\phi$    |    $\phi \sim U(-1,1)$   |  **AR1 option**  | 
-| $\varepsilon_{0}$ |     $\varepsilon_{0} \sim N(0,100)$     |**AR1 option**  | 
-| $\sigma _{\omega}$|     $\sigma _{\omega} \sim U(0,10)$     |**TVA option**| 
----
-
-The model was written in JAGS (), with default setting of 5000 burn-in, followed by 10000 simulation and samples were taken at every 5th simulation.  3 chains where starting values were selected randomly from the prior range (Table 3). 
-                                                                      
-
-#### Model Parameters based on expected mean vs. median recruit 
-Under the assumption of lognormal distribution of recruit (R), $R \sim LN(ln(\mu),{\sigma}^{2})$ or $ln(R) \sim N(\mu,{\sigma}^{2})$, $\mu$ is an expected **Median Recruit**, and expected **Mean Recruit** is $\mu = exp(ln(\mu) + {\sigma}^{2}/2)$.
-
-**statistical bias corrected alpha parameters**  $ln(\alpha.c) = ln(\alpha) + {\sigma}^{2}/2$ and $\alpha.c = \alpha e^{\frac{\sigma^{2}}{2}}$
-for AR1 model, $ln(\alpha.c) = ln(\alpha)+ \frac{\sigma^{2}}{2(1-\phi^{2})}$ and $\alpha.c = \alpha e^{\frac{\sigma^{2}}{2(1-\phi^{2})}}$
-
-**Ricker model**
-$$Median(R) = \alpha Se^{-\beta S}$$
-$$Mean(R) = \alpha.c Se^{-\beta S}$$
-
-**Beverton-Holt model** 
-$$Median(R) = \frac{\alpha S}{1+\beta S}$$
-$$Mean(R) = \frac{\alpha.c S}{1+\beta S}$$
-
-### Profile Analysis 
-MSY-Rmax profiles analysis is aimed to fined a range of $S$ that will produce yield-recruit that are above q% of MSY-Rmax.  
-
-calculate the probability of a given escapement producing an yield-recruit that are above q% of MSY-Rmax.  The MSY profile is calculated in following steps.  
-* In each Bayesian sample of SR parameters (j) and given spawner range(S)
-  * Calculate expected yield $Y_{j}(S_{i})$ and find the maximum yield (**MSY**) $Max(Y_{j})$
-  * Assign $X_{i,j}$ to 1 if the expected yield is above the minimum q% of the MSY or 0 if otherwise
-* At each escapement take the mean of X from all the simulation samples. 
-* MSY Profile Range $S_{MSY}$ is a range of spawners such that the profile probability is above the minimum p% target. 
-
-This is written as: 
-**MSY based spawner profile**
-$$P(S_{i}) =\frac{\sum_{j=1}^{n}X_{i,j}}{n}$$
-where
-
-$$
-X_{i,j} = 
-\begin{cases}
- 1   & \quad\ Y_{j}(S_{i})\geq  q\cdot\ Max(Y_{j})\\
- 0   & \quad\ otherwise
- \end{cases}
-$$
-
-MSY based Escapement Goal range is a range of S where P(S) is equal to and greater than the predefined p. 
-
-$$\left \{ S_{MSY}\leftarrow \left [ S_{l}\: ,\:S_{u}  \right ]|P(S)\geq p \right \}$$
-
-### Rmax Proile 
-Rmax Profile calculates the probability of a given spawner size producing recruits that are above q% of Rmax.  **Note that Ricker SR model only.  Rmax does not exist in Beverton-Holt SR model.**   
-
-The Rmax profile is calculated in following steps.  
-* At each Bayesian samples SR parameters (j) and given spawner range(S)
-  * Calculate expected recruit $R_{j}(S_{i})$ and find the maximum recruit (**Rmax**) $Max(R_{j})$
-  * Assign $X_{i,j}$ to 1 if the expected recruit is above the minimum q% of the Rmax or 0 if otherwise
-* At each escapement take the mean of X from all the simulation samples. 
-* Rmax Profile Range $S_{max}$ is a range of spawners such that the profile probability is above the minimum p% target.  
-
-This is written as: 
-**Rmax based spawner profile**
-$$P(S_{i}) =\frac{\sum_{j=1}^{n}X_{i,j}}{n}$$
-where
-$$
-X_{i,j} = 
-\begin{cases}
- 1  & \quad\ R_{j}(S_{i})\geq  q\cdot\ Max(R_{j})\\
- 0  & \quad\ othrewise
- \end{cases}
-$$
-Rmax based escapement goal range is a range of S where P(S) is equal to and greater than the predefined p. 
-
-$$\left \{ S_{max}\leftarrow \left [ S_{l}\: ,\:S_{u}  \right ]|P(S)\geq p \right \}$$
+```{r, results='asis', eval=(input$T_Rec_prof)}
+cat('## Target Recruit Profile')
+```
+```{r,echo=FALSE,eval = (input$T_Rec__prof) ,fig.dim = c(18,8),fig.cap = paste0("Target Recruit Profile Analyses plot. The line indicates a specified escapement producing recruit greater than the target recruit.")}
+#params$plt_max_prof
+```
 
 
+\newpage
+# Tables 
+
+## Spawner-Recruit Data 
+
+```{r,echo=FALSE, }
+table <- sr.data()
+names(table)[1:3] <- c('Year','Spawner','Recruit')
+kable(round(table[,1:3],0),caption = "Spawner-Rercuit data used for the analyses.")
+```
+
+```{r, child=if (params$data=='Run') 'run_table.Rmd'}
+```
+
+```{r, child=if (input$SREQ) 'SR_Equations.Rmd'}
+```
 

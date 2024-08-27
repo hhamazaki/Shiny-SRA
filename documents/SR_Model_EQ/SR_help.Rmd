@@ -1,0 +1,56 @@
+# Spawner-Recruit model 
+
+Two Spawner-Recruit models are available:**Ricker** and **Beverton-Holt** 
+
+**Ricker Model**
+
+$$R = \alpha Se^{-\beta S}e^{\varepsilon}$$
+
+**log-linear Ricker Model**
+$$ln(`R)= ln(\alpha )-\beta s+ln(S)+\varepsilon$$
+
+
+**Beverton-Holt model**
+
+$$R = \frac{\alpha S}{1+\beta S}e^{\varepsilon}$$
+
+**log-linear Beverton-Holt Model**
+$$ln(`R)=ln(\alpha )-ln(1+\beta s)+ln(S)+\varepsilon$$
+
+where 
+$$\varepsilon_{iid} \sim N(0,\sigma ^{2})$$
+$s = S\cdot{10}^{-d}$ and $d = Int(log_{10}(\bar{S}))$
+
+**AR(1) model option** 
+AR(1) model (First-order auto-regressive model) assumes that error is serially correlated or that the value of residual at time *t* is a linear function of the residual at time *t-1*.  
+
+This is modeled as 
+$${\varepsilon_{t}}=\phi {\varepsilon_{t-1}}+{\nu_{t}}$$ where $${\nu_{t}} \sim N(0,{\sigma _{\nu }}^{2})$$  
+
+
+**Time variant alpha model option**  
+Time variant alpha model assumes that alpha takes random walk process. 
+$${ln(\alpha )_{t}}={ln(\alpha )_{t-1}}+{\omega_{t}}$$ 
+where $${\omega_{t}} \sim N(0,{\sigma _{\omega }}^{2})$$
+
+## Measrement Error Model  
+Standard Spawner-Recruit model assumes that Spawner is observed without (or very small) error.  Measurement Error Model incorporates error of spawner obervation for estimation of the model parameters.  In this, S is assumed to have log normal error 
+$$S\hat{}\sim LN(lnS_{\mu},\sigma_{s}^{2})$$ 
+In the SR model $S\hat{}$ is used for S.  
+
+
+#### Model Parameters and Priors 
+The model estimates following parameters
+
+|Parameter |  | Prior  |  |    Note  |
+|  ------- |---:| -------:|---:|-------:|
+|_________|_|________________|_|________________________|
+| $ln(\alpha)$  | | $ln(\alpha) \sim U(0,10)$ | | All models   | 
+| $\beta$    |  |   $\beta \sim U(0,10)$  | | All models   | 
+| $\sigma$    |   |   $\sigma \sim U(0,10)$  | | All models    | 
+| $\phi$    |   | $\phi \sim U(-1,1)$   |  |**AR1 option**  | 
+| $\varepsilon_{0}$ |   |  $\varepsilon_{0} \sim N(0,100)$   |  |**AR1 option**  | 
+| $\sigma _{\omega}$|   |  $\sigma _{\omega} \sim U(0,10)$   |  |**TVA option**| 
+|_________|_|________________|_|________________________|
+---
+All the priors are set to be flat, uninformative, reasonable range that are seen in salmon stock assessment. Model starting points are randomly selected from the above prior ranges. 
