@@ -71,8 +71,7 @@ observe({
     hideTab(inputId = "ssTab", target = "Brood Age Comp") 
   }
  })  
-
-
+#'--- End  Tab Control ---------------------------------------------------------
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Panel 1  Data Input and Submit ----
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -89,7 +88,30 @@ observe({
   
 ### data1 Data file reading module ---- 
 data1 <-  dataInputServer("datain")
-
+datacheck <- function(dat){
+   dm <- sapply(dat,class)
+   c <- length(dm[dm %in% 'character'])
+   return(c)
+  }
+#' Error Checking routine -------------------------------------------------------
+observe({
+#' Stop if not all data are numeric/integer ------------------------------------    
+        if(datacheck(data1())>0){
+      showModal(modalDialog(
+        title = Info_data_input_Error_title,
+        Info_data_input_Error,
+        easyClose = TRUE,
+        footer = NULL
+      ))}else if(input$dataType== "Run"&is.null(age.out(data1()))){
+#' For Run data, Stop if age data are not formated correctly -------------------    
+      showModal(modalDialog(
+        title = Info_data_Age_Error_title,
+        Info_data_Age_Error,
+        easyClose = TRUE,
+        footer = NULL
+      ))}
+    })
+#'
 #' data:  Sample data input  ---- 
 data <- reactive({
   if(isTRUE(input$Sample)){
@@ -98,15 +120,21 @@ data <- reactive({
   else if(input$dataType== "Escapement Only"){out <- read.csv('Sample_data/Sample_Esc_data.csv',header=T)} 
     }
   else {
-   out <- data1()
-  }
+#' Stop if not all data are numeric/integer ------------------------------------    
+    validate(need(datacheck(data1())==0,"Please check input data format."))
+#' For Run data, Stop if age data are not formated correctly -------------------    
+    if(input$dataType =="Run"){
+    validate(need(!is.null(age.out(data1())),"Please check Age data column names."))
+    }
+    out <- data1()
+   }
   return(out)
 })
-      
+
 ### Tbl_data: Uploaded data table output ----------------------------------------
   output$Tbl_data <- renderDT(datatable(data(),rownames = FALSE))  
 
-##### UI agerange: Set Age range ------------------------------------------------------------
+##### UI agerange: Set Age range --------------------------------------------------------------------------------
   output$agerange <- renderUI({
     if(input$dataType== "Run"){
      age <-  age.out(data())
@@ -388,7 +416,7 @@ output$Tbl_sum.data <- renderTable({
   if(input$dataType != "Escapement Only"){
   dat <- sr.data()
   dat$Y <- dat$R-dat$S
-  x <- as.data.frame(t(t(sum.fun(dat[,c('S','R','Y','lnRS')],90))))  
+  x <- as.data.frame(t(t(sum.fun(dat[,c('S','R','Y','lnRS')],95))))  
 for(i in 1:3){x[,i] <- as.integer(x[,i])}
   x[,4] <- round(x[,4],3)
   names(x) <- c('Spawner','Recruit','Yield','ln(R/S)')
@@ -1211,7 +1239,7 @@ base.pl <- reactive({
   xp <- sr.data.0()
   xp2 <- sr.data()
   SRp <- SRp()
-#  maxS <- round(max(SRp$S))
+  maxS <- round(max(SRp$S))
   maxR <- round(1.25*max(xp$R,na.rm=TRUE))
   minY <- round(min(SRp$Rl-SRp$S,na.rm=TRUE))
   maxY <- round(1.25*max(xp$R-xp$S,na.rm=TRUE))
@@ -1229,7 +1257,7 @@ base.pl <- reactive({
   geom_line(data = SRp, aes(x = S, y = RS.md), color = "black", linewidth = 0.8) +
 # predicted Mean    
   geom_line(data = SRp, aes(x = S, y = RS.me), color = "black", linewidth = 0.8,linetype = 2) +
-  scale_x_continuous(expand=c(0, 0), limits=c(0, NA), 
+  scale_x_continuous(expand=c(0, 0), limits=c(0, maxS), 
                      labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep) +
   scale_y_continuous(expand=c(0, 0), limits=c(0, maxR), 
                      labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep)+
@@ -1247,7 +1275,7 @@ base.pl <- reactive({
 # predicted Mean    
   geom_line(data = SRp, aes(x = S, y = (RS.me-S)), color = "black", linewidth = 0.8,linetype = 2) +
   geom_hline(yintercept = 0, linetype = "solid",color=1,size=1.0) +
-  scale_x_continuous(expand=c(0, 0), limits=c(0, NA), 
+  scale_x_continuous(expand=c(0, 0), limits=c(0, maxS), 
                      labels = label_number(scale = 1 /u), n.breaks = 10,oob=oob_keep) +
   scale_y_continuous(expand=c(0, 0), limits=c(minY, maxY),
                      labels = label_number(scale = 1 /u), n.breaks = 10,oob=oob_keep)+
@@ -1264,7 +1292,7 @@ base.pl <- reactive({
 # predicted Mean    
   geom_line(data = SRp, aes(x = S, y = log(RS.me/S)), color = "black", linewidth = 0.8,linetype = 2) +
   geom_hline(yintercept = 0, linetype = "solid",color=1,size=1.0) +
-  scale_x_continuous(expand=c(0, 0), limits=c(0, NA), 
+  scale_x_continuous(expand=c(0, 0), limits=c(0, maxS), 
                      labels = label_number(scale = 1 /u), n.breaks = 10,oob=oob_keep) +
   scale_y_continuous(expand=c(0, 0), 
                      n.breaks = 10,oob=oob_keep)+

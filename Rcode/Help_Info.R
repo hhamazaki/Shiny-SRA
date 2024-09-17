@@ -2,6 +2,34 @@
 #'  Help_info.R
 #'  This file contains objects used for popup info modoules 
 #'==============================================================================
+# Data Error  -------------------------------------------------------------------
+Info_data_input_Error_title <- "Input data contain non-numbers"
+Info_data_input_Error <- HTML("
+
+<p>The some data are read as <strong> character </strong> not as <strong> numbers </strong> (numberic, integer).</p>
+<p>This is most likely casused by</p> 
+<ol>
+	<li>The data were formated with thousands comma <strong>","</strong> (e.g., <strong>2,150</strong>)</li>
+	<li>The data have some <strong> footnote/superscript </strong> (e.g., <strong>2125<sup>a</sup></strong>)</li>
+	<li>The data have additional non-number colums </li>
+</ol>
+
+Please correct errors 
+<ol>
+	<li>Reformat data to general</li>
+	<li>Remove character footnote/superscripts</li>
+	<li>Remove non-number columns </li>
+</ol>
+                              ") # End HTML
+
+# Age Error  -------------------------------------------------------------------
+Info_data_Age_Error_title <- "Incorrect Age colmun names"
+Info_data_Age_Error <- HTML("
+<p>The Run data require Age column named as: A+run age (e.g.,<strong>A1,A2,A3......</strong>) or a+European scale&nbsp; age (e.g., <strong>a0.1, a1.1, a1.4, ....</strong>).</p>
+Please correct the age column name.
+                              ") # End HTML
+
+
 # Data Input -------------------------------------------------------------------
 Info_data_input_title <- "Data Type Options: Help for further information"
 Info_data_input <- HTML("
