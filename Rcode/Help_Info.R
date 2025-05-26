@@ -29,7 +29,6 @@ Info_data_Age_Error <- HTML("
 Please correct the age column name.
                               ") # End HTML
 
-
 # Data Input -------------------------------------------------------------------
 Info_data_input_title <- "Data Type Options: Help for further information"
 Info_data_input <- HTML("

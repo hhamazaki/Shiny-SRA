@@ -1,11 +1,12 @@
 # Escapement data requirements
 
-The Escapement Only Analyses Methods are based on the assumptions that **salmon population has been sustainable at observed historical escapement range** and thus **the population will be sustainable at the observed historical range**.  
+The Escapement Only Analyses Methods are based on the assumptions that **a salmon population has been sustainable at observed historical escapement range** and thus **the population will be sustainable at the observed historical range**.  
+
 To meet this assumption escapement only data should have following qualities: 
-* Escapements are accurate with low survey errors. 
-* Escapements are  sufficiently long.
-* Escapements have good contrasts (e.g. >4)
-* Escapements have no discernible trends (e.g., increasing, declining)
+* Data are sufficiently long (e.g., several generations of salmon have returned).
+* Escapement data are accurate with low survey errors. 
+* Escapement has a good contrast (e.g. >4)
+* Escapement has no discernible trends (e.g., increasing, declining)
 * Assumed harvest rates are low to moderate
 
 ## When escacapement data do not meet the analyses requirements....

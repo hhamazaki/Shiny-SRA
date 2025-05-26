@@ -10,20 +10,6 @@ mult <- function(u){
   mult <- ifelse(u==1000000,paste0('(x million)'),ifelse(u>1,paste0('(x',u,')'),''))  
   return(mult)  
 }
-## Show Color Shades -------------------------------------------------------   
-tcol <- function(color, percent = 50, name = NULL) {
-  #	  color = color name
-  #	percent = % transparency
-  #	   name = an optional name for the color
-  ## Get RGB values for named color
-  rgb.val <- col2rgb(color)
-  ## Make new color using input color as base and alpha set by transparency
-  t.col <- rgb(rgb.val[1], rgb.val[2], rgb.val[3],
-               max = 255,
-               alpha = (100-percent)*255/100,
-               names = name)
-  return(t.col)
-}
 
 #'===============================================================================
 #  1.0 Data Modification ---- 
@@ -142,6 +128,12 @@ make.brood <- function(data,p){
    return(x)
  }
   
+trimden <- function(x){
+  q <- quantile(x,  probs = 0.999)
+  x <- x[x<q]
+  return(x)
+ }
+
 #'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ##  1.5  Text functions -----  
 #'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -220,9 +212,6 @@ Id.outliers <- function(dat,target){
 # Remove obvious outlier data 
 # Assign 1 when beta or lnalpha are less than 0   
   dat$Remove <- ifelse(dat$beta<=0,1,NA)
-#  temp <- ifelse(dat$beta>0,log(0.01*dat$beta/(1-0.01*dat$beta)),NA)
-#  temp[which(dat$Remove>=1)] <- NA
-#  if(length(outliers(temp)>0)) dat$Remove[outliers(temp)] <- 2
   pars <- c('beta','lnalpha')
   if(target=='me'){pars <- c('beta','lnalpha.c')}
   for(i in 1:2){
@@ -233,6 +222,19 @@ Id.outliers <- function(dat,target){
   }
   return(dat)
  }
+
+outlier_sum <- function(post){
+ dat <-data.frame(table(post$Remove,useNA='ifany'))   
+ dat$Pct <- round(100*dat$n/sum(dat$n),1)
+ dat$code <- as.integer(as.character(dat$code))
+ note <- c('beta Negative','Outlier beta','Outlier lnalpha')
+ code <- c(1,2,3)
+ note <- data.frame(code,note)
+ dat <- merge(dat,note, by =c('code'),all=TRUE)
+ dat$code <- as.integer(dat$code)
+ return(dat)
+}
+
 
 #'-------------------------------------------------------------------------------
 # sim.out: Read MCMC data, remove outliers, and calculate biological reference 
@@ -641,6 +643,7 @@ MSE.sim <- function(srmodel,lnalpha.i,beta,S0,D,e.Rec,e.p,e.pred,e.imp,FT,mH){
     N[y] <- sum(N.ta[b.y,])
 # Predicted Run with error 
     N.pred[y] <- N[y]*(e.pred[y])
+    
 # Harvest Target----------------------------------------------------------------
     PY <- N.pred[y] - FT   # Predicted Yield  
     H.target[y] <- ifelse(
@@ -649,13 +652,13 @@ MSE.sim <- function(srmodel,lnalpha.i,beta,S0,D,e.Rec,e.p,e.pred,e.imp,FT,mH){
       # Case 2: Predicted Yield is positive: 
       # fishery target is surplus or min harvest whichever bigger  
       # fishery target is also between surplus and the max harvest (fishing capacity) whichever smaller 
-      min(mH[2],max(mH[1],PY))
+      min(mH[2],max(mH[1],(N.pred[y]-FT)))
     )  # End ifelse 
     # Target Harvest rate 
 # Set Target harvest rate 
-    HTR <- H.target[y]/N.pred[y]
+    HTR <- H.target[y]*(e.imp[y])/N.pred[y]
     #  Actual Harvest: Harvest will not exceed 95% of incoming run
-    H[y] <- N[y]*min(HTR*e.imp[y],0.9)
+    H[y] <- N[y]*min(HTR,0.95)
     S[y] <- N[y] - H[y]
     #     
     R0[b.y] <- srmodel(lnalpha.i[b.y],beta,S[y],D)
