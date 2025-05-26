@@ -245,7 +245,7 @@ jag.model.SR.SS <-function() {
 #' GENERAL MATURITY SCHEDULE---------------------------------------------------
   for (a in 1:nages) {
        for (y in 1:(nyrs+lage-fage)) {   
-        g[y,a] ~ dgamma(gamma[a],1)
+        g[y,a] ~ dgamma(gamma[a],.5)
       # q: brood year age proportion (i.e. maturity schedule). 	 
         q[y,a] <- g[y,a]/sum(g[y,])                  }
         gamma[a] ~ dgamma(0.005,0.005)  # Gamma prior   
