@@ -1,38 +1,3 @@
-\newpage
-# Methods
-## Spawner Recruit Model
-The spawner-recruit data are fitted to the **Ricker (1957)** or **Beverton-Holt (1958)** model. 
-
-### Ricker model 
-$$R = \alpha Se^{-\beta S}e^{\varepsilon}$$
-**Log-linear form**
-$$R = ln.\alpha -\beta S+ln(S) +\varepsilon $$
-where $ln.\alpha = ln(\alpha)$, $s_{y} = S_{y}\cdot{10}^{-d}$ and $d = Int(log(\bar{S}))$.   
-
-
-### Beverton-Holt model 
-$$R = \frac{\alpha S}{1+\beta S}e^{\varepsilon}$$
-**Log-linear form**
-$$R=ln.\alpha -ln(1+\beta S)+ln(S) + \varepsilon$$
-
-where 
-$$\varepsilon_{iid} \sim N(0,\sigma ^{2})$$
-## Model data fitting
-
-In data fitting of the model, recruit ($R_{y}$) derived from the y-th brood year spawner ($S_{y}$) is assumed to be log-normally distributed with mean $\mu_{y}$ and variance ${\sigma}^{2}$
- 
-$$ln(R_{y}) \sim N(\mu_{y},{\sigma}^{2})$$
-where $\mu_{y}$ is a log-linearlized Ricker or Beverton-Holt spawner-recruit model 
-
-**Ricker Model**
-$$\mu_{y} = ln.\alpha -\beta s_{y}+ln(S_{y})$$
-**Beverton-Holt Model**
-$$\mu_{y}=ln.\alpha -ln(1+\beta s_{y})+ln(S_{y})$$
-where $ln.\alpha = ln(\alpha)$, $s_{y} = S_{y}\cdot{10}^{-d}$ and $d = Int(log(\bar{S}))$.   
-
-
-In the above equations, the conversion from $S$ to $s$ makes $\beta$ to a range similar to the range of $ln.\alpha$.  This is numerically more efficient to estimate parameters. 
-
 ### Additional Model options 
 
 #### AR(1) model option 
@@ -50,7 +15,6 @@ Time variant alpha model assumes that alpha takes random walk process.
 $${ln.\alpha_{y}}={ln.\alpha_{y-1}}+{\omega_{y}}$$
 where 
 $${\omega_{y}} \sim N(0,{\sigma _{\omega }}^{2})$$
-
 ## Model priors 
 Model priors were set to be uniform (Table 1)
 
@@ -67,63 +31,22 @@ Table 1.  Priors for the Ricer/Beverton-Holt spawner recruit model parameters.
 
 
                                                                       
-## Model Output Parameters based on expected mean vs. median recruit 
+## Model Output Parameters based on expected median vs. mean recruit 
+
+The model expected mean ln(R) corresponds to **median** recruit.  To obtain **mean** recruit statistical bias correction is performed as:
 
 **statistical bias corrected alpha parameters**  
 $$ln(\alpha_{c}) = ln(\alpha) + \frac{\sigma^{2}}{2}$$ 
-and $$\alpha.c = \alpha e^{\frac{\sigma^{2}}{2}}$$
-
+and 
+$$\alpha.c = \alpha e^{\frac{\sigma^{2}}{2}}$$
 
 AR1 model, 
+
 $$ln(\alpha_{c}) = ln(\alpha)+ \frac{\sigma^{2}}{2(1-\phi^{2})}$$ 
+
 and 
 $$\alpha_{c} = \alpha e^{\frac{\sigma^{2}}{2(1-\phi^{2})}}$$
-
-**Ricker model**
-$$Median(R) = \alpha Se^{-\beta S}$$
-$$Mean(R) = \alpha_{c} Se^{-\beta S}$$
-
-$$Predicted (R) = \alpha Se^{-\beta S}e^{\sigma}$$
-**Beverton-Holt model** 
-$$Median(R) = \frac{\alpha S}{1+\beta S}$$
-$$Mean(R) = \frac{\alpha_{c} S}{1+\beta S}$$
-$$Predicted(R) = \frac{\alpha S}{1+\beta S}e^{\sigma}$$
-
-## Biological Reference Parameters
-Following biological reference parameters are generated from the model 
-* Seq   Spawner abundance expected to produce the same number of recruits
-* Smsy  Spawner abundance expected to produce the maximum number of yield (MSY) 
-* Umsy  Exploitation rate expected to produce MSY
-* Smax  Spawner abundance expected to produce the maximum number of recruits.  
-* Sgen  Spawner abundance expected to produce recruitment size of Smsy. Sgen is a conservation benchmark used by Department of Ocean Canada (DFO)
-
-### Ricker model 
-$$S_{eq} =  \frac{ln.\alpha}{\beta}$$
-Smsy and Umsy of the Riker model is an approximate where 0 < $ln(\alpha)$ < 3  (Hilbon 1985) 
-$$S_{msy} =  S_{eq}(0.5-0.07ln.\alpha)$$
-$$U_{msy} =  ln.\alpha(0.5-0.07ln.\alpha)$$
-$$S_{max} =  \frac{1}{\beta}$$
-Note: Smax does not practically exist when $ln.\alpha < 1$.
-
-**Sgen** is approximated by numerically solving $S$ in following equation
-$$ln.\alpha-\beta S_{gen} + ln(S_{gen}) - ln(S_{msy}) = 0$$
-
-
-### Beverton-Holt model
-$$S_{eq} =  \frac{\alpha -1}{\beta}$$
-
-$$S_{msy} =  \frac{\sqrt{\alpha} -1}{\beta}$$
-
-$$U_{msy} = 1- \sqrt{\frac{1}{\alpha}}$$
-
-**Beverton-Holt model does not have Smax**
-$$S_{max} = NA$$
-
-**Sgen** is approximated by numerically solving $S$ in following equation  
-
-$$ln.\alpha - ln(1+\beta S_{gen}) + ln(S_{gen}) - ln(S_{msy}) = 0$$
-
-**When using lognormal bias corrected model, replace $\alpha$ and $ln(\alpha)$ with $\alpha.c$ and $ln(\alpha.c)$.**
+**When using lognormal bias corrected model,  $\alpha$ and $ln(\alpha)$ are replaced with $\alpha.c$ and $ln(\alpha.c)$.**
 
 
 ## Outlier removal 
@@ -136,18 +59,9 @@ The outliers are removed when
   * log-odd ratio of  $ln(0.001ln.\alpha /(1-0.001ln.\alpha))$  is outlier
   
 
-
 ## Profile Analyses
 
 ### MSY-RMAX Profile Analysis
-
-
-
-
-**Note** 
-  * The RMAx is the Ricker SR model only. RMAX does not exist in the Beverton-Holt SR model. 
-  * The when ln.alpha or ln.alpha.c is less than 1.0, Smax (spawner size that produces RMAS) will be **greater** than Seq 
-
 
 The MSY-RMAX profiles at given range of $S$ was calculated with following steps. 
 

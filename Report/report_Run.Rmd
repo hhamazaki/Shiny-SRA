@@ -7,9 +7,8 @@ date: '`r format(Sys.time(), "%d %B, %Y")`'
 output: word_document
 reference_docx: template.docx
 
-
 params:
-Tbl_sum: NA
+Tbl_sumpost: NA
 srplot: NA
 
 ---
@@ -26,12 +25,12 @@ knitr::opts_chunk$set(echo = FALSE,comment=NULL, dev='png',fig.dim = c(9,6),dpi=
 
 
 ```{r,echo = FALSE, fig.cap = paste0("Figure 1.  Spawner-recruit curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
-params$srplot
+params$plt_SR
 ```
 
 
 ```{r,echo = FALSE, fig.cap = paste0("Figure 2  Spawner-recruit curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
-yldplot()
+params$plt_yield
 ```
 
 ```{r}

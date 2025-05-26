@@ -1,8 +1,8 @@
 \newpage
-## Brood Tablde
+## Brood Table
 
 ```{r,echo=FALSE}
-brood <- round(brood.out()$brood,0)
+brood <- round(params$tbl_brood,0)
 bname <- names(brood)
 names(brood)[1] <- c('Year')
 names(brood)[3:(length(bname)-1)] <- substring(bname[3:(length(bname)-1)],3,10)
@@ -15,9 +15,8 @@ kable(brood,caption = "Table 2. Brood table")
 ## Run by age
 
 ```{r,echo=FALSE}
-run <- run.out()
+run <- params$tbl_run
 row.names(run) <- NULL
-
 rname <- names(run)
 names(run)[1:3] <- c('Year','Spawner','Run')
 names(run)[4:(length(rname))] <- paste0('Age',substring(rname[4:length(rname)],2,4))

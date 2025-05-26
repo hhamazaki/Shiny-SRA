@@ -1,8 +1,8 @@
 # Percentile Analysis:
-Percentile analysis method is first developed by Bue and Hasbrouck (unpublished) (See [Bue et al. 2002](http://www.adfg.alaska.gov/FedAidPDFs/RIR.2A.2002.35.pdf)) that was further evaluated by [Clark et al. 2014](http://www.adfg.alaska.gov/FedAidPDFs/FMS14-06.pdf).  
-This method is  aimed to keep escapements at levels that have been observed. The range also is more likely to encompass Smsy.
+Percentile Analysis was developed to provide a goal range that that is more likely to encompass **Smsy** from escapement only data. 
 
-The Percentile method has 3 tiers with specific selection criteria:
+Percentile analysis method is first developed by Bue and Hasbrouck (unpublished) (See [Bue et al. 2002](http://www.adfg.alaska.gov/FedAidPDFs/RIR.2A.2002.35.pdf)) that was further evaluated by [Clark et al. 2014](http://www.adfg.alaska.gov/FedAidPDFs/FMS14-06.pdf).  Clark et al. (2014) simulated salmon populations of various productivity, density dependence, harvest rates, and observation errors, and evaluated escapement percentile range with high likelihood of containing the true Smsy.  From those they derived following 3 ranges and criteria.  
+
 
 * **Tier 1: Goal Range: 20th - 60th percentile** 
   * High escapement contrast (> 8)
@@ -23,3 +23,5 @@ The Percentile method has 3 tiers with specific selection criteria:
   * High measurement error (aerial or foot surveys)
   * Moderate to high assumed average harvest rate (> 40%)  
 
+* **High harvest rate (> 40%) case: Suggested Goal Range: 25th - >75th percentile**
+ 

@@ -24,37 +24,7 @@ where $ln.\alpha = ln(\alpha)$, $s_{y} = S_{y}\cdot{10}^{-d}$ and $d = Int(log(\
 
 In the above equations, the conversion from $S$ to $s$ makes $\beta$ to a range similar to the range of $ln.\alpha$.  This is numerically more efficient to estimate parameters. 
 
-
-## Model priors 
-Model priors were set to be uniform (Table 1)
-
-|Parameter |   Prior    |    Note  |
-|  ------- | -------:|-------:|
-| $ln(\alpha)$  |  $ln(\alpha) \sim U(0,10)$ |  All models   | 
-| $\beta$    |     $\beta \sim U(0,10)$  |  All models   | 
-| $\sigma$    |      $\sigma \sim U(0,10)$  |  All models    | 
-| $\phi$    |    $\phi \sim U(-1,1)$   |  **AR1 option**  | 
-| $\varepsilon_{0}$ |     $\varepsilon_{0} \sim N(0,100)$     |**AR1 option**  | 
-| $\sigma _{\omega}$|     $\sigma _{\omega} \sim U(0,10)$     |**TVA option**| 
-
-Table 1.  Priors for the Ricer/Beverton-Holt spawner recruit model parameters.
-
-
                                                                       
-## Model Output Parameters based on expected mean vs. median recruit 
-
-**statistical bias corrected alpha parameters**  
-$$ln(\alpha_{c}) = ln(\alpha) + \frac{\sigma^{2}}{2}$$ 
-and $$\alpha.c = \alpha e^{\frac{\sigma^{2}}{2}}$$
-
-
-AR1 model, 
-$$ln(\alpha_{c}) = ln(\alpha)+ \frac{\sigma^{2}}{2(1-\phi^{2})}$$ 
-and 
-$$\alpha_{c} = \alpha e^{\frac{\sigma^{2}}{2(1-\phi^{2})}}$$
-$$Median(R) = \frac{\alpha S}{1+\beta S}$$
-$$Mean(R) = \frac{\alpha_{c} S}{1+\beta S}$$
-$$Predicted(R) = \frac{\alpha S}{1+\beta S}e^{\sigma}$$
 ## Biological Reference Parameters
 Following biological reference parameters are generated from the model 
 * Seq   Spawner abundance expected to produce the same number of recruits
@@ -70,7 +40,3 @@ $$U_{msy} = 1- \sqrt{\frac{1}{\alpha}}$$
 **Sgen** is approximated by numerically solving $S$ in following equation  
 
 $$ln.\alpha - ln(1+\beta S_{gen}) + ln(S_{gen}) - ln(S_{msy}) = 0$$
-
-**When using lognormal bias corrected model, replace $\alpha$ and $ln.\alpha$ with $\alpha_{c}$ and $ln.\alpha_{c}$.**
-
-

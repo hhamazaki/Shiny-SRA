@@ -10,54 +10,48 @@
 #'==============================================================================
 # Include required packages 
 library(shiny)
-library(shinythemes)  # used to specify themes
 library(bslib)
 library(rmarkdown)     # used to get rmarkdown file
 library(markdown)     # used to get rmarkdown file
 library(knitr)         # used to produce word report 
 library(reshape2)     # used for data transpose 
-library(lmtest)       # used for dwtest 
+library(gsl)       # used for dwtest 
+library(car)          # used for dwtest 
 library(mgcv)         # used for spline 
-library(coda)         # used to read MCMC data 
 library(R2jags)       # used to run JAGS
-library(DT)
-
 options(scipen=999)   # Do not show Scientific notation
 #'--- Required Source code------------------------------------------------------
 source("Rcode/Shiny_modules.R")   #  Module codes 
-source("Rcode/Shiny_SR_functions.R")  #  All functions created and used in this app 
-source("Rcode/Shiny_Bayes_modules.R")  #  Modules related to Bayesian model 
 source("Rcode/Help_Info.R")  # Help doc info
-source("Rcode/plots/ggplot/ggplot_theme.R")  # ggplot theme
-source("Rcode/plots/ggplot/ggplot_functions.R")  # ggplot them
-#source("Rcode/plots/baseplot/pointLabelBase.R")   #  Separate year 
-#source("Rcode/plots/baseplot/addNonOverlappingTestLabelsOrPoints.R")   # 
-#source("Rcode/plots/baseplot/Base_plot_functions.R")   # 
+
+#options(shiny.legacy.datatable = TRUE)
 #'==============================================================================    
 #' UI Section----  
 #'==============================================================================
 ui<-fluidPage(
  navbarPage(
-    theme =  bs_theme(version = 3, bootswatch = 'cerulean'), id = "tabs",
-    title = div(
+    theme =  bs_theme(version = 3, bootswatch = 'cerulean'), 
+     id = "tabs",
+     title = div(
         img(src="Picture2.png",height=40, width=40)
         , "Pacific Salmon SR Escapement Goal Analyses"),
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## Panel 1  Data Input and Submit ----
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   tabPanel("Data Input",
+### Sidebar Panel ================================================================           
    sidebarPanel(width = 3,
 #'------------------------------------------------------------------------------ 
 #'###  Data file Input ----
 #'------------------------------------------------------------------------------
-# Create brood and SR module
-
+#' Data type selection ---------------------------------------------------------
 selectInput(inputId="dataType",
-#' Add popup information mark----------------------------------------------------        
+#' Add popup information mark---------------------------------------------------        
  InfoUI('info1','Input Data Type'), 
 choices = c('Run','S-R','Escapement Only')),
-# Sample data input 
-checkboxInput(inputId="Sample", "Inport Sample Data", FALSE), 
+
+#' Sample data input -----------------------------------------------------------
+checkboxInput(inputId="Sample", "Import Sample Data", FALSE), 
 # File input UI: shows when sample data input is false
 conditionalPanel(condition="input.Sample== false",
 # File Input module 
@@ -69,30 +63,33 @@ conditionalPanel(condition="input.Sample== false",
   uiOutput('agecomb'),
 # Limit Year range 
   uiOutput('yrange'),
-  textOutput('test'),
+#  textOutput('test'),
 #'------------------------------------------------------------------------------
   hr(),
-# Default axis point UI 
+# input_switch('gg','ggplot'),
+#' Default axis point UI --------------------------------------------------------
  checkboxInput(inputId="autoui", "Defalut axis unit", TRUE),
  conditionalPanel(condition="input.autoui== false",
     selectInput(inputId="ui","Figure Axis Dislpay Unit", choices = c('1','1000','million'))
      )
    ), # End sidebarPanel (Data Input)
 
-#### MainPanel=============================================
+### Main Panel ========================================================
   mainPanel(
     tabsetPanel(id="subTab",
 #'------------------ Show Input data -------------------------------------------      
       tabPanel("Input Data",
-               DTOutput('Tbl_data')),
+               DT::DTOutput('Tbl_data')
+               ),
 #'------------------ Corrected Run Table ---------------------------------------      
       tabPanel("Run Table",
-          DTOutput("Tbl_data.run")
+          DT::DTOutput("Tbl_data.run")
+       
            ), # End tabPanel
 
-#'------------------ Brood Table -----------------------------------------------      
+#'------------------ Brood Table -----------------------------------------------  
       tabPanel("Brood Table",
-                DTOutput("Tbl_data.brood")
+                DT::DTOutput("Tbl_data.brood")
                   ), # End tabPanel
 #'------------------ Time Series -----------------------------------------------
       tabPanel("Time Series",
@@ -102,7 +99,7 @@ conditionalPanel(condition="input.Sample== false",
                 ),#End tabPanel
 #'------------------ Data summary  ---------------------------------------------
       tabPanel("Summary",
-               tableOutput('Tbl_sum.data'),
+               tableOutput('Tbl_sum_sr.data'),
                plotOutput('Plt_hist.sry',height='300px'),
                tableOutput('Tbl_sum_run.data'),
                plotOutput('Plt_hist.run',height='300px')
@@ -115,6 +112,7 @@ conditionalPanel(condition="input.Sample== false",
 ##  Panel 2 Escapement Only Analyses---- 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 tabPanel("Escapement Only Analyses",
+### Sidebar Panel ==============================================================         
     sidebarPanel(width = 3,
       conditionalPanel(condition="input.ePanel == 'Percentile Analyses'",  
         p(strong("Percentile Analyses")),
@@ -131,19 +129,26 @@ tabPanel("Escapement Only Analyses",
         strong(htmlOutput('Txt_Risk'))
                  ) # End conditionalPanel
           ), #End SidbarPanel
-###  Main Panel ======================================================    
+### Main Panel ======================================================    
   mainPanel(
     tabsetPanel(id = "ePanel",
 #'------------------ Percentile Analyses ---------------------------------------   
       tabPanel("Percentile Analyses",
-        plotOutput("Plt_prcnt")   
+# Parcentile figure                
+        plotOutput("Plt_prcnt"),  
+# Histogram
+        plotOutput("Plt_prcnt_hist") 
             ), #End tabPanel:Percentile
 #'------------------ Risk Analyses  --------------------------------------------  
       tabPanel("Risk Analyses",
+#  Main Risk Analyses                
         plotOutput(height = '400px', "Plt_risk"),
+#  Time series 
         plotOutput(height = '300px', "Plt_risk2"),
+# Risk Table 
         tableOutput('Tbl_risk'),
         tableOutput('Tbl_riskp'),
+# Durbin-Watson Statistics 
           p(strong("Durbin-Watson Serial Correlation Analyses")),
           verbatimTextOutput('Txt_dwtest')
             ), #End tabPanel: Risk
@@ -158,6 +163,7 @@ tabPanel("Escapement Only Analyses",
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 navbarMenu("SR Model",
   tabPanel("Bayes Model",
+           
     sidebarPanel(width = 3,
 #'--- ConditionalPanel Bayes Model Control -------------------------------------      
       conditionalPanel(condition="input.Panel == 'Bayes Model'|| input.Panel =='Model Code'||input.Panel =='Model data'",
@@ -172,32 +178,30 @@ navbarMenu("SR Model",
         radioButtons(inputId="add","Model Addition",
             choices=c("None"="none","AR(1) Error"="ar1","Time varying alpha"="kf"),
             selected = NULL),
- hr(),
-#'--------- Change Priors   ----------------------------------------------------
-  checkboxInput(inputId="Priors", "Modify Priors", FALSE), 
-  conditionalPanel(condition="input.Priors== true",
-# Change Priors 
-  sliderInput(inputId="lnalpha","lnalpha", value=c(0,5),min=-2,max=10,step=0.1),
-  sliderInput(inputId="beta","beta", value=c(0,5),min=-2,max=10,step=0.1),
- ),
+hr(),
+checkboxInput(inputId="BayesMCMC", strong("Import MCMC"), FALSE), 
+conditionalPanel(condition="input.BayesMCMC == true",
+                 dataInputUI("mcmc.in", "User data (.csv format)"),
+),  # End conditional Panel true
+conditionalPanel(condition="input.BayesMCMC == false",
+    BayesInputUI('Bayes'),
+checkboxInput(inputId="Priors", "Modify Priors", FALSE), 
+    conditionalPanel(condition="input.Priors== true",
+                     # Change Priors 
+      sliderInput(inputId="lnalpha","lnalpha", value=c(-1,4),min=-5,max=10,step=0.1),
+      sliderInput(inputId="beta","beta", value=c(-1,5),min=-5,max=10,step=0.1)
+    ),
+    p(strong('Download MCMC')),
+    downloadButton("download.mc","Download")                    
+   ), # End conditional panel: false
+
+ ),  # End conditionalPanel for Bayes Model 
+
+
 
 #'------------------------------------------------------------------------------    
 # UI:  Bayes Model Control UI
 #'------------------------------------------------------------------------------
- hr(),
- p(strong("Bayes Model Setting")),
-   checkboxInput(inputId="BayesMCMC", strong("Import MCMC"), FALSE), 
-   conditionalPanel(condition="input.BayesMCMC == false",
-      BayesInputUI('Bayes'),
-      hr(),
-#      downloadUI('MCMC','Download MCMC')
-      p(strong('Download MCMC')),
-      downloadButton("download.mc","Download")      
-      ), # End conditional panel
-   conditionalPanel(condition="input.BayesMCMC == true",
-      dataInputUI("mcmc.in", "User data (.csv format)"),
-                    )              
-          ),  # End conditionalPanel for Bayes Model 
 
 #' Conditional Panel SR and Yield Plot -----------------------------------------
 conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model Code'& input.Panel !='Model data'",
@@ -208,12 +212,12 @@ conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model C
 #' UI output astar: Segmented time series Only show when TVA model is selected    
         uiOutput('astar'),  # Only show when TVA model is selected 
    ),
-  conditionalPanel(condition="input.Panel == 'SR Plot'|| input.Panel == 'Yield Plot'|| input.Panel == 'ln(R/S) Plot'",
+  conditionalPanel(condition="input.Panel == 'SR Plot'|| input.Panel == 'Yield Plot'|| input.Panel == 'ln(R/S) Plot'|| input.Panel=='SR Dist Plot'",
 #' Choose between Median or Mean recruit target option  
-
 #' Plot Options ----------------------------------------------    
         p(strong("Plot options")),               
-        checkboxInput(inputId="show.points", "show Years", TRUE), 
+        checkboxInput(inputId="show.points", "show Years", TRUE),
+        checkboxInput(inputId="show.seq", "show Seq", FALSE),
         checkboxInput(inputId="show.smsy", "show Smsy", FALSE),
         checkboxInput(inputId="show.smax", "show Smax", FALSE),
         checkboxInput(inputId="show.sgen", "show Sgen", FALSE),
@@ -228,6 +232,13 @@ conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model C
 #' CI selection -----------------------------------------------------------------
         sliderInput("CI", "% Interval", value=95,min=0,max=100,step=5),
         selectInput(inputId="Li","Interval Type", choices = c('credible','prediction')),
+#' S Axis selection -------------------------------------------------------------
+ checkboxInput(inputId="axis", "Select Axis Range", FALSE),
+ conditionalPanel(condition="input.axis== true",
+        uiOutput('maxS'),
+        uiOutput('maxR'),
+        uiOutput('Yrange'),
+         ),        
       ), # End conditionalPanel forSR and Yield Plot 
 
 #' Summary  ------------------------------------------------------
@@ -255,7 +266,7 @@ conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model C
         strong(textOutput("SRinfo")),
         plotOutput(height='500px','Plt_SR',click ='SR_click'
                    ),
-         (textOutput("Txt_SR"))
+         textOutput("Txt_SR")
             ),#End tabPanel: SR Plot
 ##### Yield Plot--------------------------------------------------        
     tabPanel("Yield Plot",
@@ -265,12 +276,19 @@ conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model C
 ##### ln(R/S) Plot--------------------------------------------------        
   tabPanel("ln(R/S) Plot",
         plotOutput(height='500px','Plt_lnRS'),
-        (textOutput("Txt_lnRS")),
+        textOutput("Txt_lnRS"),
             ),#End tabPanel: lnRS
+#####  SR Refrence Plot  -------
+  tabPanel("SR Dist Plot",
+        plotOutput(height='500px',"Plt_MSY.mc"),
+  p("Probability distribution of reference parameters. The vertical line indicates mean."),
+            ),#End tabPanel: Model Code
 ##### Summary ------------------------------------------------------- 
   tabPanel("Summary",
-         tableOutput('sumpost'),
+         tableOutput('Tbl_sumpost'),
          plotOutput(height='500px',"Plt_hist.mc"),
+         hr(),
+      p("Probability distribution of the model and biological reference parameters. The vertical line indicates mean (solid) and median (hash)."),
          hr(),
   conditionalPanel(condition="input.Remove_out == true", 
          p(strong('Outlier summary')),
@@ -281,10 +299,7 @@ conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model C
   tabPanel("Model Code",
          verbatimTextOutput('modelcode')
     ),#End tabPanel: Model Code
-##### Priors  ---------------------------------------------------------------
-#  tabPanel("Priors",
-#         print('Under construction')
-#    ),#End tabPanel: Model Code
+##### Priors  --------------------------------------------------------
 ##### Model data ---------------------------------------------------
  tabPanel("Model data",
          verbatimTextOutput('modeldata')
@@ -302,22 +317,30 @@ tabPanel("Model Diagnoses",
 ##### Bayes Model Code ------------------------------------------- 
 ##### Residuals  ------------------------------------------------- 
   tabPanel("Residuals", 
-         plotOutput(height='300px',"Plt_predict"),     
-         plotOutput(height='300px',"Plt_residual"),
-         plotOutput(height='300px',"Plt_lnalphai"),
+         plotOutput(height='400px',"Plt_predict"), 
+  p("Predicted vs. Observed ln(Recruit). The gray shade indicates 95% credible interval."),
+         plotOutput(height='400px',"Plt_residual"),
+  p("Resicdaual plot between predicted and observed ln(Recruit). The red line indicated mean and gray shade indicates 95% credible interval."),
+         strong(textOutput('Txt_dwtest.title')),
+         verbatimTextOutput('Txt_dwtest.resid'),
+         plotOutput(height='400px',"Plt_lnalphai"),
     ),#End tabPanel: Diagnoses
  tabPanel("Run Size", 
-         plotOutput(height='900px',"Plt_SS")     
- ),#End tabPanel: Diagnoses
+         plotOutput(height='900px',"Plt_SS"),     
+  p("Predicted vs. Observed run size. The gray shade indicates 95% credible interval."),
+                   ),#End tabPanel: Diagnoses
  tabPanel("Run Age Comp", 
-         plotOutput(height='900px',"Plt_SS_Age")     
+         plotOutput(height='900px',"Plt_SS_Age"),
+  p("Predicted vs. Observed run age compositon. The gray shade indicates 95% credible interval."),
  ),#End tabPanel: Diagnoses
  tabPanel("Brood Age Comp", 
-         plotOutput(height='900px',"Plt_SS_BAge")     
+         plotOutput(height='900px',"Plt_SS_BAge"),
+  p("Predicted vs. Observed brood recruit age compositon. The gray shade indicates 95% credible interval."),
  ),#End tabPanel: Diagnoses
 ##### MCMC data --------------------------------------------------------------------
   tabPanel("MCMC data",
-     DTOutput('Tbl_mcmcdata')
+     DT::DTOutput('Tbl_mcmcdata')
+#     dataTableOutput('Tbl_mcmcdata')
             ),#End tabPanel: Model Code
     ) # End tabsetPanel
   ) # End MainPanel
@@ -367,13 +390,35 @@ mainPanel(
             fluidRow(
       column(10,plotOutput(height='400px','Plt_Smsy_prof')),  
       column(2,tableOutput('Tbl_MSY_gl'))
-                      ), 
+                      ),
+      p("MSY Profile Analyses Plot. 
+        The profile line indiate probability of yield exceeding x% of MSY at given escapement.
+        Intersecion of the probablity profile and target probability (red line) shows 
+        the range of escapement meeting the criteria."),
       fluidRow(
       column(10,plotOutput(height='400px','Plt_Smax_prof')),  
       column(2,tableOutput('Tbl_Rmax_gl'))
                       ),
-      
+      p("RMAX Profile Analyses Plot. 
+        The profile line indiate probability of yield exceeding x% of RMAX at given escapement.
+        Intersecion of the probablity profile and target probability (red line) shows 
+        the range of escapement meeting the criteria.")
             ), #End tabPanel: Profile
+#### Profile Analyses ----------------------------------------------------   
+        tabPanel("Optimal",
+              splitLayout(cellWidths = c("50%", "50%"),
+              plotOutput(height='600px','Plt_msyprof_r'),
+              plotOutput(height='600px','Plt_maxprof_r')
+              ),
+          splitLayout(cellWidths = c("50%", "50%"),
+          p("MSY Optimal profile plot. Each ridge indicates a range of Escapement in which the yield exceeding 
+             x % of MSY. The profile line indicates the proportion of ridges that intersected at given Escapement."),
+          p("Rmax Optimal profile plot. Each ridge indicates a range of Escapement in which the yield exceeding 
+             x % of Rmax. The profile line indicates the proportion of ridges that intersected at given Escapement.")
+          )
+                       
+        ), #End tab Panel
+
 #### Smsy Yield Profile -----------------------------------------
         tabPanel("Yield & Recruit",
           plotOutput(height='300px','Plt_yield.pg'),
@@ -399,12 +444,12 @@ mainPanel(
 #'===============================================================================    
   tabPanel("Yield & Recruit Goal Analyses",
     sidebarPanel(width = 3,
-      conditionalPanel(condition="input.cPanel == 'Recruit Goal Analyses'",  
+      conditionalPanel(condition="input.cPanel == 'Recruit Goal Analyses'||input.cPanel == 'Optimal'",  
         p(strong("Recruit Goal Analyses")), 
         uiOutput('minRec'),
         sliderInput("r1p", "Min % Achieve", value=90,min=0, max=100,step=5)
         ), # End conditionalPanel
-      conditionalPanel(condition="input.cPanel == 'Yield Goal Analyses'",                        
+      conditionalPanel(condition="input.cPanel == 'Yield Goal Analyses'||input.cPanel == 'Optimal'",             
         p(strong("Yield Goal Analyses")),
         uiOutput('minYield'),
         sliderInput("y1p", "Min % Achieve", value=90,min=0, max=100,step=5)
@@ -425,7 +470,14 @@ mainPanel(
           plotOutput(height='300px','Plt_rec.gl'),
           plotOutput(height='300px','Plt_rec.prof'),
           verbatimTextOutput("Txt_Rec_gl")
-         )# End tabPanel
+         ),# End tabPanel
+#### Profile Analyses ----------------------------------------------------   
+        tabPanel("Optimal",
+              splitLayout(cellWidths = c("50%", "50%"),
+              plotOutput(height='600px','Plt_yield_r'),
+              plotOutput(height='600px','Plt_rec_r')
+              )
+        ), #End tab Panel
           )#End tabsetPanel
         )#End maiPanel
       ),#End tabPanel Recruit & Yield Goal Analyses 
@@ -452,7 +504,7 @@ tabPanel("Custom Escapment Goal Range Analyses",
       tabsetPanel(
 #### Profile Analyses ----------------------------------------------------   
         tabPanel("Profile Analyses",
-                fluidRow(
+            fluidRow(
       column(10,plotOutput(height='400px','Plt_msyprof_c')),  
       column(2,tableOutput('Tbl_msyprof_c'))
                       ), 
@@ -461,7 +513,7 @@ tabPanel("Custom Escapment Goal Range Analyses",
       column(2,tableOutput('Tbl_maxprof_c'))
                       )       
         ), #End tab Panel
-                 
+
 #### Expected Yields ---------------------------   
         tabPanel("Expected Yield",
           plotOutput(height = '300px', 'Plt_yield.cg'),      
@@ -511,16 +563,12 @@ navbarMenu("MSE Analyses",
  conditionalPanel(condition="input.MSEPanel == 'Simulation Run'",           
   fluidRow(
         selectInput(inputId="strType", InfoUI('info5','Management Strategies') ,
-          choices = c('Escapement','Harvest'),selected = 'Escapement'),
-conditionalPanel(condition="input.strType == 'Escapement'",          
+          choices = c('Escapement','Harvest','Hybrid'),selected = 'Escapement'),
+conditionalPanel(condition="input.strType != 'Harvest'",          
   p(strong("Escapement Goal")), 
      fluidRow(
-      column(4,uiOutput('LEG')),  
-      column(4,uiOutput('UEG')),
-      column(4,
-      selectInput(inputId="cmode","Target Eecapement", 
-          choices = c('Lower','Middle','Upper'),selected = 'Middle')
-             )  
+      column(6,uiOutput('LEG')),  
+      column(6,uiOutput('UEG')),
       ),
      ),
     p(strong("Fishery Target & Capacity")),  
@@ -537,12 +585,16 @@ conditionalPanel(condition="input.strType == 'Escapement'",
     ),
      fluidRow(
        column(6,uiOutput('nsim')),  
-         ),
+       column(6,
+  selectInput(inputId="cmode","Target Eecapement", 
+       choices = c('Lower','Middle','Upper'),selected = 'Middle')
+              ) 
+         ),  # End fluidRow
     actionButton("SimRun","Simulate"),
 #                     ),
   p(strong("Management % Error")),  
     fluidRow(
-     column(6,numericInput(inputId="spred", "Run Assessment", value=15,min=0,max=100,step=5),
+     column(6,numericInput(inputId="spred", "Assessment", value=15,min=0,max=100,step=5),
       ),
      column(6,numericInput(inputId="simpH", "Inplementation", value=10,min=0,max=100,step=5),
       ),
@@ -555,7 +607,7 @@ conditionalPanel(condition="input.strType == 'Escapement'",
     numericInput(inputId="conminH", "Minimum Harvest", value=3,min=1,max=10),
     numericInput(inputId="con0H", "No Fishery", value=3,min=1,max=10),
       ),
-conditionalPanel(condition="input.MSEPanel == 'Sim replicates'",
+conditionalPanel(condition="input.MSEPanel == 'Sim rep Data'|input.MSEPanel == 'Sim replicates'",
   uiOutput('sim.rep')
  )
       ), #End sidebarPanel
@@ -602,7 +654,13 @@ conditionalPanel(condition="input.MSEPanel == 'Sim replicates'",
            downloadButton("download.mse.sim", "Download")
 #            downloadUI('MSE_Sim','Download Simulation Data')
                   ),  #End tabPanel
-                        
+tabPanel("Sim rep Data",
+#    p('Total Frequency of H0: Fishery Closure, Hmin: Bellow minimum Harvest Target,
+#      EG: Bellow Lower EG, ND: Fish extinct'),     
+    DT::DTOutput('Tbl_MSE_sum')
+),  #End tabPanel
+
+
 #'------------------ Model Parameters ---------------------------------   
     tabPanel("Model Parameters",
       fluidPage(
@@ -610,23 +668,18 @@ conditionalPanel(condition="input.MSEPanel == 'Sim replicates'",
             hr(),
       fluidRow(
         column(4,
-          p(strong("Simulation Years")),           
-           sliderInput(inputId="burnin", "Burnin", value=25,min=0,max=100,step=5,round=0),
-            sliderInput(inputId="train", "Training", value=25,min=0,max=100,step=5,round=0),
-            sliderInput(inputId="simy", "Management", value=50,min=0,max=100,step=5,round=0)
-                  ),
+#          p(strong("Simulation Years")),           
+            sliderInput(inputId="maxHR", "Maximum Harvest Rate", value=90,min=0,max=100,step=5,round=0),
+#            sliderInput(inputId="train", "Training", value=25,min=0,max=100,step=5,round=0),
+                    ),
         column(4,
           p(strong("Errors")),       
-           sliderInput(inputId="spred", "Preseason Run prediction %E", value=20,min=0,max=100,step=5),
-           sliderInput(inputId="simpH", "Management Implementation %E", value=10,min=0,max=100,step=5),
-           sliderInput(inputId="sobsH", "Harvest Observation %E", value=10,min=0,max=100,step=5),
-           sliderInput(inputId="sobsE", "Escapement Observation %E", value=30,min=0,max=100,step=5),
-           sliderInput(inputId="Nobage", "Age Comp Sample size", value=100,min=10,max=500,step=10)
+           sliderInput(inputId="sobsH", "Observation Error Harvest", value=10,min=0,max=100,step=5),
+           sliderInput(inputId="sobsE", "Observation Error Escapement", value=30,min=0,max=100,step=5),
+           sliderInput(inputId="Nobage", "Observation Error Age Comp (smaple size)", value=100,min=10,max=500,step=10)
                   ),
         column(4,
           p(strong("Population Errors")), 
-           sliderInput(inputId="phi", "AR1 correlation", value=0.6,min=0,max=1,step=.1),
-           sliderInput(inputId="D", "Drishelet D", value=50,min=0,max=200,step=10)
                 )
               ) # End fluidRow
             )# End fluidOPage
@@ -678,6 +731,8 @@ conditionalPanel(condition="input.MSEPanel == 'Sim replicates'",
         ),
    mainPanel(
     h1("Under Construction"),
+      textInput("txt_title", label = "Stock Name", value = ""),
+      textAreaInput("txt_free", label="Project Description", value="",width='auto'),
       fluidRow( 
         column(3, 
           h3("Data Input"),
@@ -815,7 +870,7 @@ conditionalPanel(condition="input.MSEPanel == 'Sim replicates'",
           withMathJax(includeMarkdown("documents/Esc_Goal/Yield_Recruit_help.Rmd"))   
                  ),
       tabPanel("Custom Escapement Goal Analyses",
-          withMathJax(includeMarkdown("documents/Esc_Goal/Custom_Escapement_help.Rmd"))     
+          withMathJax(includeMarkdown("documents/Esc_Goal/Custom_Escapement_help.Rmd"))
                  ),
     "MSE Analyses",
         tabPanel("Model Description",
@@ -825,8 +880,8 @@ conditionalPanel(condition="input.MSEPanel == 'Sim replicates'",
 #          includeMarkdown("documents/MSE_Analyses/MSE_help.Rmd")    
                  ),
      )
-    )     
-#  )# End tabPanel Help
+#    )     
+  )# End tabPanel Help
  ),#End nabVarPage: Beginning of the ui 
 
 #'------------------------------------------------------------------------------
@@ -834,17 +889,17 @@ conditionalPanel(condition="input.MSEPanel == 'Sim replicates'",
 #'------------------------------------------------------------------------------
 hr(),
 h5("Disclaimer"),
-print(strong("This App is developed by Toshihide Hamachan Hamazaki, Alaska Department of Fish and Game Division of Commercial Fisheries")),
+strong('This App is developed by Toshihide Hamachan Hamazaki, Alaska Department of Fish and Game Division of Commercial Fisheries'),
 
 h5("Contact about this applicaiton"), 
-print(strong("Questions and improvement suggestions? Please contact",
-a(href="mailto:toshihide.hamazaki@alaska.gov", "Hamachan"))),
+strong("Questions and improvement suggestions? Please contact",
+a(href="mailto:toshihide.hamazaki@alaska.gov", "Hamachan")),
 
 h5("Suggested Citation"),
-print(strong(paste("Hamazaki, T.",format(Sys.Date(), "%Y"),". Pacific salmon escapement goal analyses (source: https://hamachan.shinyapps.io/Spawner_Recruit_Bayes/)"))),
+strong(paste("Hamazaki, T.",format(Sys.Date(), "%Y"),". Pacific salmon escapement goal analyses (source: https://hamachan.shinyapps.io/Spawner_Recruit_Bayes/)")),
 h5("Other Models"),
-p(strong("Missed escapement passage estimation:",
-         a(href="https://hamachan.shinyapps.io/Missed_Run/", "Missed Passage")))
+strong("Missed escapement passage estimation:",
+         a(href="https://hamachan.shinyapps.io/Missed_Run/", "Missed Passage"))
 
 # End of Foot note  
 ) #End fluidPage:  End of UI 
