@@ -1,6 +1,5 @@
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  JAGS Bayes Modules  
-#  This module controls JAGS run.
+#  Shiny Bayes Modules  
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #'==============================================================================
 #  BayesModelUI----
@@ -14,10 +13,6 @@ BayesInputUI <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
-      p(strong("Run Model Analyses")),
-      actionButton(ns("RunBayes"),"Run"),
-      checkboxInput(ns('config'), "Modify Model Running Setting", FALSE),
-      conditionalPanel(condition="input.config == true",
       column(6,
         numericInput(ns('n.burnin'),'Burn-in x 1000',value=5,min=0,step = 1),
         numericInput(ns('n.thin'),'Thinning',value=5,min=0,step = 1)
@@ -25,16 +20,17 @@ BayesInputUI <- function(id) {
       column(6,
              numericInput(ns('n.iter'),'Sim x 1000',value=10,min=0,step=1), 
              numericInput(ns('n.chain'),'Chains',value=3,min=1,step = 1)
-             ),
-      checkboxInput(ns('seeds'), "Set Seeds", TRUE),
-      ns=NS(id)  # call namespace here!!
-      ) # End conditional Panel 
-      ) # End fluidRow
-    ) # End tagList
+             )
+    ),  
+    checkboxInput(ns('seeds'), "Set Seeds", TRUE),
+    p(strong("Start Bayesian Analyses")),
+    actionButton(ns("RunBayes"),"Run")
+    )
   }
 #'------------------------------------------------------------------------------
 BayesInputServer <- function(id,Bayesdata,Bayesmodel){
-  moduleServer(id, function(input, output, session) {
+  moduleServer(id,
+               function(input, output, session) {
    # The selected file, if any
   run.JAGS <- eventReactive(input$RunBayes,{
 #' Progress---------------------------------------------------------------------- 
@@ -54,21 +50,22 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
     nthin <- input$n.thin
     nchain <- input$n.chain
     if(isTRUE(input$seeds)){seed <- 123} else {seed <- sample(1:10000,1)} 
+
     #  JAGS model selection 
     jagmodel <- Bayesmodel()$jagmodel
     pars <- Bayesmodel()$parameters
     # Run JAGS 
+
     output <- jags(data=datnew,parameters.to.save=pars, model.file= jagmodel,
-                            n.chains=nchain, n.iter=titer,n.burnin=nburn,n.thin=nthin,jags.seed=seed)
+      n.chains=nchain, n.iter=titer,n.burnin=nburn,n.thin=nthin,jags.seed = seed)
 #    output <- jags.parallel(data=datnew,parameters.to.save=pars, model.file= jagmodel,
 #                   n.chains=nchain, n.iter=titer,n.burnin=nburn,n.thin=nthin,jags.seed = seed)
-    out <- list(output = output, input= c(niter,nburn, titer,nthin,nchain),data=datnew)
+    out <- list(output = output, input= c(niter,nburn, titer,nthin,nchain))
     return(out)
   })
     } # End fundtion
   ) # End moduleServer
 } # End BayesInputServer
-
 
 #'==============================================================================
 #  Bayesmodel  Model Functions ----  
@@ -103,8 +100,8 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
     sigma ~ dunif(0,2)  
     sigmaw ~ dunif(0,2)
 #    sigmav ~ dunif(0,10)
-    phi ~ dnorm(0,1)%_%T(-1,1) 
-    e0 ~ dnorm(0,25) 
+    phi ~ dnorm(0,4)%_%T(-1,1) 
+    e0 ~ dnorm(0,0.001) 
     Tau <- 1/(sigma*sigma)
     tauw <- 1/(sigmaw*sigmaw)	
 #   tauv <- 1/(sigmav*sigmav)
@@ -114,9 +111,8 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
     }
   }
 
-
 #'------------------------------------------------------------------------------
-#  jag.model.SRe:  Ricker and Beverton-Holt Measurement Error model ----
+#  jag.model.SRe:  Run Ricker and Beverton-Holt Measurement Error model ----
 #'------------------------------------------------------------------------------
   jag.model.SRe <- function(){
     for(y in 1:nyrs){
@@ -146,8 +142,8 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
     sigma ~ dunif(0,2)  
     sigmaw ~ dunif(0,2)
 #    sigmav ~ dunif(0,10)
-    phi ~ dnorm(0,1)%_%T(-1,1) 
-    e0 ~ dnorm(0,25) 
+    phi ~ dnorm(0,4)%_%T(-1,1) 
+    e0 ~ dnorm(0,0.001) 
     Tau <- 1/(sigma*sigma)
     tauw <- 1/(sigmaw*sigmaw)	
 #    tauv <- 1/(sigmav*sigmav)
@@ -163,7 +159,7 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
   }
 
 #'------------------------------------------------------------------------------
-#  jag.model.SR.SS:  Ricker and Beverton-Holt State-Space Model----
+#  jag.model.SR.SS:  Run Ricker and Beverton-Holt State-Space Model----
 #'------------------------------------------------------------------------------
 jag.model.SR.SS <-function() {
 # y: Brood year 
@@ -232,9 +228,9 @@ jag.model.SR.SS <-function() {
 ###  Time variant alpha 
 #'------------------------------------------------------------------------------       	
 # cw: cumulative variation   
-    cw[1] ~ dnorm(0,tauw)%_%T(-5,5)
+    cw[1] ~ dnorm(0,tau.w)%_%T(-5,5)
   for (t in 2:(nyrs-fage)) {
-    cw[t] ~ dnorm(cw[t-1],tauw)%_%T(-5,5)
+    cw[t] ~ dnorm(cw[t-1],tau.w)%_%T(-5,5)
       }
     
 #  TVA lnalapha
@@ -245,7 +241,7 @@ jag.model.SR.SS <-function() {
 #' GENERAL MATURITY SCHEDULE---------------------------------------------------
   for (a in 1:nages) {
        for (y in 1:(nyrs+lage-fage)) {   
-        g[y,a] ~ dgamma(gamma[a],1)
+        g[y,a] ~ dgamma(gamma[a],.5)
       # q: brood year age proportion (i.e. maturity schedule). 	 
         q[y,a] <- g[y,a]/sum(g[y,])                  }
         gamma[a] ~ dgamma(0.005,0.005)  # Gamma prior   
@@ -259,12 +255,12 @@ jag.model.SR.SS <-function() {
 #    q[y,1] <- 1.0/(1.0+exp(rwk[y]*(rwe[y]-fage)))
 #    for (a in 2:(nages-1)){
 # cumulative brood age comp is a logistic function	
-#        q[y,a] <- 1.0/(1.0+exp(rwk[y]*(rwe[y]-fage-a+1))) - q[y,a-1] 
-#      } 
+#       q[y,a] <- 1.0/(1.0+exp(rwk[y]*(rwe[y]-fage-a+1))) - q[y,a-1] 
+#     } 
 #    q[y,nages] <- 1 - 1.0/(1.0+exp(rwk[y]*(rwe[y]-fage-nages+2)))	 	
       # calculate for the next year 
-#    rwe[y+1] ~ dnorm(rwe[y],25)%_%T(fage,lage-1) #Note: rwe[y] is previous year,	 
-#    rwk[y+1] ~ dnorm(rwk[y],25)%_%T(1,lage) #Note: rwk[y] is previous year,	
+#    rwe[y+1] ~ dnorm(rwe[y],0.01)%_%T(fage,lage-1) #Note: rwe[y] is previous year,	 
+#    rwk[y+1] ~ dnorm(rwk[y],0.01)%_%T(1,lage) #Note: rwk[y] is previous year,	
 #  } # End y
 
 #'------------------------------------------------------------------------------    	
@@ -272,22 +268,21 @@ jag.model.SR.SS <-function() {
 #'------------------------------------------------------------------------------        	
     lnalpha ~ dunif(min.a,max.a)
     beta ~ dunif(min.b,max.b)              
-    phi ~ dnorm(0,1)%_%T(-1,1)  
+    phi ~ dnorm(0,4)%_%T(-1,1)  
     mean.log.R0 ~ dnorm(0,1.0E-3)%_%T(0,30)  
     sigma.R0 ~ dunif(0,5)
     tau.R0 <- 1/sigma.R0^2
-    sigmaw ~ dunif(0,2)
-    tauw <- 1/sigmaw^2
+    sigma.w ~ dunif(0,2)
+    tau.w <- 1/sigma.w^2
     sigma ~ dunif(0,2)	
     tau.e  <- 1/sigma^2       	
-    e0 ~ dnorm(0,25)
+    e0 ~ dnorm(0,0.001)%_%T(-5,5)
 #    mk ~ dunif(1,lage-1)
 #    me ~ dunif(fage,lage)
  }  # End SS.CR model 
 
-
 #'==============================================================================
-# SR Model output calculation functions ----
+# SR Mpdel output calculation functions ----
 #'==============================================================================
 ## SR.CR Ricker Model  -----
   SR.CR <- function(lnalpha,beta,S,d){
@@ -298,17 +293,16 @@ jag.model.SR.SS <-function() {
 ## BR.CR Ricker Biological Refrence points ----
   BR.CR <- function(lnalpha,beta,d){
     get_Sgen.bc <- function(m){
-      fun_Sgen.bc <- function(S,m) {S*exp(m[1])*exp(-m[2]*S/(10^d)) - m[3]}
-       if(m[1]>0 & m[2]>0 & m[3]>0){
-         Sgen <- try(uniroot(fun_Sgen.bc, interval=c(0,m[3]),m=m)$root)
+      fun_Sgen.bc <- function(S,m) {S*exp(m[1]-m[2]*S/(10^d)) - m[3]}
+       if(m[1]>0 & m[2]>0){
+      Sgen <- try(uniroot(fun_Sgen.bc, interval=c(0,m[3]),m=m)$root)
        } else {Sgen <- NA}
       return(Sgen)
      }
-    Seq <- ifelse(lnalpha>0&beta>0,(10^d)*lnalpha/beta,NA)
-#    Smsy <- Seq*(0.5-0.07*lnalpha)
-    Smsy <- ifelse(lnalpha>0&beta>0,(10^d)*(1-lambert_W0(exp(1-lnalpha)))/beta,NA)
-    Umsy <- ifelse(beta>0,Smsy*beta/(10^d),NA)
-    Smax <- ifelse(beta>0,(10^d)/beta,NA)
+    Seq <- (10^d)*lnalpha/beta
+    Smsy <- Seq*(0.5-0.07*lnalpha)
+    Umsy <- lnalpha*(0.5-0.07*lnalpha)
+    Smax <- (10^d)/beta
     mat <- cbind(lnalpha,beta,Smsy)
     Sgen <- as.numeric(apply(mat,1,(get_Sgen.bc)))  
     out <- data.frame(Seq,Smsy,Umsy,Smax,Sgen)
@@ -326,15 +320,15 @@ jag.model.SR.SS <-function() {
   BR.BH <- function(lnalpha,beta,d){
   get_Sgen.bc <- function(m){
       fun_Sgen.bc <- function(S,m) {S*exp(m[1]-log(1+m[2]*S/(10^d))) - m[3]}
-    if(m[1]>0 & m[2] >0 & m[3]>0){
+    if(m[1]>0 & m[2] >0){
       Sgen <- try(uniroot(fun_Sgen.bc, interval=c(0,m[3]),m=m)$root)
     } else {Sgen <- NA}
       return(Sgen)
     }
     alpha <- exp(lnalpha)
-    Seq <- ifelse(alpha>1 & beta>0,(10^d)*(alpha-1)/beta,NA)
-    Smsy <- ifelse(alpha>1 & beta>0,(10^d)*(sqrt(alpha)-1)/beta,NA)
-    Umsy <- ifelse(alpha>0,1-sqrt(1/alpha),NA)
+    Seq <- (10^d)*(alpha-1)/beta
+    Smsy <- (10^d)*(sqrt(alpha)-1)/beta
+    Umsy <- 1-sqrt(1/alpha)
     Smax <- NA
     mat <- cbind(lnalpha,beta,Smsy)
     Sgen <- as.numeric(apply(mat,1,(get_Sgen.bc))) 
@@ -388,8 +382,9 @@ base.par <- c('lnalpha','beta','sigma')
 
 
 
+
 #'-------------------------------------------------------------------------------
-#  Deriso-Shunute  SR ModelInactive ----
+#  Deriso-Shunute  Inactive ----
 #'-------------------------------------------------------------------------------
 jag.model.DS <- function(){
     # Likelihood 

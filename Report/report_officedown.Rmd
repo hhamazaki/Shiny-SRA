@@ -14,6 +14,7 @@ output:
 params:
   title: NA
   texts: NA
+  file: NA
   add: NA
   data: NA
   JAGS: NA
@@ -52,13 +53,19 @@ knitr::opts_chunk$set(
 `r params$texts`
 
 # Analyses Methods
-## Data
 ```{r,datadesciption, echo=FALSE,include=FALSE}
+  runyr <- paste(min(params$tbl_run$Year),'-',max(params$tbl_run$Year))
+  byr <- paste(min(sr.data.0()$Yr),'-',max(sr.data.0()$Yr))
+  yrange <- ifelse(params$data =='Run',runyr,byr)
   nyr <- input$sryears[2]-input$sryears[1]+1
   o.yrs <- paste(min(sr.data.0()$Yr),'to',max(sr.data.0()$Yr))
   yrs <- paste(input$sryears[1],'to',input$sryears[2])
+  rbyr <- paste(input$sryears[1],'-',input$sryears[2])
   o.age <- c(min(o.age()),max(o.age()))
-  pool  <- ifelse(params$data =='Run',
+  r.age <- input$rage 
+  obage <-ifelse(params$data =='Run',paste(o.age[1],'-',o.age[2]),'NA')
+  rbage <-ifelse(params$data =='Run',paste(input$rage[1],'-',input$rage[2]),'NA')
+  pool  <- ifelse(params$data =='Run'& ((o.age[1]-r.age[1])!=0|(o.age[2]-r.age[2])!=0),
             ifelse(input$combage,
                    'combined to the next nearest age.',
                    'dropped and the remaining run age proportions were rescaled.'),
@@ -72,21 +79,55 @@ trim <- paste('In this model analysis, the original data were trimmed to',nyr,'y
 yy <- ifelse(nyr !=length(sr.data.0()$Yr),trim,'')
 ```
 
-`r run` `r spr` spawner-recruit data consists of `r brood`. `r yy`
-
-## Model Run 
 ```{r,modeldesciption, echo=FALSE,include=FALSE}
 # Add parameters for data and model descriptions--------------------------------
   jpar <- params$JAGS
-  madd <- ifelse(params$add=='ar1','AR(1) error',ifelse(params$add=='kf','time-variant alpha','standard'))
-  ss <- ifelse(input$SS,'state-space','')
+  madd <- ifelse(params$add=='ar1','AR(1) error',ifelse(params$add=='kf','time-variant alpha',' '))
+  ss <- ifelse(SS(),'state-space','standard')
 # Model priors 
   change.prior <- paste('The default alpha and beta prior ranges were modified to', input$lnapha[1],'-',input$lnapha[2],'for ln.alpha and',input$beta[1],'-',input$beta[2],'for beta,respectively.')
   cp <- ifelse(input$Priors,change.prior,'')
 ```  
 
+## Data and Model Configurations 
+**Data**  
+**File name:  ** `r params$file`  
+**Data Type:  **  `r params$data`  
+**Year range:  ** `r yrange`    
+**Age range:  ** `r obage`   
+
+**Data Modification**  
+**Trimmed Age range:  ** `r rbage`   
+**Pooling Method: ** `r pool`  
+
+**Brood Year range: **`r byr`  
+**Trimmed Brood Year range: **`r rbyr`  
+
+**Model**  
+**SR Model:  ** `r input$Model`  
+**SR Model Type:  ** `r ss`  
+**SR Model addition:  ** `r madd`  
+
+**Model Configuration**  
+**Total Iteration:  ** `r jpar$n.iter`  
+**Burn-in:  ** `r jpar$n.burnin`  
+**Posterior:  ** `r jpar$n.iter-jpar$n.burnin`  
+**Thinning:  ** `r jpar$n.thin`  
+**Chains:  ** `r jpar$n.chains`  
+**Total Posterior Samples: ** `r jpar$n.sims`  
+**Change Default Piors:** `r cp`  
+
+
+## Data
+`r run` `r spr` spawner-recruit data consists of `r brood`. `r yy`
+
+## Model Run 
+
 A Bayesian `r madd` `r input$Model` `r ss` Spawner-Recruit model was run using JAGS. The model was run in `r jpar$n.chains` chains.  In each chain, a total of `r jpar$n.iter` iterations was run, of which the first `r jpar$n.burnin` were discarded (burn-in).  From the latter `r jpar$n.iter-jpar$n.burnin` iterations, posterior samples were taken at every `r jpar$n.thin`  iterations.  A total of `r jpar$n.sims` samples were saved for the posterior data analyses.   
 Uniform priors with default rages were used (see Method section Table 1). `r cp`  For each chain the starting value were randomly selected from the prior ranges.
+
+
+
 
 ## Model Parameters 
 ```{r}
@@ -94,8 +135,8 @@ kable(jpar$summary,caption = "JAGS parameters summary.", digits = c(rep(3,8),0))
 ```
 For each parameter, n.eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor (at convergence, Rhat=1).  
 
-DIC info (using the rule, pD = var(deviance)/2)
-pD = `r round(jpar$pD,2)` and DIC = `r round(jpar$DIC,2)` 
+DIC info (using the rule, pV = var(deviance)/2)
+pV = `r round(jpar$pV,2)` and DIC = `r round(jpar$DIC,2)` 
 DIC is an estimate of expected predictive error (lower deviance is better).
 
 

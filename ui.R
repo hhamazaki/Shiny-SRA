@@ -22,19 +22,23 @@ library(R2jags)       # used to run JAGS
 options(scipen=999)   # Do not show Scientific notation
 #'--- Required Source code------------------------------------------------------
 source("Rcode/Shiny_modules.R")   #  Module codes 
-source("Rcode/Help_Info.R")  # Help doc info
+source("Rcode/Help_info.R")  # Help doc info
 
 #options(shiny.legacy.datatable = TRUE)
 #'==============================================================================    
 #' UI Section----  
 #'==============================================================================
 ui<-fluidPage(
+  div(style = "background-color: #f8f9fa; padding: 15px; text-align: center;",
+      img(src="Picture2.png",height=50, width=50)
+      ,HTML('<span style="font-size:32px;">Pacific Salmon SR Escapement Goal Analyses</span>')),
  navbarPage(
     theme =  bs_theme(version = 3, bootswatch = 'cerulean'), 
      id = "tabs",
-     title = div(
-        img(src="Picture2.png",height=40, width=40)
-        , "Pacific Salmon SR Escapement Goal Analyses"),
+#     title = div(
+#        img(src="Picture2.png",height=40, width=40)
+#        , "Pacific Salmon SR Escapement Goal Analyses"),
+title='',
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## Panel 1  Data Input and Submit ----
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -55,8 +59,9 @@ checkboxInput(inputId="Sample", "Import Sample Data", FALSE),
 # File input UI: shows when sample data input is false
 conditionalPanel(condition="input.Sample== false",
 # File Input module 
-  dataInputUI("datain", "User data (.csv format)")
+  dataInputUI("datain", "User data (.csv format)"),
  ),
+
 # Show Age range (Only appear when data type is "Run")
   uiOutput('agerange'),
 # Whether to combine or eliminate Ages (Only appear when data type is "Run")
@@ -283,6 +288,14 @@ conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model C
         plotOutput(height='500px',"Plt_MSY.mc"),
   p("Probability distribution of reference parameters. The vertical line indicates mean."),
             ),#End tabPanel: Model Code
+##### 3.1.6  SR Status plot  -------
+  tabPanel("Kobe Plot",
+          plotOutput(height='500px',"Plt_kobe"),
+          p("Kobe Plot: Escapement vs Harvest Rate by calenar year. Vertical line is Smsy and hoizontal line is Umsy. 
+            Generally, The upper left (>Umsy and <Smsy) is considered at Unsustainable state, 
+            and the lower right (<Umsy and >Smsy) is Perfectly sustainable state."),
+            ),#End tabPanel: Model Code
+
 ##### Summary ------------------------------------------------------- 
   tabPanel("Summary",
          tableOutput('Tbl_sumpost'),

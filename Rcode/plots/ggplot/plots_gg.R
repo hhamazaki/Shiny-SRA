@@ -33,7 +33,6 @@ plt_runesc <- reactive({
       return(p1)                      
     }
  })
-
 #'------------------------------------------------------------------------------
 ## plt_srt -------------------------------------------------------------------
 #'  Plot recruit and escapement timeseries 
@@ -248,7 +247,7 @@ p1 <- ggplot(data=df)+  theme(legend.title = element_blank())+
 #'------------------------------------------------------------------------------
 plt_SS <- eventReactive(isTRUE(SS()),{
     u <- unit()
-    run <- run.out()
+    run <- tbl_run()
     # Create trimmed year   
     trimyear <- seq(ss.year()[1],ss.year()[2])    
     # Extract Year matches trimyear  
@@ -297,7 +296,7 @@ plt_SS <- eventReactive(isTRUE(SS()),{
 #'------------------------------------------------------------------------------
 plt_SS_Age <- eventReactive(isTRUE(SS()),{
 # Import run data 
-  run <- run.out()
+  run <- tbl_run()
 # trim data 
   # Create trimmed year   
   trimyear <- seq(ss.year()[1],ss.year()[2])    
@@ -813,6 +812,54 @@ if(SS()){
   
   return(list(pltSR=p1, pltYD=p2,pltLN = p3,pltBRp=p4))  
  })
+
+
+## plt_ehrate -------------------------------------------------------------------
+#'  Plot harvest rate and escapement 
+#'------------------------------------------------------------------------------
+plt_kobe <- reactive({
+  if(input$dataType== "Run"){
+    x <- data()[,c(1:3)]
+    names(x) <-c('Yr','S','R')
+    x$ex <- with(x,(R-S)/R)
+    dyear <- floor(x$Yr/10)*10   # Decades 
+    labels <- unique(dyear)
+    colp <- 1:length(labels)+1 # Decades color pallette   
+    u <- unit()
+    legend_data <- br.data()
+    Umsy <- legend_data[grepl("Umsy", legend_data$label),]
+    Smsy <- legend_data[grepl("Smsy", legend_data$label),]
+    p1 <- ggplot()+
+      # Add shades
+      annotate("rect", xmin = Smsy$x , xmax = Inf, ymin = 0, ymax = Umsy$x, 
+               fill = "green", alpha = 0.2) +
+      annotate("rect", xmin = 0 , xmax = Smsy$x, ymin = Umsy$x, ymax = 1.0, 
+               fill = "red", alpha = 0.2) +
+      # Add shades
+      annotate("rect", xmin = Smsy$x , xmax = Inf, ymin = Umsy$x, ymax = 1.0, 
+               fill = "orange", alpha = 0.2) +
+      annotate("rect", xmin = 0 , xmax = Smsy$x, ymin = 0, ymax = Umsy$x, 
+               fill = "yellow", alpha = 0.2) +
+            geom_point(data=x,aes(x=S,y=ex,color = as.factor(dyear)), size = 3)+
+      scale_color_manual(values = colp,labels=labels)+
+      geom_text_repel(data = x, aes(x = S, y = ex, label = as.character(Yr)), 
+                      size = 5, nudge_x = 0.1, nudge_y = 0.01, max.overlaps = Inf)+
+      geom_vline(data = Smsy,aes(xintercept = x,linetype = label),color=2,key_glyph='path') +
+      scale_linetype_manual(values = setNames(legend_data$linetype, legend_data$label)) +
+      guides(orientation ="horizontal")+
+      geom_hline(data = Umsy,aes(yintercept = x,linetype = label),color=3,key_glyph='path') +
+      scale_linetype_manual(values = setNames(legend_data$linetype, legend_data$label)) +
+      guides(orientation ="horizontal")+
+      # Second y axis       
+      scale_y_continuous(expand=c(0,0),limits=c(0,1.0))+
+      scale_x_continuous(expand=expansion(mult = c(0, .25)), limits=c(0, max(x$S)),
+                         labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep)+
+      ylab(paste('Harvest Rate')) + xlab(paste('Escapement',mult(u)))
+    
+    return(p1)   
+  }
+})
+
 
 #'------------------------------------------------------------------------------
 # Profile Analyses     -------------------------

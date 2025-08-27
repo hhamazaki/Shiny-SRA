@@ -23,6 +23,7 @@ okabe <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#C
 options(DT.options=list(pageLength=25,scrollX=TRUE, scrollY="400px", scrollcollapse = TRUE,
        columnDefs=list(list(width='50px',targets="_all")
   )))
+options(shiny.maxRequestSize = 100 * 1024^2)
 #'------------------------------------------------------------------------------
 #'  Include Source codes
 #'------------------------------------------------------------------------------
@@ -38,7 +39,7 @@ source("Rcode/Functions/MSE_functions.R")  # Include functions related to data a
 plt <-'gg'
 
 if(plt=='base'){
-source("Rcode/plots/baseplot/Base_plot_functions.R")  
+source("Rcode/plots/baseplot/base_plot_functions.R")  
 source("Rcode/plots/baseplot/plots_base.R", local = TRUE)
 }
 if(plt=='gg'){
@@ -55,17 +56,13 @@ observe({
     showTab(inputId = "tabs", target = "Escapement Goal Analyses")
     showTab(inputId = "tabs", target = "MSE Analyses")
     showTab(inputId = "tabs", target = "SR Model")
+    showTab(inputId = "Panel", target =  "Kobe Plot")
     showTab(inputId = "subTab", target = "Run Table")
     showTab(inputId = "subTab", target = "Brood Table")
     hideTab(inputId = "ssTab", target = "Run Size")
     hideTab(inputId = "ssTab", target = "Run Age Comp")
     hideTab(inputId = "ssTab", target = "Brood Age Comp") 
     hideTab(inputId = "Panel", target = "Priors") 
-    if(isTRUE(SS())){
-    showTab(inputId = "ssTab", target = "Run Size")
-    showTab(inputId = "ssTab", target = "Run Age Comp")
-    showTab(inputId = "ssTab", target = "Brood Age Comp")   
-    }
     if(input$Priors){
     showTab(inputId = "Panel", target = "Priors")  
     }
@@ -73,6 +70,7 @@ observe({
     hideTab(inputId = "tabs", target = "Escapement Only Analyses")
     showTab(inputId = "tabs", target = "Escapement Goal Analyses")
     hideTab(inputId = "tabs", target = "MSE Analyses")
+    hideTab(inputId = "Panel", target =  "Kobe Plot")
     showTab(inputId = "tabs", target = "SR Model")
     hideTab(inputId = "subTab", target = "Run Table")
     hideTab(inputId = "subTab", target = "Brood Table")
@@ -105,7 +103,9 @@ observe({
 #'==============================================================================
 #' User choses dataType first (input$DataType)
 ##  Input data file reading module ---- 
-data.in <-  dataInputServer("datain")
+data.get <-  dataInputServer("datain")
+data.in <- reactive(data.get$df())
+output$file.n <- renderText(paste("Uploaded File:",data.get$fn()))
 
 ##  check input file has errors ------
 observe({
@@ -165,7 +165,7 @@ unit <- reactive({
 
 ## Tbl_data: input data Output ----------------------------------------
  output$Tbl_data <- DT::renderDT(data(),rownames = FALSE)
-
+ 
 
 #'==============================================================================
 # 2. Data Modification -----
@@ -324,6 +324,14 @@ output$yrange <- renderUI({
 ### sr.data --- final dataset used for SR analyses --------------------
   sr.data <- reactive({cut.data(sr.data.0(),input$sryears) })
 
+### Reactive ss.data --- final dataset used for percentile risk ----------------
+ss.year <- reactive({ 
+  min <- input$sryears[1]
+  max <- input$sryears[2]+input$rage[2]
+  ssyear <- c(min,max)
+  return(ssyear)
+})
+
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #  Plot SR data 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -383,7 +391,6 @@ output$Tbl_sum_run.data <- renderTable({tbl_sum_run.data()},rownames=TRUE)
 output$Plt_hist.run <- renderPlot({plt_hist.run()})
 
 
-    
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #Panel 2: Bayesian Model:  Create JAG data and model-----   
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -424,7 +431,13 @@ SS <- reactive({
   } else {out <- FALSE}
   return(out)
   })
-
+observe({
+if(isTRUE(SS())){
+  showTab(inputId = "ssTab", target = "Run Size")
+  showTab(inputId = "ssTab", target = "Run Age Comp")
+  showTab(inputId = "ssTab", target = "Brood Age Comp")   
+}
+})
 
 # Model Name 
 model.name <- reactive({
@@ -759,7 +772,7 @@ lnalphais <-reactive({
  if(input$add=='kf'){
   nyrs <- Bayesdata()$nyrs
   if(isTRUE(SS())) {nyrs <- Bayesdata()$nyrs - Bayesdata()$lage}
-  year <- sr.data()$Yr
+   year <- sr.data()$Yr
 #' Bayesian simulation out parameters -------------------------------------------    
  if(input$BayesMCMC==TRUE){
   parname <- paste0('lnalphai.',1:nyrs,'.')  # Reading CSV data 
@@ -1090,40 +1103,42 @@ base.ln <- reactive({base.sr()$base.ln})
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #Panel 4: SR Model Analyses plots ----  
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# br.data : SEQ, SMSY, SMAX, SGEN ++++++++++++++++++++++++++++++++++++++++++++++
+# br.data : SEQ, SMSY, SMAX, SGEN, UMSY  +++++++++++++++++++++++++++++++++++++++
 br.data <- reactive({
-    # SMSY Calc 
-    srmodel <- Bayesmodel()$model
-    model.br <- Bayesmodel()$model.br
-    lnalpha <- mean(SR.post()$post$lnalpha)
-    lnalpha.c <- mean(SR.post()$post$lnalpha.c)
-    beta <- mean(SR.post()$post$beta)
-    D <- Bayesdata()$d
+  # SMSY Calc 
+  srmodel <- Bayesmodel()$model
+  model.br <- Bayesmodel()$model.br
+  lnalpha <- mean(SR.post()$post$lnalpha)
+  lnalpha.c <- mean(SR.post()$post$lnalpha.c)
+  beta <- mean(SR.post()$post$beta)
+  D <- Bayesdata()$d
   if(input$add=='kf')
-     {
+  {
     if(input$alphai != 'None') {
       lnalpha <- mean(SR.post.i()$post$lnalpha) 
       lnalpha.c <- mean(SR.post.i()$post$lnalpha.c) 
       beta <- mean(SR.post.i()$post$beta)
-     } 
-   } 
-# Get unique alpha 
-    bref <- model.br(lnalpha,beta,D)
-    bref.c <- model.br(lnalpha.c,beta,D)
-    Smsy <- ifelse(input$target=='me',bref.c$Smsy,bref$Smsy)
-    Sgen <- ifelse(input$target=='me',bref.c$Sgen,bref$Sgen)
-    Seq  <- ifelse(input$target=='me',bref.c$Seq,bref$Seq)
-    Smax <- bref$Smax
-    
-out  <- data.frame(x = c(Seq,Smsy, Smax, Sgen), 
-                          label = c(
-                            paste("Seq:", format(round(Seq, 0))),
-                            paste("Smsy:", format(round(Smsy, 0))),
-                            paste("Smax:", format(round(Smax, 0))),
-                            paste("Sgen:", format(round(Sgen, 0)))
-                          ),
-                          linetype = c("solid","dashed","dotted","dotdash")) 
-return(out)  
+    } 
+  } 
+  # Get unique alpha 
+  bref <- model.br(lnalpha,beta,D)
+  bref.c <- model.br(lnalpha.c,beta,D)
+  Smsy <- ifelse(input$target=='me',bref.c$Smsy,bref$Smsy)
+  Sgen <- ifelse(input$target=='me',bref.c$Sgen,bref$Sgen)
+  Seq  <- ifelse(input$target=='me',bref.c$Seq,bref$Seq)
+  Umsy <- ifelse(input$target=='me',bref.c$Umsy,bref$Umsy)
+  Smax <- bref$Smax
+  
+  out  <- data.frame(x = c(Seq,Smsy, Smax, Sgen,Umsy), 
+                     label = c(
+                       paste("Seq:", format(round(Seq, 0))),
+                       paste("Smsy:", format(round(Smsy, 0))),
+                       paste("Smax:", format(round(Smax, 0))),
+                       paste("Sgen:", format(round(Sgen, 0))),
+                       paste("Umsy:",format(round(Umsy,2)))
+                     ),
+                     linetype = c("solid","dashed","dotted","dotdash","dashed")) 
+  return(out)  
 })
 #### TVA data  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 kf.data <- reactive({
@@ -1194,6 +1209,9 @@ output$Txt_MSY.mc <- renderText({
 "SR plot overlayed with probability distribution of Seq, Smsy, Smax, and Sgen. 
   Vertical line indicate median estimates."
   })
+## Plt_kobe --- Kobe Plot ------
+output$Plt_kobe <- renderPlot({plt_kobe()})
+
 
 #'------------------------------------------------------------------------------
 # SR Model Diagnoses plots--------------------------
@@ -2360,6 +2378,7 @@ output$downloadReport <- downloadHandler(
     params <- list(
 	    title = input$txt_title,   # Text title
       texts = input$txt_free,    # Free entry 
+	    file = data.get$fn(),      # Input file name 
       add = input$add,          # Model type
       data = input$dataType,
       JAGS = sim()$output$BUGSoutput,

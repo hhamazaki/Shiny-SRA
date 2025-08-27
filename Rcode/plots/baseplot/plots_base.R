@@ -1,4 +1,4 @@
-source("Rcode/plots/baseplot/Base_plot_functions.R")   #  Separate year 
+source("Rcode/plots/baseplot/base_plot_functions.R")   #  Separate year 
 #'==============================================================================
 # plots_base.R 
 # This file includes all graphical output functions used in Shiny Server
@@ -258,7 +258,7 @@ plt_predict <- reactive({
 #'  Plot Run, Harvest, and escapement 
 #'------------------------------------------------------------------------------
 plt_SS <- eventReactive(SS(),{
-    run <- run.out()
+    run <- tbl_run()
     # trim data 
     # Create trimmed year   
     trimyear <- seq(ss.year()[1],ss.year()[2])    
@@ -294,7 +294,7 @@ plt_SS <- eventReactive(SS(),{
 #'------------------------------------------------------------------------------
 plt_SS_Age <- eventReactive(isTRUE(SS()),{
 # Import run data 
-  run <- run.out()
+  run <- tbl_run()
 # trim data 
   # Create trimmed year   
   trimyear <- seq(ss.year()[1],ss.year()[2])    
