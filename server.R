@@ -18,7 +18,7 @@
 #'==============================================================================
 server<-shinyServer(function(input, output, session){
 #'------------------------------------------------------------------------------
-#palette("Okabe-Ito")  
+palette("Okabe-Ito")  
 okabe <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 options(DT.options=list(pageLength=25,scrollX=TRUE, scrollY="400px", scrollcollapse = TRUE,
        columnDefs=list(list(width='50px',targets="_all")
@@ -39,7 +39,7 @@ source("Rcode/Functions/MSE_functions.R")  # Include functions related to data a
 plt <-'gg'
 
 if(plt=='base'){
-source("Rcode/plots/baseplot/base_plot_functions.R")  
+source("Rcode/plots/baseplot/Base_plot_functions.R")  
 source("Rcode/plots/baseplot/plots_base.R", local = TRUE)
 }
 if(plt=='gg'){
@@ -258,16 +258,16 @@ output$Tbl_data.brood <- DT::renderDT(round(tbl_brood()$brood,0),rownames = FALS
 # This create final data sr.data or e.data (Escapement only data)
 #'==============================================================================
 #' sr.data.0  Original SR data -------------------------------------------------  
-sr.data.1 <- reactive({
+#sr.data.1 <- reactive({
   # SR data created from Run data     
-  if(input$dataType== "Run"){
-    x <- tbl_brood()$SR
-    h <- brood.H(tbl_run())
-    x <- merge(x,h,by=c('b.Year','Spawner'))
-    names(x) <- c('Yr','S','R','H')
-    return(x)
-  }
-    })
+#  if(input$dataType== "Run"){
+#    x <- tbl_brood()$SR
+#    h <- brood.H(tbl_run())
+#    x <- merge(x,h,by=c('b.Year','Spawner'))
+#    names(x) <- c('Yr','S','R','H')
+#    return(x)
+#  }
+#    })
 
 
 #' sr.data.0  Original SR data -------------------------------------------------  
@@ -917,11 +917,13 @@ tbl_sumpost<- reactive({
   }
  # Rename beta 
   names(out)[3] <- paste0('beta x10^(-',Bayesdata()$d,')')
-  return(out)
+  List <- row.names(out)
+  out2 <- cbind(List,out)
+  return(out2)
  })
 
 # print out sumpost 
-output$Tbl_sumpost <- renderTable(tbl_sumpost(),rownames = TRUE,digits=3)
+output$Tbl_sumpost <- renderTable(tbl_sumpost(),rownames = FALSE,digits=3)
 #-------------------------------------------------------------------------------
 #  Histogram 
 output$Plt_hist.mc <- renderPlot({plt_hist.mc()})
@@ -1137,7 +1139,7 @@ br.data <- reactive({
                        paste("Sgen:", format(round(Sgen, 0))),
                        paste("Umsy:",format(round(Umsy,2)))
                      ),
-                     linetype = c("solid","dashed","dotted","dotdash","dashed")) 
+                     linetype = c("solid","dashed","dotted","dotdash","longdash")) 
   return(out)  
 })
 #### TVA data  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -2408,6 +2410,26 @@ output$downloadReport <- downloadHandler(
   )
   }
  ) # End downloadReport
+
+output$downloadTable <- downloadHandler(
+  filename = function(){
+    paste0('SR_Data_', model.name(),'_', Sys.Date(),'.xlsx')
+  },
+  content = function(file) {
+    out.excel <- list()
+    out.excel$InputData <- data()
+    if(input$dataType =="Run"){  
+      out.excel$Run <- tbl_run()
+      out.excel$brood <- tbl_brood()$brood
+    }
+    if(SS()){out.excel$Runcv <- tbl_run.cv()}    
+    out.excel$SRdata <- sr.data.0()
+    out.excel$SRpred <- SRp()
+    out.excel$Summary <- tbl_sumpost()
+    out.excel$Profile <-T.Prof()
+    write.xlsx(out.excel,file,rowNames=FALSE)
+  }
+) # End downloadTable
 
 
 #'==============================================================================

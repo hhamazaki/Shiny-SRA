@@ -466,7 +466,8 @@ plt_SRY <- reactive({
   xp <- sr.data()  # SR plot datat
   dyear <- floor(xp$Yr/10)*10   # Decades 
   labels <- unique(dyear)
-  colp <- 1:length(labels)+1 # Decades color pallette    
+#  colp <- 1:length(labels)+1 # Decades color pallette
+   colp <- okabe # Decades color pallette
   maxR <- round(1.25*max(xp$R,na.rm=TRUE))
 # Create data for TVA model 
 if(input$add=='kf'){
@@ -475,7 +476,8 @@ if(input$add=='kf'){
     ny <- kf.data()$ny
     star <- kf.data()$star    
     dyear <- rep(c(1:nstar),ny)     
-    colp <- 1:nstar+1
+#    colp <- 1:nstar+1
+    colp <- okabe
     labels <- star$txt
    }   
 
@@ -528,13 +530,13 @@ if(input$add=='kf'){
     geom_point(data = xp, aes(x = S, y = R-S, color=as.factor(dyear)), size = 3)+    
         geom_line(data = df.tva, aes(x = S, y = R-S,color=star), 
               linetype = "dashed", linewidth = 0.7) +
-    scale_color_manual(values=c(1:nstar+1),labels=star$txt)  
+    scale_color_manual(values=colp,labels=star$txt)  
 #'..............................................................................  
   p3 <- p3+
     geom_point(data = xp, aes(x = S, y = log(R/S), color=as.factor(dyear)), size = 3)+    
     geom_line(data = df.tva, aes(x = S, y = log(R/S),color=star), 
               linetype = "dashed", linewidth = 0.7) +
-    scale_color_manual(values=c(1:nstar+1),labels=star$txt) 
+    scale_color_manual(values=colp,labels=star$txt) 
   }  
 
 #'-------- Add Interval -------------------------------------------------------- 
@@ -615,8 +617,8 @@ if(isTRUE(input$show.points)) {
     df <- data.frame(x = den[[1]]$x, y = den[[1]]$y)
     p4<- p4 + 
       # Under construction
-      geom_line(data = df, aes(x = x, y = maxR*y/max(y)), color = 2) +
-      geom_polygon(data = df, aes(x = x, y = maxR*y/max(y)), fill = 2, alpha = 0.2) +
+      geom_line(data = df, aes(x = x, y = maxR*y/max(y)), color = okabe[1]) +
+      geom_polygon(data = df, aes(x = x, y = maxR*y/max(y)), fill = okabe[1], alpha = 0.2) +
       geom_vline(data = legend_data[grepl("Seq", legend_data$label),], 
                  aes(xintercept = x,linetype = label),color=2,key_glyph='path') +
       scale_linetype_manual(values = setNames(legend_data$linetype, legend_data$label)) +
@@ -647,8 +649,8 @@ if(isTRUE(input$show.points)) {
     df <- data.frame(x = den[[2]]$x, y = den[[2]]$y)
     p4<- p4 + 
       # Under construction
-      geom_line(data = df, aes(x = x, y = maxR*y/max(y)), color = 3) +
-      geom_polygon(data = df, aes(x = x, y = maxR*y/max(y)), fill = 3, alpha = 0.2) +
+      geom_line(data = df, aes(x = x, y = maxR*y/max(y)), color = okabe[3]) +
+      geom_polygon(data = df, aes(x = x, y = maxR*y/max(y)), fill = okabe[3], alpha = 0.2) +
       geom_vline(data = legend_data[grepl("Smsy", legend_data$label),], 
                aes(xintercept = x,linetype = label),color=3,key_glyph='path') +
       scale_linetype_manual(values = setNames(legend_data$linetype, legend_data$label))+
@@ -678,8 +680,8 @@ if(isTRUE(input$show.points)) {
     df <- data.frame(x = den[[4]]$x, y = den[[4]]$y)
     p4<- p4 + 
       # Under construction
-      geom_line(data = df, aes(x = x, y = maxR*y/max(y)), color = 4) +
-      geom_polygon(data = df, aes(x = x, y = maxR*y/max(y)), fill = 4, alpha = 0.2) +
+      geom_line(data = df, aes(x = x, y = maxR*y/max(y)), color = okabe[4]) +
+      geom_polygon(data = df, aes(x = x, y = maxR*y/max(y)), fill = okabe[4], alpha = 0.2) +
       geom_vline(data = legend_data[grepl("Smax", legend_data$label),], 
                  aes(xintercept = x,linetype = label),color=4,key_glyph='path') +
       scale_linetype_manual(values = setNames(legend_data$linetype, legend_data$label))+
@@ -708,8 +710,8 @@ if(isTRUE(input$show.points)) {
     df <- data.frame(x = den[[3]]$x, y = den[[3]]$y)
     p4<- p4 + 
       # Under construction
-      geom_line(data = df, aes(x = x, y = maxR*y/max(y)), color = 5) +
-      geom_polygon(data = df, aes(x = x, y = maxR*y/max(y)), fill = 5, alpha = 0.2) +
+      geom_line(data = df, aes(x = x, y = maxR*y/max(y)), color = okabe[5]) +
+      geom_polygon(data = df, aes(x = x, y = maxR*y/max(y)), fill = okabe[5], alpha = 0.2) +
       geom_vline(data = legend_data[grepl("Sgen", legend_data$label),], 
                  aes(xintercept = x,linetype = label),color=5,key_glyph='path') +
       scale_linetype_manual(values = setNames(legend_data$linetype, legend_data$label)) +
@@ -720,7 +722,7 @@ if(isTRUE(input$show.points)) {
   if(RE()){
     S <- RE.post()
     S <- data.frame(S,xp)
-    cols <- as.factor(as.numeric(as.factor(dyear))+1)
+    cols <- okabe
   p1 <- p1 + 
     geom_point(data = S, aes(x = exp(mean), y = R), color = cols, size = 3) + 
     geom_segment(data=S,aes(x=exp(uci),y=R,yend=R,xend =exp(lci)),
@@ -743,9 +745,8 @@ if(SS()){
     R <- SS.post.sum()$R
     R <- R[which(R$Year %in% xp$Yr),] 
 # Color Palette    
-    
     if(isTRUE(input$show.points)|input$add=='kf'){
-    cols <- as.factor(as.numeric(as.factor(dyear))+1)
+    cols <- okabe
     } else {cols <- 'gray30'}
 
     
@@ -824,7 +825,7 @@ plt_kobe <- reactive({
     x$ex <- with(x,(R-S)/R)
     dyear <- floor(x$Yr/10)*10   # Decades 
     labels <- unique(dyear)
-    colp <- 1:length(labels)+1 # Decades color pallette   
+    colp <- okabe # Decades color palette   
     u <- unit()
     legend_data <- br.data()
     Umsy <- legend_data[grepl("Umsy", legend_data$label),]
@@ -832,22 +833,22 @@ plt_kobe <- reactive({
     p1 <- ggplot()+
       # Add shades
       annotate("rect", xmin = Smsy$x , xmax = Inf, ymin = 0, ymax = Umsy$x, 
-               fill = "green", alpha = 0.2) +
+               fill = okabe[3], alpha = 0.2) +
       annotate("rect", xmin = 0 , xmax = Smsy$x, ymin = Umsy$x, ymax = 1.0, 
-               fill = "red", alpha = 0.2) +
+               fill = okabe[6], alpha = 0.2) +
       # Add shades
       annotate("rect", xmin = Smsy$x , xmax = Inf, ymin = Umsy$x, ymax = 1.0, 
-               fill = "orange", alpha = 0.2) +
+               fill = okabe[1], alpha = 0.2) +
       annotate("rect", xmin = 0 , xmax = Smsy$x, ymin = 0, ymax = Umsy$x, 
-               fill = "yellow", alpha = 0.2) +
+               fill = okabe[4], alpha = 0.2) +
             geom_point(data=x,aes(x=S,y=ex,color = as.factor(dyear)), size = 3)+
       scale_color_manual(values = colp,labels=labels)+
       geom_text_repel(data = x, aes(x = S, y = ex, label = as.character(Yr)), 
                       size = 5, nudge_x = 0.1, nudge_y = 0.01, max.overlaps = Inf)+
-      geom_vline(data = Smsy,aes(xintercept = x,linetype = label),color=2,key_glyph='path') +
+      geom_vline(data = Smsy,aes(xintercept = x,linetype = label),color=1,key_glyph='path') +
       scale_linetype_manual(values = setNames(legend_data$linetype, legend_data$label)) +
       guides(orientation ="horizontal")+
-      geom_hline(data = Umsy,aes(yintercept = x,linetype = label),color=3,key_glyph='path') +
+      geom_hline(data = Umsy,aes(yintercept = x,linetype = label),color=1,key_glyph='path') +
       scale_linetype_manual(values = setNames(legend_data$linetype, legend_data$label)) +
       guides(orientation ="horizontal")+
       # Second y axis       

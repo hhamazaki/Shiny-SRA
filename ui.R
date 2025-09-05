@@ -22,7 +22,7 @@ library(R2jags)       # used to run JAGS
 options(scipen=999)   # Do not show Scientific notation
 #'--- Required Source code------------------------------------------------------
 source("Rcode/Shiny_modules.R")   #  Module codes 
-source("Rcode/Help_info.R")  # Help doc info
+source("Rcode/Help_Info.R")  # Help doc info
 
 #options(shiny.legacy.datatable = TRUE)
 #'==============================================================================    
@@ -740,7 +740,10 @@ tabPanel("Sim rep Data",
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   tabPanel("Report Output",   
         sidebarPanel(
-      downloadButton('downloadReport')
+          p('Report '), 
+          downloadButton('downloadReport',label='Download'),
+          p('Table'),
+          downloadButton('downloadTable',label='Download'),      
         ),
    mainPanel(
     h1("Under Construction"),
@@ -876,7 +879,7 @@ tabPanel("Sim rep Data",
             )
           ),
     "Escapement Goal Analyses",
-      tabPanel("Smsy-Smax Profile Ahalyses",
+      tabPanel("Smsy-Smax Profile Analyses",
               withMathJax(includeMarkdown("documents/Esc_Goal/Profile_help.Rmd"))
                  ),
       tabPanel("Yield-Recruit Analyses",
