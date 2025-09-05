@@ -19,6 +19,7 @@ library(gsl)       # used for dwtest
 library(car)          # used for dwtest 
 library(mgcv)         # used for spline 
 library(R2jags)       # used to run JAGS
+library(ggrepel)      # loaded in a subfile; reloaded here 
 options(scipen=999)   # Do not show Scientific notation
 #'--- Required Source code------------------------------------------------------
 source("Rcode/Shiny_modules.R")   #  Module codes 
