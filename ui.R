@@ -14,7 +14,7 @@ library(bslib)
 library(rmarkdown)     # used to get rmarkdown file
 library(markdown)     # used to get rmarkdown file
 library(knitr)         # used to produce word report 
-library(data.table)     # used for data transpose 
+library(tidyr)        # replaces reshape2; used for transposing data
 library(gsl)       # used for dwtest 
 library(car)          # used for dwtest 
 library(mgcv)         # used for spline 
@@ -74,9 +74,9 @@ conditionalPanel(condition="input.Sample== false",
   hr(),
 # input_switch('gg','ggplot'),
 #' Default axis point UI --------------------------------------------------------
- checkboxInput(inputId="autoui", "Defalut axis unit", TRUE),
+ checkboxInput(inputId="autoui", "Default axis unit", TRUE),
  conditionalPanel(condition="input.autoui== false",
-    selectInput(inputId="ui","Figure Axis Dislpay Unit", choices = c('1','1000','million'))
+    selectInput(inputId="ui","Figure Axis Display Unit", choices = c('1','1000','million'))
      )
    ), # End sidebarPanel (Data Input)
 
@@ -292,9 +292,9 @@ conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model C
 ##### 3.1.6  SR Status plot  -------
   tabPanel("Kobe Plot",
           plotOutput(height='500px',"Plt_kobe"),
-          p("Kobe Plot: Escapement vs Harvest Rate by calenar year. Vertical line is Smsy and hoizontal line is Umsy. 
-            Generally, The upper left (>Umsy and <Smsy) is considered at Unsustainable state, 
-            and the lower right (<Umsy and >Smsy) is Perfectly sustainable state."),
+          p("Kobe Plot: Escapement vs Harvest Rate by calendar year. Vertical line is Smsy and hoizontal line is Umsy. 
+            Generally, the upper left (>Umsy and <Smsy) is considered an unsustainable state, 
+            and the lower right (<Umsy and >Smsy) is perfectly sustainable state."),
             ),#End tabPanel: Model Code
 
 ##### Summary ------------------------------------------------------- 
@@ -302,7 +302,7 @@ conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model C
          tableOutput('Tbl_sumpost'),
          plotOutput(height='500px',"Plt_hist.mc"),
          hr(),
-      p("Probability distribution of the model and biological reference parameters. The vertical line indicates mean (solid) and median (hash)."),
+      p("Probability distribution of the model and biological reference parameters. The vertical line indicates the mean (solid) and median (dashed)."),
          hr(),
   conditionalPanel(condition="input.Remove_out == true", 
          p(strong('Outlier summary')),
@@ -334,7 +334,7 @@ tabPanel("Model Diagnoses",
          plotOutput(height='400px',"Plt_predict"), 
   p("Predicted vs. Observed ln(Recruit). The gray shade indicates 95% credible interval."),
          plotOutput(height='400px',"Plt_residual"),
-  p("Resicdaual plot between predicted and observed ln(Recruit). The red line indicated mean and gray shade indicates 95% credible interval."),
+  p("Residual plot between predicted and observed ln(Recruit). The red line indicated mean and gray shade indicates 95% credible interval."),
          strong(textOutput('Txt_dwtest.title')),
          verbatimTextOutput('Txt_dwtest.resid'),
          plotOutput(height='400px',"Plt_lnalphai"),
@@ -359,7 +359,7 @@ tabPanel("Model Diagnoses",
     ) # End tabsetPanel
   ) # End MainPanel
   ) # End TabPanel Model Diagnoses
-),  # End navbarMenue
+),  # End navbarMenu
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## Panel 4: Escapement Goal Analyses---- 

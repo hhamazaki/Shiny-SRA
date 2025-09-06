@@ -1170,7 +1170,7 @@ output$Plt_SR <- renderPlot({add_title(plt_SR(),sr.title())})
 
 output$Txt_SR <- renderText({
 paste0("Spawner-recruit curve (solid: median, dash: mean). Gray shade and dashed line indicate ", 
-       input$CI,"% Bayesian ",input$Li,"and Prediction interval.")
+       input$CI,"% Bayesian ",input$Li," and Prediction interval.")
   })
 
 output$SRinfo <- renderText({
@@ -1188,7 +1188,7 @@ output$Plt_yield <- renderPlot({add_title(plt_yield(),sr.title())})
 
 output$Txt_YD <- renderText({
 paste0("Spawner-Yield curve (Solid:median, dash:mean). Gray shade and dashed line indicate ", 
-       input$CI,"% Bayesian ",input$Li,"and Prediction interval.")
+       input$CI,"% Bayesian ",input$Li," and Prediction interval.")
   })
 
 ## Plt_lnRS --- Plot ln(R/S) vs S ------------------------------------------
@@ -1198,7 +1198,7 @@ output$Plt_lnRS <- renderPlot({add_title(plt_lnRS(),sr.title())})
 
 output$Txt_lnRS <- renderText({
 paste0("ln(R/S) plot (Solid:median, dash:mean). Gray shade and dashed line indicate ", 
-       input$CI,"% Bayesian ",input$Li,"and Prediction interval.")
+       input$CI,"% Bayesian ",input$Li," and Prediction interval.")
   })
 
 
@@ -1758,7 +1758,7 @@ meds <- reactiveVal(data.frame())
 
 # Data update 
 observeEvent(input$Run,{
-  # Put old value hwere 
+  # Put old value here 
   old_gl <- gls()
   old_y <- ys()
   old_meds  <- meds()
@@ -1768,9 +1768,10 @@ observeEvent(input$Run,{
   gl <- data.frame(glt, pct)
   names(gl) <- c('Esc Goal Range', '% Recruit Lng','% Yield Lng',
                  '% Recruit Anl','% Yeild Anl','% Zero Yield Anl' )
-  y <- data.frame(Y = as.vector(CG_sim()$Y), Y.p = as.vector(CG_sim()$Y.p), 
+  y <- data.frame(Y = as.vector(CG_sim()$Y), Y.p = as.vector(CG_sim()$Y.p),
                   R = as.vector(CG_sim()$R), R.p = as.vector(CG_sim()$R.p))
-  med <-  data.frame(round(t(c(apply(y,2,mean),apply(y,2,median)))))
+  med <-  data.frame(EG_Range=as.vector(glt), 
+                     round(t(c(apply(y,2,mean),apply(y,2,median)))))
   
   # attach the new line to the old data frame here:
   new_gl <- rbind(old_gl, gl)

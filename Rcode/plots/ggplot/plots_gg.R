@@ -10,6 +10,7 @@
 ## plt_runesc -------------------------------------------------------------------
 #'  Plot run and escapement timeseries 
 #'------------------------------------------------------------------------------
+# Lines 307&340 are now vestigial and can be removed after testing
 plt_runesc <- reactive({
    if(input$dataType== "Run"){
      x <- data()[,c(1:3)]
@@ -21,18 +22,18 @@ plt_runesc <- reactive({
        geom_line(aes(x=Yr,y=R,color='Run'),linetype=1)+
        geom_line(aes(x=Yr,y=S,color ='Escapement'),linetype=2)+
        geom_line(aes(x=Yr,y=H,color= 'Harvest'),linetype=3)+
-# Second y axisis        
+       # Second y axisis        
        geom_line(aes(x=Yr,y= inv_scale_function(R,ex,0,0),color='Harvest Rate'),linetype=4)+
-    scale_x_continuous(expand=expansion(add = c(.5, .5)),n.breaks = 10,oob=oob_keep) +
-    scale_y_continuous(expand=expansion(mult = c(0, .25)), limits=c(0, max(x$R)),
-                      sec.axis = sec_axis(~scale_function(.,x$R,x$ex,0,0),name='Harvest Rate'),
-                       labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep)+
-      scale_color_manual(values=c(1,2,3,4),breaks=c('Run','Escapement','Harvest','Harvest Rate'),
-        guide=guide_legend(override.aes=list(linetype=c(1,2,3,4))))+
-        xlab(paste('Year')) + ylab(paste('Abundance',mult(u)))
-      return(p1)                      
-    }
- })
+       scale_x_continuous(expand=expansion(add = c(.5, .5)),n.breaks = 10,oob=oob_keep) +
+       scale_y_continuous(expand=expansion(mult = c(0, .25)), limits=c(0, max(x$R)),
+                          sec.axis = sec_axis(~scale_function(.,x$R,x$ex,0,0),name='Harvest Rate'),
+                          labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep)+
+       scale_color_manual(values=c(1,2,3,4),breaks=c('Run','Escapement','Harvest','Harvest Rate'),
+                          guide=guide_legend(override.aes=list(linetype=c(1,2,3,4))))+
+       xlab(paste('Year')) + ylab(paste('Abundance',mult(u)))
+     return(p1)                      
+   }
+})
 #'------------------------------------------------------------------------------
 ## plt_srt -------------------------------------------------------------------
 #'  Plot recruit and escapement timeseries 
@@ -41,36 +42,36 @@ plt_srt <- reactive({
   if(input$dataType != 'Escapement Only'){
     x <- sr.data.0()
     u <- unit()
-     x$ex <- with(x,log(R/S))
-     u <- unit()
-     p1 <- ggplot(data=x)+
-       geom_line(aes(x=Yr,y=R,color='Recruit'),linetype=1)+
-       geom_line(aes(x=Yr,y=S,color ='Spawner'),linetype=5)+
-       geom_line(aes(x=Yr,y= inv_scale_function(R,ex,0,1),color='ln(R/S)'),linetype=1)+
-        scale_color_manual(values=c(1,1,4),breaks=c('Recruit','Spawner','ln(R/S)'),
-        guide=guide_legend(override.aes=list(linetype=c(1,5,1))))+
-    scale_x_continuous(expand=c(0, 0.5),n.breaks = 10,oob=oob_keep) +
-    scale_y_continuous(expand=expansion(mult = c(0, .25)), limits=c(0, max(x$R)),
-                       sec.axis = sec_axis(~scale_function(.,x$R,x$ex,0,1),name='ln(R/S)'),
-                       labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep)+
-                       labs(x=paste('Year'),y=paste('Abundance',mult(u)))                   
-    } else {
+    x$ex <- with(x,log(R/S))
+    u <- unit()
+    p1 <- ggplot(data=x)+
+      geom_line(aes(x=Yr,y=R,color='Recruit'),linetype=1)+
+      geom_line(aes(x=Yr,y=S,color ='Spawner'),linetype=5)+
+      geom_line(aes(x=Yr,y= inv_scale_function(R,ex,0,1),color='ln(R/S)'),linetype=1)+
+      scale_color_manual(values=c(1,1,4),breaks=c('Recruit','Spawner','ln(R/S)'),
+                         guide=guide_legend(override.aes=list(linetype=c(1,5,1))))+
+      scale_x_continuous(expand=c(0, 0.5),n.breaks = 10,oob=oob_keep) +
+      scale_y_continuous(expand=expansion(mult = c(0, .25)), limits=c(0, max(x$R)),
+                         sec.axis = sec_axis(~scale_function(.,x$R,x$ex,0,1),name='ln(R/S)'),
+                         labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep)+
+      labs(x=paste('Year'),y=paste('Abundance',mult(u)))                   
+  } else {
     x <- e.data.0()
     u <- unit()
-     p1 <- ggplot(data=x)+
-       geom_line(aes(x=Yr,y=S,color='Escapement'),linetype=1)+
-    scale_x_continuous(expand=c(0, 0.5),n.breaks = 10,oob=oob_keep) +
-    scale_y_continuous(expand=expansion(mult = c(0, .25)), limits=c(0, max(x$S)),
-                       labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep)+
-             labs(x=paste('Year'),y=paste('Escapement',mult(u)))
-    }
-    # Add Cutting data 
-    if(max(input$sryears)<max(x$Yr)|min(input$sryears)>min(x$Yr)){
-      p1 <- p1+ 
+    p1 <- ggplot(data=x)+
+      geom_line(aes(x=Yr,y=S,color='Escapement'),linetype=1)+
+      scale_x_continuous(expand=c(0, 0.5),n.breaks = 10,oob=oob_keep) +
+      scale_y_continuous(expand=expansion(mult = c(0, .25)), limits=c(0, max(x$S)),
+                         labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep)+
+      labs(x=paste('Year'),y=paste('Escapement',mult(u)))
+  }
+  # Add Cutting data 
+  if(max(input$sryears)<max(x$Yr)|min(input$sryears)>min(x$Yr)){
+    p1 <- p1+ 
       geom_vline(xintercept = input$sryears, color =2) 
-    }
+  }
   return(p1)      
- })
+})
 
 #'------------------------------------------------------------------------------
 ## plt_lnsrt -------------------------------------------------------------------
@@ -86,17 +87,17 @@ plt_srt <- reactive({
 plt_hist.sry <- reactive({
   u <- as.numeric(unit())
   if(input$dataType != "Escapement Only"){
-  df <- sr.data()
-  p1 <- gg_hist(df,S,u,df$S)+xlab(paste('Spawner',mult(u)))
-  p2 <- gg_hist(df,R,u,df$R)+xlab(paste('Recruit',mult(u)))
-  p3 <- gg_hist(df,Y,u,df$Y)+xlab(paste('Yield',mult(u)))
-  p4 <- gg_hist(df,lnRS,1,df$lnRS)+xlab(paste('ln(R/S)',mult(1)))
-  p5 <- plot_grid(p1,p2,p3,p4,nrow=1)
-  return(p5)
+    df <- sr.data()
+    p1 <- gg_hist(df,S,u,df$S)+xlab(paste('Spawner',mult(u)))
+    p2 <- gg_hist(df,R,u,df$R)+xlab(paste('Recruit',mult(u)))
+    p3 <- gg_hist(df,Y,u,df$Y)+xlab(paste('Yield',mult(u)))
+    p4 <- gg_hist(df,lnRS,1,df$lnRS)+xlab(paste('ln(R/S)',mult(1)))
+    p5 <- plot_grid(p1,p2,p3,p4,nrow=1)
+    return(p5)
   } else {
-  df <- e.data()  
-  p1 <- gg_hist(df,S,u,df$S)+xlab(paste('Spawner',mult(u)))
-  return(p1)
+    df <- e.data()  
+    p1 <- gg_hist(df,S,u,df$S)+xlab(paste('Spawner',mult(u)))
+    return(p1)
   }
 })
 
@@ -107,13 +108,13 @@ plt_hist.sry <- reactive({
 plt_hist.run <- reactive({
   u <- unit()
   if(input$dataType == "Run"){
-  df <- data()[,c(1:3)]
-  names(df) <-c('Yr','S','R')
-  df$H <- with(df,(R-S))
-  df$HR <- with(df,H/R)
-  p1 <- gg_hist(df,S,u,df$S)+xlab(paste('Escapement',mult(u)))
-  p2 <- gg_hist(df,R,u,df$R)+xlab(paste('Run',mult(u)))
-  p3 <- gg_hist(df,H,u,df$H)+xlab(paste('Harvest',mult(u)))
+    df <- data()[,c(1:3)]
+    names(df) <-c('Yr','S','R')
+    df$H <- with(df,(R-S))
+    df$HR <- with(df,H/R)
+    p1 <- gg_hist(df,S,u,df$S)+xlab(paste('Escapement',mult(u)))
+    p2 <- gg_hist(df,R,u,df$R)+xlab(paste('Run',mult(u)))
+    p3 <- gg_hist(df,H,u,df$H)+xlab(paste('Harvest',mult(u)))
   p4 <- gg_hist(df,HR,1,df$HR)+xlab(paste('Harvest Rate',mult(1)))
   p4 <- plot_grid(p2,p1,p3,p4,nrow=1)
   return(p4)
@@ -304,7 +305,8 @@ plt_SS_Age <- eventReactive(isTRUE(SS()),{
   run <- run[run$Year %in% trimyear,]
 # Extract observed run age comp   
 #  page <- proportions(as.matrix(run[,substr(names(run),1,1) =='A']),margin = 1) 
-  ob.page <- melt(run[,-(2:3)],id.vars='Year',variable.name='Age',value.name='ob.p')
+  #ob.page <- melt(run[,-(2:3)],id.vars='Year',variable.name='Age',value.name='ob.p')
+  ob.page <- pivot_longer(run[, -c(2:3)], cols = -Year, names_to = "Age", values_to = "ob.p")
   ob.page$Age <- paste('Age',substr(ob.page$Age,2,3))
 # Import predicted age comp   
   dat.ssp <- data.frame(do.call(rbind,SS.post.sum()$p.age))
@@ -336,7 +338,8 @@ plt_SS_BAge <- eventReactive(isTRUE(SS()),{
   # Extract Year matches trimyear  
   nages <- Bayesdata()$nages 
   fage <- Bayesdata()$fage 
-  ob.page <- melt(brood.p(),id.vars='b.Year',variable.name='Age',value.name='ob.p')
+  #ob.page <- melt(brood.p(),id.vars='b.Year',variable.name='Age',value.name='ob.p')
+  ob.page <- pivot_longer(brood.p(), cols = -b.Year, names_to = "Age", values_to = "ob.p")
   ob.page$Age <- paste('Age',substr(ob.page$Age,6,7))
   dat.ssp <- data.frame(do.call(rbind,SS.post.sum()$q.age))
   dat.ssp <- merge(dat.ssp,ob.page,by.y =c('Age','b.Year'),by.x =c('Age','Year'), all=TRUE)
