@@ -40,7 +40,7 @@ substrRight <- function(x, n){substr(x, nchar(x)-n+1, nchar(x))}
 trimden <- function(x){density(x[x<quantile(x,0.99,na.rm=TRUE)],na.rm=TRUE)}
   
 #'==============================================================================
-#  2.0  Data Summmary functions  -----  
+#  2.0  Data Summary functions  -----  (used for )
 #'==============================================================================
 sum.ci.v <- function(x,ci){
   p <- (100-ci)/200
@@ -51,7 +51,8 @@ sum.ci.v <- function(x,ci){
   mean <- mean(x, na.rm=TRUE)
   median <- median(x,na.rm=TRUE)
   sd <-  sd(x,na.rm=TRUE)
-  out <- data.frame(min=min, max=max, sd=sd, mean=mean,median=median,lci=lci,uci=uci)
+  cv <- sd/mean
+  out <- data.frame(min=min,lci=lci,mean=mean,median=median,uci=uci,max=max,sd=sd,vcv=cv)
  }
 
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -59,17 +60,8 @@ sum.ci.v <- function(x,ci){
 #   Get summary from MCMC matrix
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 sum.ci <- function(x,ci){
-  p <- (100-ci)/200
-#  x[apply(x,is.infinite)] <- NA
-  min <- apply(x,2,min, na.rm=TRUE)
-  max <- apply(x,2,max, na.rm=TRUE)
-  lci <- apply(x,2, function(x) quantile(x,prob=p,na.rm=TRUE))
-  uci <- apply(x,2, function(x) quantile(x,prob=1-p,na.rm=TRUE))
-  mean <- apply(x,2,mean, na.rm=TRUE)
-  median <- apply(x,2,median, na.rm=TRUE)
-  sd <-  apply(x,2,sd, na.rm=TRUE)
-  cv <-  sd/mean
-  out <- data.frame(Min=min, lci=lci,mean=mean,median=median,uci=uci,max=max, sd=sd,cv=cv)
+  temp <- apply(x,2,function(x) sum.ci.v(x,ci))
+  out <-  data.frame(do.call(rbind,temp))
   return(out)
  }
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -78,16 +70,7 @@ sum.ci <- function(x,ci){
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 sum.fun <- function(x,ci){
   p <- (100-ci)/200
-#  x[sapply(x,is.infinite)] <- NA
-  min <- sapply(x,min, na.rm=TRUE)
-  max <- sapply(x,max, na.rm=TRUE)
-  lci <- sapply(x,quantile, prob=p, na.rm=TRUE)
-  uci <- sapply(x,quantile, prob=1-p, na.rm=TRUE)
-  mean <- sapply(x,mean, na.rm=TRUE)
-  median <- sapply(x,median, na.rm=TRUE)
-  sd <- sapply(x,sd, na.rm=TRUE)
-  cv <- sd/mean
-  out <- rbind(min,lci,mean,median,uci,max,sd,cv)
+  out <- t(sum.ci(as.matrix(x),ci))
   rownames(out) <- c('Min',paste0(100*p,'%'),'Mean','Median',paste0(100*(1-p),'%'),'Max','SD','CV')
   return(out)
  }
@@ -282,13 +265,13 @@ pred_CI<- function(SR.pred, CI) {
 
 #'==============================================================================
 ## 4.1 Prob.calc: Create Profile Probability of achieving target ----
+# Y: Matrix  gl: Criteria
 #'==============================================================================
 Prob.calc <- function(Y,gl){
-  # Import MCMC Expected mean Yields 
-  # Mean yields    
+# If value 
   Ygl <- apply(Y,2,function(x) ifelse(x >=gl,x-gl,0))
   Yb <- apply(Ygl,2,function(x) ifelse(x >0,1,0))
-  Ypm <- colMeans(as.matrix(Yb))  # mean yield
+  Ypm <- colMeans(as.matrix(Yb))  # Mean probability
   return(list(Ypm=Ypm, Ygl = Ygl))
  }
 

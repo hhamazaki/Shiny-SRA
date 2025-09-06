@@ -45,7 +45,7 @@ dataInputServer <- function(id){
                    msg <- sprintf("File %s was uploaded", userFile()$name)
                    cat(msg, "\n")
                  }) # End observe
-                file_name <- reactive(userFile()$name)
+                 file_name <- reactive(userFile()$name)
                  return(list(df=df,fn=file_name))
                } # End function
   ) # End moduleServer
