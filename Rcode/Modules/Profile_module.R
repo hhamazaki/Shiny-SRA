@@ -114,7 +114,8 @@ ProfileServer <- function(id,SR.pred,crit,unit,plt){
         Y.prof.st <- data.frame(t(EG.st()$S.prof.st))
         names(Y.prof.st) <- c('p90','p80','p70')
         df <- data.frame(S=SR.pred()$S,Med=EG()$S.prof,Y.prof.st )
-        df1 <- melt(df,id.vars ='S',variable.name='prof.type',value.name='prob')
+        #df1 <- melt(df,id.vars ='S',variable.name='prof.type',value.name='prob')
+        df1 <- pivot_longer(df, cols = -S, names_to = "prof.type", values_to = "prob")
         if(plt=='base'){
           par(xaxs='i',yaxs='i',bty='l',las=1,cex=1.2,cex.lab=1.5)
           df1$S <- df1$S/u
