@@ -18,6 +18,7 @@ params:
   add: NA
   data: NA
   JAGS: NA
+  target: NA
   tbl_sum: NA
   tbl_sumpost: NA
   tbl_brood: NA
@@ -49,7 +50,8 @@ knitr::opts_chunk$set(
 
 # Project Description 
 ## Stock Name : `r params$title`
-
+ 
+## Project description: 
 `r params$texts`
 
 # Analyses Methods
@@ -77,6 +79,7 @@ brood <- paste0(length(sr.data.0()$Yr),'years, ranging from ',o.yrs)
 spr <- ifelse(params$data =='Run','The constructed','The input')
 trim <- paste('In this model analysis, the original data were trimmed to',nyr,'years, ranging from',yrs,'.')
 yy <- ifelse(nyr !=length(sr.data.0()$Yr),trim,'')
+tg <- ifelse(input$target=='md','Median Target','Mean Target')
 ```
 
 ```{r,modeldesciption, echo=FALSE,include=FALSE}
@@ -86,7 +89,7 @@ yy <- ifelse(nyr !=length(sr.data.0()$Yr),trim,'')
   ss <- ifelse(SS(),'state-space','standard')
 # Model priors 
   change.prior <- paste('The default alpha and beta prior ranges were modified to', input$lnapha[1],'-',input$lnapha[2],'for ln.alpha and',input$beta[1],'-',input$beta[2],'for beta,respectively.')
-  cp <- ifelse(input$Priors,change.prior,'')
+  cp <- ifelse(input$Priors,change.prior,'Default')
 ```  
 
 ## Data and Model Configurations 
@@ -117,6 +120,7 @@ yy <- ifelse(nyr !=length(sr.data.0()$Yr),trim,'')
 **Total Posterior Samples: ** `r jpar$n.sims`  
 **Change Default Piors:** `r cp`  
 
+**SR Target ** `r tg` 
 
 ## Data
 `r run` `r spr` spawner-recruit data consists of `r brood`. `r yy`

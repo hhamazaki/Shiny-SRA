@@ -1,11 +1,11 @@
 name: Spawner_Recruit_Bayes
-title: Spawner_Recruit_Bayes
+title:
 username: hamachan
 account: hamachan
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1875809
-bundleId: 10822281
+bundleId: 10859175
 url: https://hamachan.shinyapps.io/Spawner_Recruit_Bayes/
 version: 1
 asMultiple: FALSE
