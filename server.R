@@ -105,7 +105,7 @@ observe({
 ##  Input data file reading module ---- 
 data.get <-  dataInputServer("datain")
 data.in <- reactive(data.get$df())
-output$file.n <- renderText(paste("Uploaded File:",data.get$fn()))
+filename <- reactive(ifelse(input$Sample,'Sample File',data.get$fn()))
 
 ##  check input file has errors ------
 observe({
@@ -2380,9 +2380,10 @@ output$downloadReport <- downloadHandler(
     params <- list(
 	    title = input$txt_title,   # Text title
       texts = input$txt_free,    # Free entry 
-	    file = data.get$fn(),      # Input file name 
+	    file = filename(),      # Input file name 
       add = input$add,          # Model type
       data = input$dataType,
+	    target = input$target,
       JAGS = sim()$output$BUGSoutput,
       tbl_sumpost = tbl_sumpost(),
 	    tbl_brood = tbl_brood()$brood,
