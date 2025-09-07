@@ -6,9 +6,10 @@ Source code of Pacific Salmon Spawner-Recruit App
 *  **Avoid Packages just for single function use**
 *  **Annotate Packages (what the package is used for)**
 *  **Standardize code notatins**
-**  Plt_ plt_ for plot object   
-**  Tbl_ tbl_ for table object 
-**  Txt_ txt_ for text  object 
+  
+  *  Plt_ plt_ for plot object   
+  *  Tbl_ tbl_ for table object 
+  *  Txt_ txt_ for text  object 
 
 ## Repository Structure  
 This repositroy consists of following folders: 
