@@ -1,5 +1,16 @@
 # Shiny SRA
 Source code of Pacific Salmon Spawner-Recruit App
+## General coding philosophy
+**For longevity and stability of the code**
+*  **Use Base R syntax**
+*  **Avoid Packages just for single function use**
+*  **Annotate Packages (what the package is used for)**
+*  **Standardize code notatins**
+**  Plt_ plt_ for plot object   
+**  Tbl_ tbl_ for table object 
+**  Txt_ txt_ for text  object 
+
+## Repository Structure  
 This repositroy consists of following folders: 
 ## document
 This folder conteias documents in Help sections
