@@ -232,7 +232,10 @@ Risk_custom <- reactive({
           )
           # create a data.frame 
           #df <- melt(data.frame(S=x,pi),id.vars=('S'),value.name='p')
-          df <- pivot_longer(data.frame(S = x, pi), cols = -S, names_to = "variable", values_to = "p")
+          # R Base reshape: replace reshape2 tidyr
+          df <- reshape(data.frame(S=x,pi),direction='long', idvar='S',varying = names(data.frame(S=x,pi))[-1],
+                         v.names='p',timevar='variable',times=names(data.frame(S=x,pi))[-1])
+#          df <- pivot_longer(data.frame(S = x, pi), cols = -S, names_to = "variable", values_to = "p")
           p1 <- ggplot()+
             geom_line(data=df, aes(x=S,y=p,linetype=variable,color=variable, linewidth=variable))+
             scale_linetype_manual(labels=txt,values=c(1,1,2,3,4))+   

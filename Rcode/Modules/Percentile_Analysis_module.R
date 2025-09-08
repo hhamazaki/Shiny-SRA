@@ -123,7 +123,6 @@ PercentileServer <- function(id,e.data,u,plt){
         ggplot()+
           geom_line(data=x, aes(x=Yr, y=S))+
           annotate("rect", ymin=(e.g[1]),ymax=e.g[2],xmax=Inf,xmin=-Inf,fill=2,alpha = 0.1)+
-          
           scale_y_continuous(expand=c(0, 0), limits=c(0, NA), 
                              labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep) +
           scale_x_continuous(expand=c(0, 0.5),n.breaks = 10)+

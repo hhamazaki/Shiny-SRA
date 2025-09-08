@@ -14,7 +14,6 @@ library(bslib)
 library(rmarkdown)     # used to get rmarkdown file
 library(markdown)     # used to get rmarkdown file
 library(knitr)         # used to produce word report 
-library(tidyr)        # replaces reshape2; used for transposing data
 library(gsl)       # used for dwtest 
 library(car)          # used for dwtest 
 library(mgcv)         # used for spline 

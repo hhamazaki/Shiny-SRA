@@ -306,7 +306,11 @@ plt_SS_Age <- eventReactive(isTRUE(SS()),{
 # Extract observed run age comp   
 #  page <- proportions(as.matrix(run[,substr(names(run),1,1) =='A']),margin = 1) 
   #ob.page <- melt(run[,-(2:3)],id.vars='Year',variable.name='Age',value.name='ob.p')
-  ob.page <- pivot_longer(run[, -c(2:3)], cols = -Year, names_to = "Age", values_to = "ob.p")
+  # R Base reshape: replace reshape2 tidyr
+  ob.page <- reshape(run[,-(2:3)],direction='long', idvar='Year',varying = names(run[,-(2:3)])[-1],
+                 v.names='ob.p',timevar='Age',times=names(run[,-(2:3)])[-1])
+  
+#  ob.page <- pivot_longer(run[, -c(2:3)], cols = -Year, names_to = "Age", values_to = "ob.p")
   ob.page$Age <- paste('Age',substr(ob.page$Age,2,3))
 # Import predicted age comp   
   dat.ssp <- data.frame(do.call(rbind,SS.post.sum()$p.age))
@@ -323,7 +327,8 @@ p1 <- ggplot(dat.ssp)+theme(legend.title = element_blank())+
   geom_line(aes(x = Year, y = median),linetype=1, linewidth = 0.8) +
   geom_line(aes(x = Year, y = mean),linetype=2, linewidth = 0.8) +
   geom_point(aes(x = Year, y = ob.p),color='red', size = 3) +
-  facet_rep_wrap(~Age,scales='free_y',ncol=1)+
+# Replace facet_rep_wrap: (package lemon) to ggplot2 syntax  
+  facet_wrap(~Age,scales='free_y',ncol=1,axes='all',axis.labels='margins')+
 #  scale_y_continuous(expand=c(0.05,0), limits=~c(with(dat.ssp, min(lci,ob.p), max(uci,ob.p))))+
 #  scale_x_continuous(expand=c(0,0.5), limits=~c(with(dat.ssp,min(Year), max(Year))),n.breaks = 10)+
   xlab('Year') + ylab('Proportion')
@@ -338,8 +343,9 @@ plt_SS_BAge <- eventReactive(isTRUE(SS()),{
   # Extract Year matches trimyear  
   nages <- Bayesdata()$nages 
   fage <- Bayesdata()$fage 
-  #ob.page <- melt(brood.p(),id.vars='b.Year',variable.name='Age',value.name='ob.p')
-  ob.page <- pivot_longer(brood.p(), cols = -b.Year, names_to = "Age", values_to = "ob.p")
+  # R Base reshape: replace reshape2 tidyr
+  ob.page <- reshape(brood.p(),direction='long', idvar='b.Year',varying = names(brood.p())[-1],
+                     v.names='ob.p',timevar='Age',times=names(brood.p())[-1])
   ob.page$Age <- paste('Age',substr(ob.page$Age,6,7))
   dat.ssp <- data.frame(do.call(rbind,SS.post.sum()$q.age))
   dat.ssp <- merge(dat.ssp,ob.page,by.y =c('Age','b.Year'),by.x =c('Age','Year'), all=TRUE)
@@ -350,7 +356,7 @@ p1 <- ggplot(dat.ssp)+theme(legend.title = element_blank())+
   geom_line(aes(x = Year, y = median),linetype=1, linewidth = 0.8) +
   geom_line(aes(x = Year, y = mean),linetype=2, linewidth = 0.8) +
   geom_point(aes(x = Year, y = ob.p),color='red', size = 3) +
-  facet_rep_wrap(~Age,scales='free_y',ncol=1)+
+  facet_wrap(~Age,scales='free_y',ncol=1,axes='all',axis.labels='margins')+
 #  scale_y_continuous(expand=c(0.05,0), limits=~c(with(dat.ssp, min(lci,ob.p), max(uci,ob.p))))+
 #  scale_x_continuous(expand=c(0,0.5), limits=~c(with(dat.ssp,min(Year), max(Year))),n.breaks = 10)+
   xlab('Brood Year') + ylab('Proportion')
@@ -468,9 +474,12 @@ plt_SRY <- reactive({
   SRp <- SRp()   # Predicted 
   xp <- sr.data()  # SR plot datat
   dyear <- floor(xp$Yr/10)*10   # Decades 
+  ndyear <- (dyear-min(dyear))/10+1
+  df.okabe <- data.frame(okabe)
+  df.okabe$level <- row.names(df.okabe)
+  cdyear <- merge(data.frame(ndyear),df.okabe,by.x='ndyear',by.y='level') 
   labels <- unique(dyear)
-#  colp <- 1:length(labels)+1 # Decades color pallette
-   colp <- okabe # Decades color pallette
+  colp <- okabe # Decades color pallette
   maxR <- round(1.25*max(xp$R,na.rm=TRUE))
 # Create data for TVA model 
 if(input$add=='kf'){
@@ -725,7 +734,9 @@ if(isTRUE(input$show.points)) {
   if(RE()){
     S <- RE.post()
     S <- data.frame(S,xp)
-    cols <- okabe
+    if(isTRUE(input$show.points)|input$add=='kf'){
+      cols <- cdyear$okabe
+    } else {cols <- 'gray'}
   p1 <- p1 + 
     geom_point(data = S, aes(x = exp(mean), y = R), color = cols, size = 3) + 
     geom_segment(data=S,aes(x=exp(uci),y=R,yend=R,xend =exp(lci)),
@@ -749,10 +760,9 @@ if(SS()){
     R <- R[which(R$Year %in% xp$Yr),] 
 # Color Palette    
     if(isTRUE(input$show.points)|input$add=='kf'){
-    cols <- okabe
-    } else {cols <- 'gray30'}
+      cols <- cdyear$okabe
+    } else {cols <- 'gray'}
 
-    
     df.SS <- data.frame(S=S$mean, Suci=S$uci,Slci=S$lci,R=R$mean,Ruci=R$uci,Rlci=R$lci)
 # Observed CI   
   if(isTRUE(input$show.ob.se)){    

@@ -2,8 +2,7 @@
 #' ggplot2  function Sets
 #'==============================================================================
 library(ggplot2)    # Used for ggplot graphics 
-library(lemon)      # Used for ggplot: better figures (facet_rep_wrap)
-library(ggrepel)      # Used for ggplot: better figures (facet_rep_wrap)
+library(ggrepel)      # Used for ggplot: avoid year overlap 
 library(cowplot) # Used to arrange plots
 library(scales)  # Used to make axis scaled
 library(rlang)   # Used to make ggplot functions
