@@ -41,7 +41,7 @@ plt_runesc <- reactive({
 plt_srt <- reactive({
   if(input$dataType != 'Escapement Only'){
   layout(matrix(1:2, ncol=2), widths=c(4,1))  
-    x <- sr.data.0()
+    x <- data_sr.0()
     u <- unit()
   par(yaxs='i',bty='u',las=1,cex=1.2,cex.lab=1.25,font.lab=2)
    plot(R/u~Yr,data=x,type='l',ylim=c(0,with(x,max(R,S,na.rm=TRUE)/u)),xlab='',ylab='')
@@ -59,7 +59,7 @@ plt_srt <- reactive({
      } 
    add_legend('topleft',c('Spawner','Recruit','R/S'),lty=c(2,1,1),col=c(1,1,2),box.lty=0,xpd=TRUE)  
     } else {
-    x <- e.data.0()
+    x <- data_esc.0()
     u <- unit()
     par(yaxs='i',bty='l',las=1,cex=1.2,cex.lab=1.25,font.lab=2)
     plot(S/u~Yr,data=x,type='l',ylim=c(0,with(x,max(S/u,na.rm=TRUE))),xlab='',ylab='')
@@ -78,7 +78,7 @@ plt_srt <- reactive({
 plt_srt2 <- reactive({
   if(input$dataType == 'Run'){
     layout(matrix(1:2, ncol=2), widths=c(4,1))  
-    x <- sr.data.1()
+    x <- data_sr.1()
     u <- unit()
     par(yaxs='i',bty='u',las=1,cex=1.2,cex.lab=1.25,font.lab=2)
     plot(R/u~Yr,data=x,type='l',ylim=c(0,with(x,max(R,S,na.rm=TRUE)/u)),xlab='',ylab='')
@@ -104,7 +104,7 @@ plt_srt2 <- reactive({
 #'  Plot lnRS and escapement timeseries 
 #'------------------------------------------------------------------------------
 plt_lnsrt <- reactive({
-  x <- sr.data.0()
+  x <- data_sr.0()
   u <- unit()
   par(cex=1.2,cex.lab=1.25,font.lab=2)
   plot_runesc(x,u)
@@ -127,13 +127,13 @@ plt_hist.sry <- reactive({
   u <- as.numeric(unit())  
   if(input$dataType != "Escapement Only"){
   par(mfrow=c(1,4),cex=1.2,mar=c(4,2,1,0))
-  df <- sr.data()
+  df <- data_sr()
   plot_hist(df$S,u,paste('Spawnter',mult(u)))
   plot_hist(df$R,u,paste('Recruit',mult(u)))
   plot_hist(df$Y,u,paste('Yield',mult(u)))
   plot_hist(df$lnRS,u,paste('ln(R/S)'))
   } else {
-    x <- e.data()  
+    x <- data_esc()  
   plot_hist(x$S,u,paste('Spawnter',mult(u)))    
   }
   })
@@ -212,7 +212,7 @@ plt_lnalphai <- reactive({
 #'  Plot residual teme series plot 
 #'------------------------------------------------------------------------------
 plt_residual <- reactive({
-  year <- sr.data()$Yr
+  year <- data_sr()$Yr
   if(input$add=='ar1'){
     resid <-SR.resid()$RD2  
    } else {
@@ -235,9 +235,9 @@ plt_residual <- reactive({
 #'  Plot annual predicted recruitment time series 
 #'------------------------------------------------------------------------------
 plt_predict <- reactive({
-  year <- sr.data()$Yr
+  year <- data_sr()$Yr
   resid <-SR.resid()$RD
-  R <- log(sr.data()$R)
+  R <- log(data_sr()$R)
   R.m <- R - apply(resid,2,mean)
   cil <- R - apply(resid,2,function(x) quantile(x, 0.025))
   ciu <- R - apply(resid,2,function(x) quantile(x, 0.975))
@@ -360,10 +360,10 @@ plt_SS_BAge <- eventReactive(isTRUE(SS()),{
 #'------------------------------------------------------------------------------
 base.pl <- reactive({
   u <- unit()
-  xp <- sr.data.0()
+  xp <- data_sr.0()
   xp[,c(2,3)] <- xp[,c(2,3)]/u
   xp$Y <- xp$Y/u
-  xp2 <- sr.data()
+  xp2 <- data_sr()
   xp2[,c(2:3)] <- xp2[,c(2,3)]/u
   xp2$Y <- xp2$Y/u
   SRp <- SRp()/u
@@ -452,7 +452,7 @@ plt_SRY <- reactive({
   u <- unit()
   SRp <- SRp()/u
   maxS <- ifelse(input$axis,input$maxS,max(SRp$S))
-  xp <- sr.data()  # SR plot datat
+  xp <- data_sr()  # SR plot datat
   xp[,c(2,3)] <- xp[,c(2,3)]/u
   xp$Y <- xp$Y/u
   dyear <- floor(xp$Yr/10)*10   # Decades 
@@ -762,7 +762,7 @@ l1 <- 0
   }  
 #'-- Add SS Elements  ----------------------------------------------------------
 if(SS()){
-    cidata <- data.frame(sr.data.ci())
+    cidata <- data.frame(data_sr.ci())
     cidata <- cidata[which(cidata$Yr %in% xp$Yr),]
     cidata[,!names(cidata) %in% c('Yr')] <- cidata[,!names(cidata) %in% c('Yr')]/u
     S <- SS.post.sum()$S

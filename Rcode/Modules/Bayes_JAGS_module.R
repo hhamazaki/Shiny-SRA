@@ -306,7 +306,7 @@ jag.model.SR.SS <-function() {
      }
     Seq <- ifelse(lnalpha>0&beta>0,(10^d)*lnalpha/beta,NA)
 #    Smsy <- Seq*(0.5-0.07*lnalpha)
-    Smsy <- ifelse(lnalpha>0&beta>0,(10^d)*(1-lambert_W0(exp(1-lnalpha)))/beta,NA)
+    Smsy <- ifelse(lnalpha>0&beta>0,(10^d)*(1-lambertW0(exp(1-lnalpha)))/beta,NA)
     Umsy <- ifelse(beta>0,Smsy*beta/(10^d),NA)
     Smax <- ifelse(beta>0,(10^d)/beta,NA)
     mat <- cbind(lnalpha,beta,Smsy)

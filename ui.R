@@ -10,15 +10,15 @@
 #'==============================================================================
 # Include required packages 
 library(shiny)
-library(bslib)
+library(bslib)        # used for ui application 
 library(rmarkdown)     # used to get rmarkdown file
 library(markdown)     # used to get rmarkdown file
 library(knitr)         # used to produce word report 
-library(gsl)       # used for dwtest 
+library(lamW)          # used for lanbert w 
 library(car)          # used for dwtest 
-library(mgcv)         # used for spline 
+#library(mgcv)         # used for spline  
 library(R2jags)       # used to run JAGS
-library(ggrepel)      # loaded in a subfile; reloaded here 
+#library(ggrepel)      # loaded in a subfile; reloaded here 
 options(scipen=999)   # Do not show Scientific notation
 #'--- Required Source code------------------------------------------------------
 source("Rcode/Shiny_modules.R")   #  Module codes 
@@ -286,7 +286,7 @@ conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model C
 #####  SR Refrence Plot  -------
   tabPanel("SR Dist Plot",
         plotOutput(height='500px',"Plt_MSY.mc"),
-  p("Probability distribution of reference parameters. The vertical line indicates mean."),
+  p("SR plot overlayed with probability distribution of Seq, Smsy, Smax, and Sgen.  Vertical line indicate median estimates."),
             ),#End tabPanel: Model Code
 ##### 3.1.6  SR Status plot  -------
   tabPanel("Kobe Plot",

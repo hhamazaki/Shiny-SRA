@@ -40,7 +40,7 @@ plt_runesc <- reactive({
 #'------------------------------------------------------------------------------
 plt_srt <- reactive({
   if(input$dataType != 'Escapement Only'){
-    x <- sr.data.0()
+    x <- data_sr.0()
     u <- unit()
     x$ex <- with(x,log(R/S))
     u <- unit()
@@ -56,7 +56,7 @@ plt_srt <- reactive({
                          labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep)+
       labs(x=paste('Year'),y=paste('Abundance',mult(u)))                   
   } else {
-    x <- e.data.0()
+    x <- data_esc.0()
     u <- unit()
     p1 <- ggplot(data=x)+
       geom_line(aes(x=Yr,y=S,color='Escapement'),linetype=1)+
@@ -87,7 +87,7 @@ plt_srt <- reactive({
 plt_hist.sry <- reactive({
   u <- as.numeric(unit())
   if(input$dataType != "Escapement Only"){
-    df <- sr.data()
+    df <- data_sr()
     p1 <- gg_hist(df,S,u,df$S)+xlab(paste('Spawner',mult(u)))
     p2 <- gg_hist(df,R,u,df$R)+xlab(paste('Recruit',mult(u)))
     p3 <- gg_hist(df,Y,u,df$Y)+xlab(paste('Yield',mult(u)))
@@ -95,7 +95,7 @@ plt_hist.sry <- reactive({
     p5 <- plot_grid(p1,p2,p3,p4,nrow=1)
     return(p5)
   } else {
-    df <- e.data()  
+    df <- data_esc()  
     p1 <- gg_hist(df,S,u,df$S)+xlab(paste('Spawner',mult(u)))
     return(p1)
   }
@@ -181,7 +181,7 @@ plt_lnalphai <- reactive({
 #'  Plot residual teme series plot 
 #'------------------------------------------------------------------------------
 plt_residual <- reactive({
-  year <- sr.data()$Yr
+  year <- data_sr()$Yr
   if(input$add=='ar1'){
     resid <-SR.resid()$RD2  
    } else {
@@ -213,9 +213,9 @@ p1 <- ggplot(data=df)+
 #'  Plot annual predicted recruitment time series 
 #'------------------------------------------------------------------------------
 plt_predict <- reactive({
-  year <- sr.data()$Yr
+  year <- data_sr()$Yr
   resid <-SR.resid()$RD
-  R <- log(sr.data()$R)
+  R <- log(data_sr()$R)
   R.m <- R - apply(resid,2,mean)
   cil <- R - apply(resid,2,function(x) quantile(x, 0.025))
   ciu <- R - apply(resid,2,function(x) quantile(x, 0.975))
@@ -372,8 +372,8 @@ p1 <- ggplot(dat.ssp)+theme(legend.title = element_blank())+
 #'------------------------------------------------------------------------------
 base.pl <- reactive({
   u <- as.numeric(unit())
-  xp <- sr.data.0()
-  xp2 <- sr.data()
+  xp <- data_sr.0()
+  xp2 <- data_sr()
   SRp <- SRp()
   maxS <- ifelse(input$axis,input$maxS*u,max(SRp$S))
   maxR <- ifelse(input$axis,input$maxR*u,round(1.25*max(xp$R,na.rm=TRUE)))
@@ -472,7 +472,7 @@ base.sr <- reactive({
 #'------------------------------------------------------------------------------
 plt_SRY <- reactive({
   SRp <- SRp()   # Predicted 
-  xp <- sr.data()  # SR plot datat
+  xp <- data_sr()  # SR plot datat
   dyear <- floor(xp$Yr/10)*10   # Decades 
   ndyear <- (dyear-min(dyear))/10+1
   df.okabe <- data.frame(okabe)
@@ -752,7 +752,7 @@ if(isTRUE(input$show.points)) {
   
 #'-- Add SS Elements  ----------------------------------------------------------
 if(SS()){
-    cidata <- data.frame(sr.data.ci())
+    cidata <- data.frame(data_sr.ci())
     cidata <- cidata[which(cidata$Yr %in% xp$Yr),]
     S <- SS.post.sum()$S
     S <- S[which(S$Year %in% xp$Yr),]

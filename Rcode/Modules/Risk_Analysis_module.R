@@ -223,7 +223,7 @@ Risk_custom <- reactive({
           mult <- mult(u)
           x <-Risk_sim()$S
           pi <- data.frame(Risk_sim()$pi)
-          names(pi) <- c('a','c','d','e','b')
+          names(pi) <- c('a','b','c','d','e')
           delta <- Risk_sim()$delta
           n <- length(delta)
           e.g <- Risk_sim()$int.S
@@ -238,7 +238,7 @@ Risk_custom <- reactive({
 #          df <- pivot_longer(data.frame(S = x, pi), cols = -S, names_to = "variable", values_to = "p")
           p1 <- ggplot()+
             geom_line(data=df, aes(x=S,y=p,linetype=variable,color=variable, linewidth=variable))+
-            scale_linetype_manual(labels=txt,values=c(1,1,2,3,4))+   
+            scale_linetype_manual(labels=txt,values=c(1,1,3,4,5))+   
             scale_linewidth_manual(labels=txt,values=c(1,1,0.5,0.5,0.5))+
             scale_color_manual(labels=txt,values=c(1,2,3,4,5))+
             scale_x_continuous(expand=c(0, 0), limits=c(0, NA), 

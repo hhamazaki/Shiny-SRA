@@ -3,7 +3,7 @@
 #'==============================================================================
 library(ggplot2)    # Used for ggplot graphics 
 library(ggrepel)      # Used for ggplot: avoid year overlap 
-library(cowplot) # Used to arrange plots
+library(cowplot) # Used to mainly plot_grid function
 library(scales)  # Used to make axis scaled
 library(rlang)   # Used to make ggplot functions
 library(ggpmisc)

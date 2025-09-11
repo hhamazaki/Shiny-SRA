@@ -1,0 +1,30 @@
+Plot,Caption
+plt_srt,
+plt_runesc,
+plt_hist.sry,
+plt_hist.run,
+plt_prcnt,
+plt_prcnt_hist,
+plt_risk,
+plt_risk2,
+plt_yield,
+plt_lnRS,
+plt_MSY.mc,"SR plot overlayed with probability distribution of Seq, Smsy, Smax, and Sgen.  Vertical line indicate median estimates."
+plt_kobe,"Kobe Plot: Escapement vs Harvest Rate by calendar year. Vertical line is Smsy and hoizontal line is Umsy.  Generally, the upper left (>Umsy and <Smsy) is considered an unsustainable state, and the lower right (<Umsy and >Smsy) is perfectly sustainable state."
+plt_hist.mc,Probability distribution of reference parameters. The vertical line indicates mean.
+plt_Smsy_prof,MSY Profile Analyses Plot.  The profile line indiate the probability of yield exceeding x% of RMAX at given escapement.  Intersecion of the probablity profile and target probability (red line) shows the range of escapement meeting the criteria.
+plt_Rmax_prof,RMAX Profile Analyses Plot.  The profile line indiate probability of recruit exceeding x% of RMAX at given escapement.  Intersecion of the probablity profile and target probability (red line) shows the range of escapement meeting the criteria.
+plt_msyprof_r,MSY Optimal profile plot. Each ridge indicates a range of Escapement in which the yield exceeding  x % of MSY. The profile line indicates the proportion of ridges that intersected at given Escapement.
+plt_maxprof_r,Rmax Optimal profile plot. Each ridge indicates a range of Escapement in which the yield exceeding x % of Rmax. The profile line indicates the proportion of ridges that intersected at given Escapement.
+plt_yield.gl,
+plt_yield.prof,
+plt_rec.gl,
+plt_rec.prof,
+plt_yield_r,
+plt_rec_r,
+plt_msyprof_c,
+plt_maxprof_c,
+plt_yield.cg,
+plt_yield_EG,
+plt_rec.cg,
+plt_rec_EG,

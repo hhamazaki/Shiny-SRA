@@ -7,11 +7,11 @@
 #'  This program is conducts Escapement Goal Analyses using Bayesian SR models
 #'   
 #'  Naming convention 
-#'  Plt_xxx  (Plot Output)
-#'  plt_xxx  (plot object for reporting)
-#'  Tbl_xxx  (Table output)
-#'  tbl_xxs  (Table object for reporting)
-#'  Txt_xxx  (Text Output)
+#'  Plt_xxx  (Plot Output) plt_xxx (Plot object)
+#'  Tbl_xxx  (Table output) tbl_xxx (Table object)
+#'  Txt_xxx  (Text Output)  txt_xxx (Text object)
+#'  data_xxx (Data object)
+#'  
 #'==============================================================================
 #'============================================================================== 
 #'#  Server ----  
@@ -101,7 +101,7 @@ observe({
 # 1. Data input ----
 #' final input data object is data()
 #'==============================================================================
-#' User choses dataType first (input$DataType)
+#' User chooses dataType first (input$DataType)
 ##  Input data file reading module ---- 
 data.get <-  dataInputServer("datain")
 data.in <- reactive(data.get$df())
@@ -222,9 +222,9 @@ tbl_run.cv <-  reactive({
      }
     })   
 # Create SR data with ci
-sr.data.ci <- reactive({
+data_sr.ci <- reactive({
     if(!is.null(tbl_run.cv())){
-      make_sr_var(tbl_run(),tbl_run.cv(),sr.data())
+      make_sr_var(tbl_run(),tbl_run.cv(),data_sr())
     }
   })
 
@@ -236,9 +236,9 @@ tbl_brood <-  reactive({
     })
 
 #' Create brood by age proportion table ------------------------------
-brood.p <- reactive({
+tbl_brood.p <- reactive({
     if(input$dataType== "Run"){
-     brood <- tbl_brood()$brood[,-2] # Remove Spawner data
+     brood <- tbl_brood()$brood[,-2]# Remove Spawner data
      brood <- brood[complete.cases(brood),]
      ncol <- dim(brood)[2]
      brood[,2:ncol] <- brood[,2:ncol]/brood$Recruit
@@ -255,10 +255,10 @@ output$Tbl_data.brood <- DT::renderDT(round(tbl_brood()$brood,0),rownames = FALS
 #'==============================================================================
 # 3. Create SR or data ---- 
 # Select analysis year range 
-# This create final data sr.data or e.data (Escapement only data)
+# This create final data data_sr or data_esc (Escapement only data)
 #'==============================================================================
-#' sr.data.0  Original SR data -------------------------------------------------  
-#sr.data.1 <- reactive({
+#' data_sr.0  Original SR data -------------------------------------------------  
+#data_sr.1 <- reactive({
   # SR data created from Run data     
 #  if(input$dataType== "Run"){
 #    x <- tbl_brood()$SR
@@ -270,8 +270,8 @@ output$Tbl_data.brood <- DT::renderDT(round(tbl_brood()$brood,0),rownames = FALS
 #    })
 
 
-#' sr.data.0  Original SR data -------------------------------------------------  
-sr.data.0 <- reactive({
+#' data_sr.0  Original SR data -------------------------------------------------  
+data_sr.0 <- reactive({
 # SR data created from Run data     
     if(input$dataType== "Run"){
       x <- tbl_brood()$SR
@@ -294,8 +294,8 @@ sr.data.0 <- reactive({
     return(x)   
   })
 
-### e.data.0 Original Escapement Only data   -------------------------------  
- e.data.0 <- reactive({
+### data_esc.0 Original Escapement Only data   -------------------------------  
+ data_esc.0 <- reactive({
    if(input$dataType== "Escapement Only"){
       x <- data()[,c(1:2)]
     names(x) <- c('Yr','S')
@@ -307,10 +307,10 @@ sr.data.0 <- reactive({
 output$yrange <- renderUI({
   if(input$dataType== "Escapement Only"){
     name <- 'Calendar'
-    year <- e.data.0()$Yr    # Extract Calendar year data range 
+    year <- data_esc.0()$Yr    # Extract Calendar year data range 
       }else{
     name <- 'Brood'
-    year <- sr.data.0()$Yr   # Extract brood year data range     
+    year <- data_sr.0()$Yr   # Extract brood year data range     
          }
     fyear <- min(year)       # First year 
     lyear <- max(year)       # Last year
@@ -318,11 +318,11 @@ output$yrange <- renderUI({
     sliderInput("sryears", label = paste("Select",name,"Year Range"), min = fyear, max = lyear, value = c(fyear, lyear),step=1,sep = "")
   })
 
-### e.data --- final dataset used for percentile risk -----------------
-  e.data <- reactive({ cut.data(e.data.0(),input$sryears) })
+### data_esc --- final dataset used for percentile risk -----------------
+  data_esc <- reactive({ cut.data(data_esc.0(),input$sryears) })
   
-### sr.data --- final dataset used for SR analyses --------------------
-  sr.data <- reactive({cut.data(sr.data.0(),input$sryears) })
+### data_sr --- final dataset used for SR analyses --------------------
+  data_sr <- reactive({cut.data(data_sr.0(),input$sryears) })
 
 ### Reactive ss.data --- final dataset used for percentile risk ----------------
 ss.year <- reactive({ 
@@ -349,12 +349,12 @@ ss.year <- reactive({
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 tbl_sum_sr.data <- reactive({
   if(input$dataType == "Escapement Only"){
-  dat <- e.data()  
+  dat <- data_esc()  
  x <- ((sum.ci(dat,95)))
    names(x) <- c('Min',paste0(2.5,'%'),'Mean','Median',paste0(97.5,'%'),'Max','SD','CV')
 #      x[2,]  <- as.integer(x[2,])
       x <- x[2,]} else {   
-  dat <- sr.data()
+  dat <- data_sr()
   dat$Y <- dat$R-dat$S
   x <- data.frame(t(t(sum.fun(dat[,c('S','R','Y','lnRS')],95))))  
 #for(i in 1:3){x[,i] <- as.integer(x[,i])}
@@ -399,7 +399,7 @@ output$Plt_hist.run <- renderPlot({plt_hist.run()})
 #'==============================================================================
 ###  UI output re: Measurement Error model option Show only when data are SR and CV_E exists -------------------  
 output$re <- renderUI({  
-  if(input$dataType== "S-R" & sum(names(sr.data()) %in% 'cv_E')==1){
+  if(input$dataType== "S-R" & sum(names(data_sr()) %in% 'cv_E')==1){
   checkboxInput(inputId="RE", "Measurement Error Model", FALSE)
   } 
  })
@@ -417,7 +417,7 @@ if(input$dataType=='Run' & (!is.null(tbl_run.cv()))){
 RE <- reactive({
       if(input$dataType=='Run'& (!is.null(tbl_run.cv()))){
       out <- ifelse(input$SS=="Measurement Error Model",TRUE,FALSE)
-      } else if(input$dataType=='S-R'& sum(names(sr.data()) %in% 'cv_E')==1){
+      } else if(input$dataType=='S-R'& sum(names(data_sr()) %in% 'cv_E')==1){
         out <- input$RE   
       } else {
       out <- FALSE  
@@ -468,7 +468,7 @@ model.title <- reactive({
 sr.title <- reactive({
   add <- ifelse(input$add=="ar1","AR(1) Error",
                 ifelse(input$add=="kf","Time varying alpha",""))
-  yrs <- paste('Brood Year:',min(sr.data()$Yr),'-',max(sr.data()$Yr))
+  yrs <- paste('Brood Year:',min(data_sr()$Yr),'-',max(data_sr()$Yr))
   model <- paste0('SR Model: ',input$Model,' ',add)
   title <- paste(model,yrs)
   return(title)
@@ -538,7 +538,7 @@ if(SS()){
    } else {
 # Analysis is not State-Space model   
   #  Import SR data 
-  x <- sr.data()
+  x <- data_sr()
   # nyrs is the number of brood years (i.e. number of rows) 
   nyrs <- dim(x)[1]
   R <- x$R
@@ -636,7 +636,7 @@ RE.post <- reactive({
     if(isTRUE(input$BayesMCMC)){
     mcmc <- mcmcdata()
     } else {
-    mcmc <- MCMC()
+    mcmc <- as.data.frame(MCMC())
     }
 # Extract data 
     lnS <- mcmc[,substr(names(mcmc),1,5)=='log.S']
@@ -772,7 +772,7 @@ lnalphais <-reactive({
  if(input$add=='kf'){
   nyrs <- Bayesdata()$nyrs
   if(isTRUE(SS())) {nyrs <- Bayesdata()$nyrs - Bayesdata()$lage}
-   year <- sr.data()$Yr
+   year <- data_sr()$Yr
 #' Bayesian simulation out parameters -------------------------------------------    
  if(input$BayesMCMC==TRUE){
   parname <- paste0('lnalphai.',1:nyrs,'.')  # Reading CSV data 
@@ -878,7 +878,7 @@ SR.post.i <- reactive({
     }
  })
 ### Tbl_mcmcdata output mcmc data ----------------------------------------------
-#output$Tbl_mcmcdata <- DT::renderDT({datatable(SS.post.sum()$S,rownames = FALSE)}) 
+output$Tbl_mcmcdata <- DT::renderDT({RE.post()}) 
 #output$Tbl_mcmcdata <- renderDataTable({SR.post()$post}) 
 
 #'------------------------------------------------------------------------------
@@ -983,7 +983,7 @@ SR.pred1 <-reactive({
 #'--------- Determine model S length -------------------------------------------
   Seq <- quantile(SR.post()$post$Seq,0.95,na.rm=TRUE)   # Extract 90 percentile Seq
   # Extract max spawner
-  max.s <- ceiling(max(Seq,max(sr.data.0()$S))/(10^D))*(10^D)
+  max.s <- ceiling(max(Seq,max(data_sr.0()$S))/(10^D))*(10^D)
   unit.list <- c(10^(0:10),5*10^(0:9))
   picker <-  function(x, viable_numbers) {
   max(viable_numbers[viable_numbers < x])
@@ -1085,14 +1085,14 @@ output$maxS <- renderUI({
  })
 output$maxR <- renderUI({
   u <- unit()
-  maxR <- round(1.25*max(sr.data.0()$R/u,na.rm=TRUE))
+  maxR <- round(1.25*max(data_sr.0()$R/u,na.rm=TRUE))
   step = 10^(floor(log10(maxR))-1)
   sliderInput("maxR", paste("Max R",mult(u)),min=0,max=maxR,value=maxR,step=step)
  })
 output$Yrange <- renderUI({
   u <- unit()
   minY <- round(min(SRp()$Rl-SRp()$S,na.rm=TRUE)/u)
-  maxY <- round(1.25*max(sr.data.0()$Y,na.rm=TRUE)/u)
+  maxY <- round(1.25*max(data_sr.0()$Y,na.rm=TRUE)/u)
   step = 10^(floor(log10(maxY))-1)
   sliderInput("Yrange", paste("Yield Range",mult(u)), value=c(minY,maxY),min=minY,max=maxY,step=step)
  })
@@ -1229,9 +1229,9 @@ SR.resid <-reactive({
   lnalpha <-SR.post()$post$lnalpha
   beta <- SR.post()$post$beta
   phi <- SR.post()$post$phi
-  S <- sr.data()$S
+  S <- data_sr()$S
   D <- Bayesdata()$d
-  R <- sr.data()$R
+  R <- data_sr()$R
 #'---------  Set up empty matrix -----------------------------------------------  
   ncol <- length(S) 
   nrow <- length(lnalpha)  #  Extract number of MCMC sample 
@@ -1444,7 +1444,7 @@ output$Plt_yield.pg <- renderPlot({
 output$minYield = renderUI({
   u <- as.numeric(unit())
   mult <- mult(u)
-  v <- numinput(sr.data()$R-sr.data()$S,0.5)/u
+  v <- numinput(data_sr()$R-data_sr()$S,0.5)/u
   numericInput("y1", paste("Target Yield",mult), value=v[1],min=0, step=v[2])
 })
 
@@ -1483,7 +1483,7 @@ Yield_gl_sim <- reactive({
 output$minRec <- renderUI({
   u <- as.numeric(unit())
   mult <- mult(u)
-  v <- numinput(sr.data()$R,0.5)/u
+  v <- numinput(data_sr()$R,0.5)/u
   numericInput("r1", paste("Target Recruit",mult), value=v[1],min=0,step=v[2])
 })
 
@@ -1808,7 +1808,7 @@ output$altsim.R <- renderPrint({
 #  Percentile Analyses ----
 #'===============================================================================
 # Call Percentile Analyses module Server 
-prcntout <- PercentileServer("prcnt",e.data,as.numeric(unit()),plt)
+prcntout <- PercentileServer("prcnt",data_esc,as.numeric(unit()),plt)
 
 # Txt_Tier : Tier Definition output  
   txt <- reactive({prcntout$Txt_Tier()})
@@ -1834,7 +1834,7 @@ prcntout <- PercentileServer("prcnt",e.data,as.numeric(unit()),plt)
 #  Risk Analyses ----
 #'===============================================================================
 # Call Risk Analyses module Server 
-riskout <- RiskServer("risk",e.data,as.numeric(unit()),plt)
+riskout <- RiskServer("risk",data_esc,as.numeric(unit()),plt)
 
 #---- UI Output----------------------------------------------------------------------
 
@@ -1978,7 +1978,7 @@ MSE.int <-  eventReactive(input$SimRun,{
 # Extract number of simulation years
   nyrs <- input$simy
 # import brood table
-  brood.p <- brood.p()[,-1]
+  brood.p <- tbl_brood.p()[,-1]
 # Maturity schedule is a random sample of observed brood proportion 
   e.p  <- brood.p[sample(dim(brood.p)[1],nyrs+lage,replace = TRUE),]    
 # Prediction and Implementation Error are normal with mean 1.0   
@@ -2425,7 +2425,7 @@ output$downloadTable <- downloadHandler(
       out.excel$brood <- tbl_brood()$brood
     }
     if(SS()){out.excel$Runcv <- tbl_run.cv()}    
-    out.excel$SRdata <- sr.data.0()
+    out.excel$SRdata <- data_sr.0()
     out.excel$SRpred <- SRp()
     out.excel$Summary <- tbl_sumpost()
     out.excel$Profile <-T.Prof()

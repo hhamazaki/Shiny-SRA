@@ -5,7 +5,7 @@ account: hamachan
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1875809
-bundleId: 10859175
+bundleId: 10894147
 url: https://hamachan.shinyapps.io/Spawner_Recruit_Bayes/
 version: 1
 asMultiple: FALSE
