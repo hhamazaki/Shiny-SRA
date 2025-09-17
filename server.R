@@ -27,7 +27,7 @@ options(shiny.maxRequestSize = 100 * 1024^2)
 #'------------------------------------------------------------------------------
 #'  Include Source codes
 #'------------------------------------------------------------------------------
-source("Rcode/Functions/Data_Assemby.R")  # Include functions related to data assembly
+source("Rcode/Functions/Data_Assembly.R")  # Include functions related to data assembly
 source("Rcode/Functions/Shiny_SR_functions.R")  # Include functions related to data assembly
 source("Rcode/Functions/MSE_functions.R")  # Include functions related to data assembly
 

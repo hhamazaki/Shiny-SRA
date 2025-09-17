@@ -599,17 +599,18 @@ conditionalPanel(condition="input.strType != 'Harvest'",
      fluidRow(
        column(6,uiOutput('nsim')),  
        column(6,
-  selectInput(inputId="cmode","Target Eecapement", 
+  selectInput(inputId="cmode","Target Escapement", 
        choices = c('Lower','Middle','Upper'),selected = 'Middle')
               ) 
          ),  # End fluidRow
-    actionButton("SimRun","Simulate"),
+    actionButton("SimRun","Simulate", class="btn btn-primary btn-block"),
+  hr(),
 #                     ),
   p(strong("Management % Error")),  
     fluidRow(
      column(6,numericInput(inputId="spred", "Assessment", value=15,min=0,max=100,step=5),
       ),
-     column(6,numericInput(inputId="simpH", "Inplementation", value=10,min=0,max=100,step=5),
+     column(6,numericInput(inputId="simpH", "Implementation", value=10,min=0,max=100,step=5),
       ),
     ),
   sliderInput(inputId="simy", "Management Years", value=50,min=0,max=100,step=5,round=0),
@@ -907,7 +908,7 @@ hr(),
 h5("Disclaimer"),
 strong('This App is developed by Toshihide Hamachan Hamazaki, Alaska Department of Fish and Game Division of Commercial Fisheries'),
 
-h5("Contact about this applicaiton"), 
+h5("Contact about this application"), 
 strong("Questions and improvement suggestions? Please contact",
 a(href="mailto:toshihide.hamazaki@alaska.gov", "Hamachan")),
 

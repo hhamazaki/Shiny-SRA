@@ -28,7 +28,7 @@ MSEUI <- function(id){
     p(strong("Lower and Upper Escapement Goal Range")),  
     numericInput("LEG", "Lower Goal", value=0,min=0, step=1000),  
     numericInput("UEG", "Upper Goal", value=0,min=0, step=1000),
-    selectInput(inputId="cmode","Fishery Oepnng above Escapement Goal", choices = c('Lower','Middle','Upper')),              
+    selectInput(inputId="cmode","Fishery Opening above Escapement Goal", choices = c('Lower','Middle','Upper')),              
     p(strong("Fishery limits")),  
     numericInput(inputId="maxH", "Maximum Harvest", value=0,min=0,step=10000),
     sliderInput(inputId="maxHr", "Maximum Surplus Harvest Rate", value=0.5,min=0,max=1,step=0.1),
