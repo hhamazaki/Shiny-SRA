@@ -878,7 +878,7 @@ SR.post.i <- reactive({
     }
  })
 ### Tbl_mcmcdata output mcmc data ----------------------------------------------
-output$Tbl_mcmcdata <- DT::renderDT({RE.post()}) 
+#output$Tbl_mcmcdata <- DT::renderDT({kf.data()$df}) 
 #output$Tbl_mcmcdata <- renderDataTable({SR.post()$post}) 
 
 #'------------------------------------------------------------------------------
@@ -1157,13 +1157,15 @@ kf.data <- reactive({
    }  
     names(df) <- c(1:nstar)
       df$S <- SRp()$S
-      df <- melt(df, id.vars='S',variable.name='star',value.name='R' )
+#      df <- melt(df, id.vars='S',variable.name='star',value.name='R' )
+      df <- reshape(df,direction='long', idvar='S',varying = names(df)[1:nstar],
+                   v.names='R',timevar='star',times= names(df)[1:nstar])
       out <- list(df=df,star=star,nstar=nstar,ny=ny)
     return(out)
       }
   })
 
-
+output$Tbl_mcmcdata <- DT::renderDT({kf.data()$df}) 
 ## Plt_SR ------ SR plot -------------------------------------------------------
 plt_SR <- reactive({plt_SRY()$pltSR})
 output$Plt_SR <- renderPlot({add_title(plt_SR(),sr.title())})
@@ -1355,7 +1357,9 @@ smsyprof <- ProfileServer("smsy",SR.pred,'MSY',unit,plt)
       Y.prof.st <- data.frame(t(EG.Smax.st()$S.prof.st))
       names(Y.prof.st) <- c('p90','p80','p70')
       df <- data.frame(S=S,Med=Y.prof,Y.prof.st )
-      out <- melt(df,id.vars ='S',variable.name='prof.type',value.name='prob') 
+#      out <- melt(df,id.vars ='S',variable.name='prof.type',value.name='prob') 
+      out <- reshape(df,direction='long',idvar='S',varying = names(df)[-1],
+                   v.names='prof.type',timevar='prob',times=names(df)[-1])
     return(out)
   })
 # Create Summary Table  

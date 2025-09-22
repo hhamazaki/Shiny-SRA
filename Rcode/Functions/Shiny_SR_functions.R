@@ -15,29 +15,49 @@ mult <- function(u){
 #'==============================================================================
 
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-##  1.4  cut.data: Cut data based on specified years -----
+##  1.1  cut.data: Cut data based on specified years -----
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  cut.data <- function(data, years){
    x <- data[data$Yr>=years[1] & data$Yr<=years[2],]
    return(x)
  }
-
-### Cut raw data based on brood years -----  
+#'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+##  1.3  cut.N.data: Cut data based on brood years -----
+#'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
  cut.N.data <- function(data, years,lyear){
    x <- data[data[,1]>=years[1] & data[,1]<=(years[2]+lyear),]
    return(x)
  }
   
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-##  1.5  Text functions -----  
+##  1.4  substrRight: extract text from right -----  
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #' function extract right 
 substrRight <- function(x, n){substr(x, nchar(x)-n+1, nchar(x))}
 
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-##  1.6  Trim density function  -----  
+##  1.5  Trim density function  -----  
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
 trimden <- function(x){density(x[x<quantile(x,0.99,na.rm=TRUE)],na.rm=TRUE)}
+
+#'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+##  1.6  reshapeWL: Reshape from wide to long  -----  
+#'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
+ reshapeWL <- function(df,idvar,timevar,v.names){
+      dfname <- names(df)[names(df)!=idvar]
+  out <- reshape(df,direction='long',idvar=idvar,varying=dfname,
+          timevar = timevar,v.names=v.names,times=dfname)
+     return(out)}  
+  
+reshapeLW <- function(df,idvar=idvar,v.names=v.names,timevar=timevar){
+  dfs <- df[c(idvar,timevar,v.names)]
+   w <- reshape(dfs,direction='wide',timevar=timevar,v.names=v.names,idvar=idvar)
+   wname <- names(w)[-c(1:length(idvar))]
+   vhead <-paste0(v.names,'.')
+   wname <- gsub(vhead,'',wname)
+   names(w)[-c(1:length(idvar))] <- wname
+   return(w)
+}
   
 #'==============================================================================
 #  2.0  Data Summary functions  -----  (used for )
