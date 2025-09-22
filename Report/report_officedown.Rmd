@@ -57,10 +57,10 @@ knitr::opts_chunk$set(
 # Analyses Methods
 ```{r,datadesciption, echo=FALSE,include=FALSE}
   runyr <- paste(min(params$tbl_run$Year),'-',max(params$tbl_run$Year))
-  byr <- paste(min(sr.data.0()$Yr),'-',max(sr.data.0()$Yr))
+  byr <- paste(min(data_sr.0()$Yr),'-',max(data_sr.0()$Yr))
   yrange <- ifelse(params$data =='Run',runyr,byr)
   nyr <- input$sryears[2]-input$sryears[1]+1
-  o.yrs <- paste(min(sr.data.0()$Yr),'to',max(sr.data.0()$Yr))
+  o.yrs <- paste(min(data_sr.0()$Yr),'to',max(data_sr.0()$Yr))
   yrs <- paste(input$sryears[1],'to',input$sryears[2])
   rbyr <- paste(input$sryears[1],'-',input$sryears[2])
   o.age <- c(min(o.age()),max(o.age()))
@@ -75,10 +75,10 @@ knitr::opts_chunk$set(
     
 Run <- paste('The brood table (Table 1) and spawner-recruit data were constructed from the input run and age table. The original run ages were trimmed from',o.age[1],'to',o.age[2],'to from',input$rage[1],'to',input$rage[2],'(Table 2). The run proportions of the trimmed ages were',pool)
 run <- ifelse(params$data =='Run',Run,'')
-brood <- paste0(length(sr.data.0()$Yr),'years, ranging from ',o.yrs)
+brood <- paste0(length(data_sr.0()$Yr),'years, ranging from ',o.yrs)
 spr <- ifelse(params$data =='Run','The constructed','The input')
 trim <- paste('In this model analysis, the original data were trimmed to',nyr,'years, ranging from',yrs,'.')
-yy <- ifelse(nyr !=length(sr.data.0()$Yr),trim,'')
+yy <- ifelse(nyr !=length(data_sr.0()$Yr),trim,'')
 tg <- ifelse(input$target=='md','Median Target','Mean Target')
 ```
 
@@ -169,7 +169,8 @@ kable(Ref_data_sum(),caption = paste0("Summary of posterior samples removed."))
 
 ```{r,fig.dim = c(16,8),fig.cap = paste0("Figure 1. Spawner(Escapement) and brood year recruit, and Recruit per Spawner (R/S) ")}
 # Run and Escapement time series plot 
-params$plt_srt
+params$plt_srt+theme(text = element_text(family = "serif"))
+
 ```
 
 ```{r, results='asis', eval=(params$data=='Run')}
@@ -178,7 +179,7 @@ cat('## Run and Escapement')
 
 ```{r,echo=FALSE,eval=(params$data=='Run'),fig.dim = c(16,8),fig.cap = paste0("Figure 1. Run and escapement")}
 # Run and Escapement time series plot 
-params$plt_runesc
+params$plt_run+theme(text = element_text(family = "serif"))
 ```
 
 \newpage
@@ -195,7 +196,6 @@ cat('## Yield Plot')
 ```
 ```{r,echo=FALSE, eval=(input$YLD_plt),fig.dim = c(12,8),fig.cap = paste0("Yierld curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval."),fig.id = "Spawner and Yield"}
 params$plt_yield
-```
 
 
 \newpage
@@ -276,7 +276,7 @@ params$plt_max_prof
 ## Spawner-Recruit Data 
 
 ```{r,echo=FALSE, }
-table <- sr.data()
+table <- data_sr()
 names(table)[1:3] <- c('Year','Spawner','Recruit')
 kable(round(table[,1:3],0),caption = "Spawner-Rercuit data used for the analyses.")
 ```

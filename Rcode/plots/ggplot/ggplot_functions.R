@@ -8,7 +8,9 @@ library(scales)  # Used to make axis scaled
 library(rlang)   # Used to make ggplot functions
 library(ggpmisc)
 source("Rcode/plots/ggplot/ggplot_theme.R") 
+source("Rcode/plots/ggplot/theme_adfg.R") 
 theme_set(theme_simple())
+#theme_set(theme_adfg_bbc())
 okabe <- c("#E69F00","#56B4E9", "#009E73","#F0E442","#0072B2","#D55E00","#CC79A7" )
 options(ggplot2.discrete.colour = okabe)
 options(ggplot2.discrete.fill = list(okabe))
