@@ -178,7 +178,7 @@ plot_range <- function(baseplot,Srange1,Srange2=c(NA,NA),u,goal=NA)
   p1 <- p1+ annotate('rect', xmin = Srange2[1], xmax = Srange2[2], ymin = -Inf, ymax = Inf, alpha=0.1, fill=4)
   }
   if(!is.na(goal)) {
-  p1 <- p1 + geom_hline(yintercept = goal, color = 2,size =1.2 )
+  p1 <- p1 + geom_hline(yintercept = goal, color = 2,linewidth =1.2 )
   }  
   return(p1)
   }
@@ -230,7 +230,7 @@ plot_ridge <- function(S, ridge.dat, u, n) {
     geom_polygon(data=ridge_data, aes(x = x, y = y, fill = factor(group)), color = NA, alpha = 0.3) +
     # Add horizontal dashed lines
     geom_hline(data = data.frame(y = (0:(n-1)) * inc), aes(yintercept = y), 
-               color = "grey", linetype = "solid", size = 0.25) +
+               color = "grey", linetype = "solid", linewidth = 0.25) +
     # Set axis labels and title
     labs(x = paste('Spawner', mult(u)), y = NULL) +
     scale_fill_manual(values = rainbow(n)) +

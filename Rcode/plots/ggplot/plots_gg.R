@@ -344,8 +344,8 @@ plt_SS_BAge <- eventReactive(isTRUE(SS()),{
   nages <- Bayesdata()$nages 
   fage <- Bayesdata()$fage 
   # R Base reshape: replace reshape2 tidyr
-  ob.page <- reshape(brood.p(),direction='long', idvar='b.Year',varying = names(brood.p())[-1],
-                     v.names='ob.p',timevar='Age',times=names(brood.p())[-1])
+  ob.page <- reshape(tbl_brood.p(),direction='long', idvar='b.Year',varying = names(tbl_brood.p())[-1],
+                     v.names='ob.p',timevar='Age',times=names(tbl_brood.p())[-1])
   ob.page$Age <- paste('Age',substr(ob.page$Age,6,7))
   dat.ssp <- data.frame(do.call(rbind,SS.post.sum()$q.age))
   dat.ssp <- merge(dat.ssp,ob.page,by.y =c('Age','b.Year'),by.x =c('Age','Year'), all=TRUE)
@@ -375,11 +375,13 @@ base.pl <- reactive({
   xp <- data_sr.0()
   xp2 <- data_sr()
   SRp <- SRp()
+  pred <- pred.data()
   maxS <- ifelse(input$axis,input$maxS*u,max(SRp$S))
   maxR <- ifelse(input$axis,input$maxR*u,round(1.25*max(xp$R,na.rm=TRUE)))
   minY <- ifelse(input$axis,input$Yrange[1]*u,round(min(SRp$Rl-SRp$S,na.rm=TRUE)))
   maxY <- ifelse(input$axis,input$Yrange[2]*u,round(1.25*max(xp$Y,na.rm=TRUE)))
-  minlnRS <- ifelse(min(xp$lnRS)>0,0.75*min(xp$lnRS),1.25*min(xp$lnRS))
+  minlnRS <- ifelse(input$axis,input$lnRSrange[1],ifelse(min(xp$lnRS)>0,0.75*min(xp$lnRS),1.25*min(xp$lnRS)))
+  maxlnRS <- ifelse(input$axis,input$lnRSrange[2],1.05*max(xp$lnRS))
 #'---  Basic SR plot ------------------------------------------------------------
   gsr <- ggplot()+
 # Original data    
@@ -389,14 +391,24 @@ base.pl <- reactive({
 # 1:1 line
   geom_abline(intercept = 0, slope = 1, linetype = "solid",color='red',linewidth=0.8) +
 # predicted Median
-  geom_line(data = SRp, aes(x = S, y = RS.md), color = "black", linewidth = 0.8) +
+  geom_line(data = pred, aes(x = S, y = RS.md), color = "black", linewidth = 0.8) +
 # predicted Mean    
-  geom_line(data = SRp, aes(x = S, y = RS.me), color = "black", linewidth = 0.8,linetype = 2) +
+  geom_line(data = pred, aes(x = S, y = RS.me), color = "black", linewidth = 0.8,linetype = 2) +
+# predicted Median
+#  geom_line(data = SRp, aes(x = S, y = RS.md), color = "blue", linewidth = 0.5,alpha=0.3) +
+# predicted Mean    
+#  geom_line(data = SRp, aes(x = S, y = RS.me), color = "blue", linewidth = 0.5,alpha=0.3,linetype = 2) +
+    
   scale_x_continuous(expand=c(0, 0), limits=c(0, maxS), 
                      labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep) +
   scale_y_continuous(expand=c(0, 0), limits=c(0, maxR), 
                      labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep)+
   labs(x=paste('Spawner',mult(u)),y=paste('Recruit',mult(u)))
+#  if(input$target =='me'){
+#    gsr <- gsr+geom_line(data = pred, aes(x = S, y = RS.me), color = "black", linewidth = 0.8)
+#  } else {
+#    gsr <- gsr+geom_line(data = pred, aes(x = S, y = RS.md), color = "black", linewidth = 0.8)
+#  } 
   
 #'-------------------------------------------------------------------------------
 #'---  Basic Yield plot ---------------------------------------------------------
@@ -406,10 +418,14 @@ base.pl <- reactive({
 # Trimmed data
   geom_point(data = xp2, aes(x = S, y = (R-S)), color = "black", size = 3) +
 # predicted Median
-  geom_line(data = SRp, aes(x = S, y = (RS.md-S)), color = "black", linewidth = 0.8) +
+  geom_line(data = pred, aes(x = S, y = (RS.md-S)), color = "black", linewidth = 0.8) +
 # predicted Mean    
-  geom_line(data = SRp, aes(x = S, y = (RS.me-S)), color = "black", linewidth = 0.8,linetype = 2) +
-  geom_hline(yintercept = 0, linetype = "solid",color=1,size=1.0) +
+  geom_line(data = pred, aes(x = S, y = (RS.me-S)), color = "black", linewidth = 0.8,linetype = 2) +
+# predicted Median
+#  geom_line(data = SRp, aes(x = S, y = (RS.md-S)), color = "black", linewidth = 0.8) +
+# predicted Mean    
+#  geom_line(data = SRp, aes(x = S, y = (RS.me-S)), color = "black", linewidth = 0.8,linetype = 2) +
+  geom_hline(yintercept = 0, linetype = "solid",color=1,linewidth=1.0) +
   scale_x_continuous(expand=c(0, 0), limits=c(0, maxS), 
                      labels = label_number(scale = 1 /u), n.breaks = 10,oob=oob_keep) +
   scale_y_continuous(expand=c(0, 0), limits=c(minY, maxY),
@@ -423,13 +439,17 @@ base.pl <- reactive({
 # Trimmed data
   geom_point(data = xp2, aes(x = S, y = log(R/S)), color = "black", size = 3) +
 # predicted Median
-  geom_line(data = SRp, aes(x = S, y = log(RS.md/S)), color = "black", linewidth = 0.8) +
+    geom_line(data = pred, aes(x = S, y = log(RS.md/S)), color = "black", linewidth = 0.8) +
 # predicted Mean    
-  geom_line(data = SRp, aes(x = S, y = log(RS.me/S)), color = "black", linewidth = 0.8,linetype = 2) +
-  geom_hline(yintercept = 0, linetype = "solid",color=1,size=1.0) +
+    geom_line(data = pred, aes(x = S, y = log(RS.me/S)), color = "black", linewidth = 0.8,linetype = 2) +
+# predicted Median
+#  geom_line(data = SRp, aes(x = S, y = log(RS.md/S)), color = "black", linewidth = 0.8) +
+# predicted Mean    
+#  geom_line(data = SRp, aes(x = S, y = log(RS.me/S)), color = "black", linewidth = 0.8,linetype = 2) +
+  geom_hline(yintercept = 0, linetype = "solid",color=1,linewidth=1.0) +
   scale_x_continuous(expand=c(0, 0), limits=c(0, maxS), 
                      labels = label_number(scale = 1 /u), n.breaks = 10,oob=oob_keep) +
-  scale_y_continuous(expand=c(0, 0), 
+  scale_y_continuous(expand=c(0, 0), limits=c(minlnRS, maxlnRS),
                      n.breaks = 10,oob=oob_keep)+
    labs(x=paste('Spawner',mult(u)),y=paste('ln(R/S)'))
   
@@ -762,7 +782,6 @@ if(SS()){
     if(isTRUE(input$show.points)|input$add=='kf'){
       cols <- cdyear$okabe
     } else {cols <- 'gray'}
-
     df.SS <- data.frame(S=S$mean, Suci=S$uci,Slci=S$lci,R=R$mean,Ruci=R$uci,Rlci=R$lci)
 # Observed CI   
   if(isTRUE(input$show.ob.se)){    

@@ -257,18 +257,6 @@ output$Tbl_data.brood <- DT::renderDT(round(tbl_brood()$brood,0),rownames = FALS
 # Select analysis year range 
 # This create final data data_sr or data_esc (Escapement only data)
 #'==============================================================================
-#' data_sr.0  Original SR data -------------------------------------------------  
-#data_sr.1 <- reactive({
-  # SR data created from Run data     
-#  if(input$dataType== "Run"){
-#    x <- tbl_brood()$SR
-#    h <- brood.H(tbl_run())
-#    x <- merge(x,h,by=c('b.Year','Spawner'))
-#    names(x) <- c('Yr','S','R','H')
-#    return(x)
-#  }
-#    })
-
 
 #' data_sr.0  Original SR data -------------------------------------------------  
 data_sr.0 <- reactive({
@@ -397,6 +385,28 @@ output$Plt_hist.run <- renderPlot({plt_hist.run()})
 #'==============================================================================
 # 1. Model Selection -----   
 #'==============================================================================
+output$contrast <- renderUI({
+   req(data_sr())
+    contrast <- with(data_sr(),round(max(S)/min(S),1))
+    if (contrast < 4) {
+    HTML(
+        paste(
+          "<span style='font-size:18px;'><font color=red><b>Warning</b></font></span>",
+          "<b>Contrast:</b>","<font color=red><b>",contrast,"</b></font>","Poor Model Estimate"
+          ))
+  } else if(contrast <= 8) 
+    {
+    HTML(
+      paste("<b>Contrast:</b>","<font color=orange><b>", contrast, "</b></font>","Better Model Estimate")
+    )   
+  } else 
+    {
+      HTML(
+        paste("<b>Contrast:</b>","<font color=green><b>", contrast, "</b></font>","Best Model Estimate")
+      )   
+    } 
+})
+
 ###  UI output re: Measurement Error model option Show only when data are SR and CV_E exists -------------------  
 output$re <- renderUI({  
   if(input$dataType== "S-R" & sum(names(data_sr()) %in% 'cv_E')==1){
@@ -431,6 +441,8 @@ SS <- reactive({
   } else {out <- FALSE}
   return(out)
   })
+
+#' Tab setting -----------------------------------------------------------
 observe({
 if(isTRUE(SS())){
   showTab(inputId = "ssTab", target = "Run Size")
@@ -438,6 +450,7 @@ if(isTRUE(SS())){
   showTab(inputId = "ssTab", target = "Brood Age Comp")   
 }
 })
+#'------------------------------------------------------------------------------
 
 # Model Name 
 model.name <- reactive({
@@ -499,7 +512,7 @@ hyper <- reactive({
 
 
 ## Bayesedata --- Create data set for Bayesian modeling -------------------------
-Bayesdata <- reactive({
+Bayesdata <- reactive({3
 model <- list(
   rk = ifelse(input$Model=='Ricker',1,0),
   bh = ifelse(input$Model=='Beverton-Holt',1,0),
@@ -611,7 +624,7 @@ mcmcdata <- dataInputServer("mcmc.in")
 ## Extract JAG results ----
 #'------------------------------------------------------------------------------
 ### BayesSum ------------ Output MCMC summary ----------------------------------
-output$BayesSum <- renderPrint({print(sim()$output) })
+output$BayesSum <- renderPrint({print(sim()$output)},width=800)
 
 ### Plt_trace --------- Trace and density plot ---------------------------------
 output$Plt_trace <- renderPlot({
@@ -756,11 +769,16 @@ SS.post.sum <- reactive({
    mcmc <- as.matrix(MCMC())
    }
    post <- sim.out(mcmc,d=D,add=input$add,model=input$Model,model.br=Bayesmodel()$model.br)
+#   mpars <- data.frame(lnalpha=mean(post$lnalpha,na.rm=TRUE),
+#                       beta=mean(post$beta,na.rm=TRUE),
+#                       sigma=mean(post$sigma,na.rm=TRUE))
+#   if(input$add =='ar1'){
+#     mpars$phi <- mean(post$phi,na.rm=TRUE)
+#   }
    post <-  Id.outliers(post,input$target) 
    outlier <- outlier_sum(post)
-   
 if(isTRUE(input$Remove_out)){post <- post[which(is.na(post$Remove)),]}
-  out <- list(post=post,outlier=outlier)
+   out <- list(post=post,outlier=outlier)
       return(out)
   })
 
@@ -793,6 +811,7 @@ lnalphais <-reactive({
   cil <- apply(lnalphai,2,function(x) quantile(x, 0.025))
   ciu <- apply(lnalphai,2,function(x) quantile(x, 0.975))
 # Calculate STARS using STARS function 
+
    names(lnalphai.mm) <- year
    stars <- stars(lnalphai.mm, L=5, p=0.05,  h=2, AR1red="est", prewhitening = F)  
    test <- data.frame(stars$starsResult)
@@ -854,15 +873,19 @@ SR.post.i <- reactive({
     lnalphai <- MCMC()[,parname]
     post <- SR.post()$post
     post$lnalpha <- apply(lnalphai,1, FUN=mean, na.rm=TRUE)
-    post$lnalpha.sigma <- apply(lnalphai,1, FUN=sd, na.rm=TRUE) 
+    post$sigma.lnalpha <- apply(lnalphai,1, FUN=sd, na.rm=TRUE)
+    post$sigma <- with(post, sqrt(sigma.lnalpha^2+sigma^2))
     post$lnalpha.c <- post$lnalpha+0.5*post$sigma^2
     post$alpha <- exp(post$lnalpha)
     post$alpha.c <- exp(post$lnalpha.c)
+#    mpars <- data.frame(lnalpha=mean(post$lnalpha,na.rm=TRUE),
+#                        beta=mean(post$beta,na.rm=TRUE),
+#                        sigma=mean(post$sigma,na.rm=TRUE))
     D <- as.numeric(Bayesdata()$d)
     br <- with(post,Bayesmodel()$model.br(lnalpha,beta,D))
     br.c <- with(post,Bayesmodel()$model.br(lnalpha.c,beta,D))
-    post$Seq <- br$Seq
-    post$Smsy <- br$Smsy
+   post$Seq <- br$Seq
+   post$Smsy <- br$Smsy
    post$Umsy <- br$Umsy
    post$Sgen <- br$Sgen
    post$Seq.c <- br.c$Seq
@@ -879,7 +902,7 @@ SR.post.i <- reactive({
  })
 ### Tbl_mcmcdata output mcmc data ----------------------------------------------
 #output$Tbl_mcmcdata <- DT::renderDT({kf.data()$df}) 
-#output$Tbl_mcmcdata <- renderDataTable({SR.post()$post}) 
+output$Tbl_mcmcdata <- DT::renderDT({SR.post()$post}) 
 
 #'------------------------------------------------------------------------------
 #' Posterior Summaries 
@@ -981,7 +1004,7 @@ SR.pred1 <-reactive({
   D <- Bayesdata()$d
   u <- unit()
 #'--------- Determine model S length -------------------------------------------
-  Seq <- quantile(SR.post()$post$Seq,0.95,na.rm=TRUE)   # Extract 90 percentile Seq
+  Seq <- quantile(SR.post()$post$Seq,0.7,na.rm=TRUE)   # Extract 90 percentile Seq
   # Extract max spawner
   max.s <- ceiling(max(Seq,max(data_sr.0()$S))/(10^D))*(10^D)
   unit.list <- c(10^(0:10),5*10^(0:9))
@@ -1097,6 +1120,15 @@ output$Yrange <- renderUI({
   sliderInput("Yrange", paste("Yield Range",mult(u)), value=c(minY,maxY),min=minY,max=maxY,step=step)
  })
 
+output$lnRSrange <- renderUI({
+  minY <- round(ifelse(min(data_sr.0()$lnRS)>0,0.75*min(data_sr.0()$lnRS),1.25*min(data_sr.0()$lnRS)),1)
+  maxY <- round(1.05*max(data_sr.0()$lnRS),1)
+  step = 0.1
+  sliderInput("lnRSrange", paste("ln(R/S) Range"), value=c(minY,maxY),min=minY,max=maxY,step=step)
+})
+
+
+
 
 base.r <- reactive({base.sr()$base.r})
 base.y <- reactive({base.sr()$base.y})
@@ -1105,41 +1137,47 @@ base.ln <- reactive({base.sr()$base.ln})
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #Panel 4: SR Model Analyses plots ----  
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# br.data : SEQ, SMSY, SMAX, SGEN, UMSY  +++++++++++++++++++++++++++++++++++++++
-br.data <- reactive({
-  # SMSY Calc 
+pred.data <- reactive({
   srmodel <- Bayesmodel()$model
-  model.br <- Bayesmodel()$model.br
   lnalpha <- mean(SR.post()$post$lnalpha)
   lnalpha.c <- mean(SR.post()$post$lnalpha.c)
   beta <- mean(SR.post()$post$beta)
-  D <- Bayesdata()$d
-  if(input$add=='kf')
+if(input$add=='kf')
   {
     if(input$alphai != 'None') {
       lnalpha <- mean(SR.post.i()$post$lnalpha) 
       lnalpha.c <- mean(SR.post.i()$post$lnalpha.c) 
       beta <- mean(SR.post.i()$post$beta)
     } 
-  } 
-  # Get unique alpha 
-  bref <- model.br(lnalpha,beta,D)
-  bref.c <- model.br(lnalpha.c,beta,D)
-  Smsy <- ifelse(input$target=='me',bref.c$Smsy,bref$Smsy)
-  Sgen <- ifelse(input$target=='me',bref.c$Sgen,bref$Sgen)
-  Seq  <- ifelse(input$target=='me',bref.c$Seq,bref$Seq)
-  Umsy <- ifelse(input$target=='me',bref.c$Umsy,bref$Umsy)
-  Smax <- bref$Smax
+  }  
   
+  D <- Bayesdata()$d
+  S <- SR.pred1()$S
+  Rmd <- srmodel(lnalpha,beta,S,D)
+  Rme <- srmodel(lnalpha.c,beta,S,D)
+  out <- data.frame(S=S,RS.md = Rmd,RS.me=Rme)
+  return(out)
+})
+
+
+# br.data : SEQ, SMSY, SMAX, SGEN, UMSY  +++++++++++++++++++++++++++++++++++++++
+br.data <- reactive({
+  br <- tbl_sumpost()
+  # Get median
+  Smsy <- ifelse(input$target=='me',br$Smsy.c[4],br$Smsy[4])
+  Sgen <- ifelse(input$target=='me',br$Sgen.c[4],br$Sgen[4])
+  Seq  <- ifelse(input$target=='me',br$Seq.c[4],br$Seq[4])
+  Umsy <- ifelse(input$target=='me',br$Umsy.c[4],br$Umsy[4])
+  Smax <- br$Smax[4]
   out  <- data.frame(x = c(Seq,Smsy, Smax, Sgen,Umsy), 
-                     label = c(
-                       paste("Seq:", format(round(Seq, 0))),
-                       paste("Smsy:", format(round(Smsy, 0))),
-                       paste("Smax:", format(round(Smax, 0))),
-                       paste("Sgen:", format(round(Sgen, 0))),
-                       paste("Umsy:",format(round(Umsy,2)))
-                     ),
-                     linetype = c("solid","dashed","dotted","dotdash","longdash")) 
+          label = c(
+            paste("Seq:", format(round(Seq, 0))),
+            paste("Smsy:", format(round(Smsy, 0))),
+            paste("Smax:", format(round(Smax, 0))),
+            paste("Sgen:", format(round(Sgen, 0))),
+            paste("Umsy:",format(round(Umsy,2)))
+             ),
+          linetype = c("solid","dashed","dotted","dotdash","longdash")) 
   return(out)  
 })
 #### TVA data  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1157,7 +1195,6 @@ kf.data <- reactive({
    }  
     names(df) <- c(1:nstar)
       df$S <- SRp()$S
-#      df <- melt(df, id.vars='S',variable.name='star',value.name='R' )
       df <- reshape(df,direction='long', idvar='S',varying = names(df)[1:nstar],
                    v.names='R',timevar='star',times= names(df)[1:nstar])
       out <- list(df=df,star=star,nstar=nstar,ny=ny)
@@ -2446,6 +2483,9 @@ InfoServer('info1',Info_data_input_title,Info_data_input)
 
 ## Pool Age  Help ----
 InfoServer('info2',Info_pool_title,Info_pool)
+
+## SR Data quality ------
+InfoServer('info6',Info_srdata_title,Info_srdata)
 
 ## Outlier Removed Help ------
 InfoServer('info3',Info_Outlier_title,Info_Outlier)

@@ -167,7 +167,7 @@ kable(Ref_data_sum(),caption = paste0("Summary of posterior samples removed."))
 # Figures 
 ## Spawner and Recruit timeseries 
 
-```{r,fig.dim = c(16,8),fig.cap = paste0("Figure 1. Spawner(Escapement) and brood year recruit, and Recruit per Spawner (R/S) ")}
+```{r,echo=FALSE,fig.dim = c(16,8),fig.cap = paste0("Figure 1. Spawner(Escapement) and brood year recruit, and Recruit per Spawner (R/S) ")}
 # Run and Escapement time series plot 
 params$plt_srt+theme(text = element_text(family = "serif"))
 
@@ -187,7 +187,7 @@ params$plt_run+theme(text = element_text(family = "serif"))
 ```{r, results='asis', eval=(input$SR_plt)}
 cat('## Spawner-Recruit Plot')
 ```
-```{r,fig.dim = c(12,8),eval=(input$SR_plt),fig.cap = paste0("Spawner-recruit curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
+```{r,echo=FALSE,fig.dim = c(12,8),eval=(input$SR_plt),fig.cap = paste0("Spawner-recruit curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
 params$plt_SR
 ```
 
@@ -196,7 +196,7 @@ cat('## Yield Plot')
 ```
 ```{r,echo=FALSE, eval=(input$YLD_plt),fig.dim = c(12,8),fig.cap = paste0("Yierld curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval."),fig.id = "Spawner and Yield"}
 params$plt_yield
-
+```
 
 \newpage
 

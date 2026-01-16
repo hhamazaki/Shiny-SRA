@@ -103,7 +103,7 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
     sigma ~ dunif(0,2)  
     sigmaw ~ dunif(0,2)
 #    sigmav ~ dunif(0,10)
-    phi ~ dnorm(0,1)%_%T(-1,1) 
+    phi ~ dnorm(0,5)%_%T(-1,1) 
     e0 ~ dnorm(0,25) 
     Tau <- 1/(sigma*sigma)
     tauw <- 1/(sigmaw*sigmaw)	
@@ -146,7 +146,7 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
     sigma ~ dunif(0,2)  
     sigmaw ~ dunif(0,2)
 #    sigmav ~ dunif(0,10)
-    phi ~ dnorm(0,1)%_%T(-1,1) 
+    phi ~ dnorm(0,5)%_%T(-1,1) 
     e0 ~ dnorm(0,25) 
     Tau <- 1/(sigma*sigma)
     tauw <- 1/(sigmaw*sigmaw)	
@@ -272,7 +272,7 @@ jag.model.SR.SS <-function() {
 #'------------------------------------------------------------------------------        	
     lnalpha ~ dunif(min.a,max.a)
     beta ~ dunif(min.b,max.b)              
-    phi ~ dnorm(0,1)%_%T(-1,1)  
+    phi ~ dnorm(0,5)%_%T(-1,1)  
     mean.log.R0 ~ dnorm(0,1.0E-3)%_%T(0,30)  
     sigma.R0 ~ dunif(0,5)
     tau.R0 <- 1/sigma.R0^2
@@ -305,7 +305,7 @@ jag.model.SR.SS <-function() {
       return(Sgen)
      }
     Seq <- ifelse(lnalpha>0&beta>0,(10^d)*lnalpha/beta,NA)
-#    Smsy <- Seq*(0.5-0.07*lnalpha)
+#    Smsy <- ifelse(is.na(Seq),NA,Seq*(0.5-0.07*lnalpha))
     Smsy <- ifelse(lnalpha>0&beta>0,(10^d)*(1-lambertW0(exp(1-lnalpha)))/beta,NA)
     Umsy <- ifelse(beta>0,Smsy*beta/(10^d),NA)
     Smax <- ifelse(beta>0,(10^d)/beta,NA)

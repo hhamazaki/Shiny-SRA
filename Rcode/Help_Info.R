@@ -122,6 +122,20 @@ Info_pool <- HTML("
 </table>
          ") # End HTML
 
+# SR Data   -------------------------------------------------------------------
+Info_srdata_title <- "SR Data Reliablity"
+Info_srdata <- HTML("
+Spawner-recruit model assumes that the recruit is a function of spawners.  To 
+obtain reliable estimates the data should have wide spawner range. 
+As rule of thumb data with spawner contrast (maximum/minimum) 
+<ol>
+	<li><strong> < 4: Poor model estimates </strong></li>
+	<li><strong> 4 - 8: Better model estimates </strong></li>
+	<li><strong> > 8: Best model estimates </strong></li>
+</ol>
+                              ") # End HTML
+
+
 #  Outlier Removed -------------------------------------------------------------
 Info_Outlier_title <- "Remove Outliers"
 Info_Outlier <- HTML("

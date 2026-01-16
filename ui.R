@@ -16,9 +16,8 @@ library(markdown)     # used to get rmarkdown file
 library(knitr)         # used to produce word report 
 library(lamW)          # used for lanbert w 
 library(car)          # used for dwtest 
-#library(mgcv)         # used for spline  
 library(R2jags)       # used to run JAGS
-#library(ggrepel)      # loaded in a subfile; reloaded here 
+library(openxlsx)
 options(scipen=999)   # Do not show Scientific notation
 #'--- Required Source code------------------------------------------------------
 source("Rcode/Shiny_modules.R")   #  Module codes 
@@ -71,7 +70,6 @@ conditionalPanel(condition="input.Sample== false",
 #  textOutput('test'),
 #'------------------------------------------------------------------------------
   hr(),
-# input_switch('gg','ggplot'),
 #' Default axis point UI --------------------------------------------------------
  checkboxInput(inputId="autoui", "Default axis unit", TRUE),
  conditionalPanel(condition="input.autoui== false",
@@ -168,12 +166,14 @@ tabPanel("Escapement Only Analyses",
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 navbarMenu("SR Model",
   tabPanel("Bayes Model",
-           
     sidebarPanel(width = 3,
 #'--- ConditionalPanel Bayes Model Control -------------------------------------      
-      conditionalPanel(condition="input.Panel == 'Bayes Model'|| input.Panel =='Model Code'||input.Panel =='Model data'",
-        p(strong("Bayesian Model Setting")),
-          selectInput('Model',"Select SR Model",choices=c('Ricker','Beverton-Holt'),
+  conditionalPanel(condition="input.Panel == 'Bayes Model'|| input.Panel =='Model Code'||input.Panel =='Model data'",
+#'---- WARRNING ----------------------------------------------------------------                 
+InfoUI('info6','SR Model Data Reliablity'), 
+    uiOutput('contrast'),
+hr(),
+    selectInput('Model',"Select SR Model",choices=c('Ricker','Beverton-Holt'),
                     selected ='Ricker'),
 #'--------  Conditional RE option ----------------------------------------------      
         uiOutput('re'),
@@ -243,6 +243,7 @@ conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model C
         uiOutput('maxS'),
         uiOutput('maxR'),
         uiOutput('Yrange'),
+        uiOutput('lnRSrange')
          ),        
       ), # End conditionalPanel forSR and Yield Plot 
 
@@ -251,8 +252,8 @@ conditionalPanel(condition="input.Panel != 'Bayes Model'& input.Panel !='Model C
         sliderInput(inputId="CIB", "% Interval", value=95,min=0,max=100,step=5),
         checkboxInput(inputId="Remove_out", 
                       InfoUI('info3','Remove Outliers'), FALSE),
-        p(strong('Download summary data')),
-        downloadButton("download.sum", "Download")
+#        p(strong('Download summary data')),
+#        downloadButton("download.sum", "Download")
         ) # End Conditional panel MCMC 
       ), # End sidebarPanel
        
@@ -330,13 +331,13 @@ tabPanel("Model Diagnoses",
 ##### Bayes Model Code ------------------------------------------- 
 ##### Residuals  ------------------------------------------------- 
   tabPanel("Residuals", 
-         plotOutput(height='400px',"Plt_predict"), 
+         plotOutput(height='300px',"Plt_predict"), 
   p("Predicted vs. Observed ln(Recruit). The gray shade indicates 95% credible interval."),
-         plotOutput(height='400px',"Plt_residual"),
+         plotOutput(height='300px',"Plt_residual"),
   p("Residual plot between predicted and observed ln(Recruit). The red line indicated mean and gray shade indicates 95% credible interval."),
          strong(textOutput('Txt_dwtest.title')),
          verbatimTextOutput('Txt_dwtest.resid'),
-         plotOutput(height='400px',"Plt_lnalphai"),
+         plotOutput(height='300px',"Plt_lnalphai"),
     ),#End tabPanel: Diagnoses
  tabPanel("Run Size", 
          plotOutput(height='900px',"Plt_SS"),     
@@ -401,7 +402,7 @@ mainPanel(
 #### Smsy Profile ----------------------------------------------- 
         tabPanel("Profile",
             fluidRow(
-      column(10,plotOutput(height='400px','Plt_Smsy_prof')),  
+      column(10,plotOutput(height='300px','Plt_Smsy_prof')),  
       column(2,tableOutput('Tbl_MSY_gl'))
                       ),
       p("MSY Profile Analyses Plot. 
@@ -409,7 +410,7 @@ mainPanel(
         Intersecion of the probablity profile and target probability (red line) shows 
         the range of escapement meeting the criteria."),
       fluidRow(
-      column(10,plotOutput(height='400px','Plt_Smax_prof')),  
+      column(10,plotOutput(height='300px','Plt_Smax_prof')),  
       column(2,tableOutput('Tbl_Rmax_gl'))
                       ),
       p("RMAX Profile Analyses Plot. 
@@ -518,11 +519,11 @@ tabPanel("Custom Escapment Goal Range Analyses",
 #### Profile Analyses ----------------------------------------------------   
         tabPanel("Profile Analyses",
             fluidRow(
-      column(10,plotOutput(height='400px','Plt_msyprof_c')),  
+      column(10,plotOutput(height='300px','Plt_msyprof_c')),  
       column(2,tableOutput('Tbl_msyprof_c'))
                       ), 
       fluidRow(
-      column(10,plotOutput(height='400px','Plt_maxprof_c')),  
+      column(10,plotOutput(height='300px','Plt_maxprof_c')),  
       column(2,tableOutput('Tbl_maxprof_c'))
                       )       
         ), #End tab Panel

@@ -157,12 +157,13 @@ sim.out <- function(sim,d,add,model,model.br){
 # for TVA model calculate median lnalphai and simga.lnalpha
     post$lnalpha <- apply(post[,grep(pattern='lnalphai',names(post),value=TRUE)],1, FUN=median, na.rm=TRUE)
     post$sigma.lnalpha <- apply(post[,grep(pattern='lnalphai',names(post),value=TRUE)],1, FUN=sd, na.rm=TRUE)
-  }
+    
+    }
     post$alpha <- exp(post$lnalpha)
 # Calculate Mean R adjustment     
   if(add=='ar1'){
-    post$lnalpha.c <- post$lnalpha+0.5*(post$sigma^2)/(1-post$phi^2)
-    } else {post$lnalpha.c <- post$lnalpha+0.5*post$sigma^2}
+    post$lnalpha.c <- with(post,lnalpha+0.5*(sigma^2)/(1-phi^2))
+    } else {post$lnalpha.c <- with(post,lnalpha+0.5*sigma^2)}
     post$alpha.c <- exp(post$lnalpha.c)
   
 #'------------------------------------------------------------------------------
@@ -197,7 +198,6 @@ SR.pred.sim <-function(SRpar,D,S,srmodel,add){
     sigma <- with(SRpar, sqrt(sigma^2/(1-phi^2)))
   } else if(add == 'kf'){
     sigma <- with(SRpar, sqrt(sigma^2+sigma.lnalpha^2))
-    #    sigma <- SRpar$sigma
   } else {
     sigma <- SRpar$sigma
   }
@@ -222,16 +222,18 @@ SR.pred.sim <-function(SRpar,D,S,srmodel,add){
   }  
 # Create expected mean/median (mc.Y) and observed Yield (mc.Y.p) matrix
 #  Expected Median or Mean Yield
-#  mc.Y <-  t(t(mc.R)-S) 
-  mc.Y <- sweep(mc.R,MARGIN = 2,S,'-')
-#  mc.Y.c <-  t(t(mc.R.c)-S) 
-  mc.Y.c <- sweep(mc.R,MARGIN = 2,S,'-')
+  mc.Y <-  t(t(mc.R)-S) 
+#  mc.Y <- sweep(mc.R,MARGIN = 2,S,'-')
+  mc.Y.c <-  t(t(mc.R.c)-S) 
+#  mc.Y.c <- sweep(mc.R,MARGIN = 2,S,'-')
 #  Expected Annual Yield
-#  mc.Y.p <-  t(t(mc.R.p)-S) 
-  mc.Y.p <- sweep(mc.R.p,MARGIN = 2,S,'-')
+  mc.Y.p <-  t(t(mc.R.p)-S) 
+#  mc.Y.p <- sweep(mc.R.p,MARGIN = 2,S,'-')
 #  Expected SR 
-  mc.lnRS <- log(sweep(mc.R,MARGIN = 2,S,'/'))
-  mc.lnRS.p <- log(sweep(mc.R.p,MARGIN = 2,S,'/'))
+  mc.lnRS <- t(log(t(mc.R)/S))
+  mc.lnRS.p <- t(log(t(mc.R.p)/S))
+#  mc.lnRS <- log(sweep(mc.R,MARGIN = 2,S,'/'))
+#  mc.lnRS.p <- log(sweep(mc.R.p,MARGIN = 2,S,'/'))
   mc.lnRS[is.nan(mc.lnRS)] <- NA
   mc.lnRS.p[is.nan(mc.lnRS.p)] <- NA  
    
