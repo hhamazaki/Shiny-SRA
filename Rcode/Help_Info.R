@@ -1,6 +1,6 @@
 #'==============================================================================
 #'  Help_info.R
-#'  This file contains objects used for popup info modoules 
+#'  This file contains objects used for popup info modules 
 #'==============================================================================
 # Data Error  -------------------------------------------------------------------
 Info_data_input_Error_title <- "Input data contain non-numbers"

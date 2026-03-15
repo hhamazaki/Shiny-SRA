@@ -15,8 +15,9 @@ BayesInputUI <- function(id) {
   tagList(
     fluidRow(
       p(strong("Run Model Analyses")),
-      actionButton(ns("RunBayes"),"Run"),
-      checkboxInput(ns('config'), "Modify Model Running Setting", FALSE),
+      actionButton(ns("RunBayes"), "Run SR Analysis", class="btn btn-primary btn-block"),
+      br(),
+      checkboxInput(ns('config'), "Modify MCMC Settings", FALSE),
       conditionalPanel(condition="input.config == true",
       column(6,
         numericInput(ns('n.burnin'),'Burn-in x 1000',value=5,min=0,step = 1),
