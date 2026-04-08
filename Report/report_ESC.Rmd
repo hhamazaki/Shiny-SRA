@@ -1,30 +1,24 @@
----
-title: "Escapement Goal Analysis Report"
-author:
-  - name:
-date: '`r format(Sys.time(), "%d %B, %Y")`'
-#output: officedown::rdocx_document
-output: word_document
-reference_docx: template.docx
 
-
-params:
-Tbl_sum: NA
-srplot: NA
----
-
-```{r,echo=FALSE,include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,comment=NULL, dev='png',fig.dim = c(9,6),dpi=600,message=FALSE,background=NULL)
-#opts <- options(knitr.kable.NA = "")
+```{r,datadesciption, echo=FALSE,include=FALSE}
+# Original data year range
+  runyr <- paste(min(params$tbl_data[,1]),'-',max(params$tbl_data[,1]))
+# Original number of years
+  n.yrs <- length(params$tbl_data[,1])
+# Trimmed n.years   
+  rn.yrs <- input$sryears[2]-input$sryears[1]+1
+  dif <- (n.yrs != rn.yrs)
+# Trimmed year range
+  rbyr <- ifelse(dif,paste(input$sryears[1],'-',input$sryears[2]),'No data trimming')
 ```
 
+## Data and Model Configurations 
+**Data**  
+**File name:  ** `r params$file`  
+**Data Type:  **  `r params$data`  
+**Year range:  ** `r yrange`    
 
-```{r,echo = FALSE, fig.cap = paste0("Figure 1. Annyak Escapment times (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
-runesc()
-```
-
-
-
+**Data Modification**  
+**Trimmed Year range: **`r rbyr`  
 
 ```{r,echo = FALSE, fig.cap = paste0("Figure 2. Percentile Analyses")}
 

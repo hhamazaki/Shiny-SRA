@@ -87,8 +87,9 @@ Risk_sim_base <- reactive({
   Risk_sim <- reactive({
     k <- input$risk.k
     p <- input$risk.p/100
-    st <- c(0.5, 0.80, 0.9)
-    delta <- c(p,st)
+#    st <- c(0.5, 0.80, 0.9)
+#    delta <- c(p,st)
+    delta <- p
     phi <- Risk_sim_base()$phi
     mu <- Risk_sim_base()$mu
     cc <- Risk_sim_base()$cc
@@ -117,16 +118,20 @@ Risk_sim_base <- reactive({
         }
         
     int.S <- numeric(nd)
+    int.p <- numeric(nd)
     pi[,1] <- colMeans(outer(X=xsimmax[,length(delta)+1], Y=lngoal, FUN="<="))  # simulated probabilities (unneeded action)
   for(j in 1:nd){
      pi[,j+1] <- colMeans(outer(X=xsimmax[,j], Y=lngoal, FUN=">"))  # simulated probabilities (mistaken inaction)
-     int.S[j] <- max(S[pi[,j+1]>pi[,1]])  
-        }
-        
-    txt <- HTML(paste0("Mistaken Inaction at ", 100*delta,"% drop : ",int.S,sep = '<br/>'))
+     int.S[j] <- max(S[pi[,j+1]>pi[,1]])
+     int.p[j] <- min(pi[(pi[,j+1]>pi[,1]),j+1])
+  }
+    
+    txt.y <- HTML(paste0("Number of Years before taking an action ", k, ' years',sep = '<br/>'))
+    txt.e <- HTML(paste0("Mistaken Inaction at ", 100*delta,"% drop : ",int.S,sep = '<br/>'))
+    txt.p <- HTML(paste0("Risk Probability: ", round(int.p,2),sep = '<br/>'))
     pi <- as.data.frame(pi)
     names(pi) <- c('Uneeded',paste0('Drop',100*delta,'pcnt'))
-    out <- list(S = S, pi = pi,delta=delta,int.S = int.S, txt=txt)
+    out <- list(S = S, pi = pi,delta=delta,int.S = int.S, int.p = int.p,txt.e=txt.e,txt.p = txt.p,txt.y=txt.y)
     return(out)   
  })
       
@@ -160,7 +165,7 @@ Risk_custom <- reactive({
   # find S that correspond to the row number       
           Sp[,i+1] <-as.integer(S[EGP])
         }
-    out <- list(Sp=Sp,EG.p=EG.p) 
+    out <- list(Sp=Sp,EG.p=EG.p,RiskC=input$RiskC) 
     return(out)
         }
   })
@@ -223,35 +228,38 @@ Risk_custom <- reactive({
           mult <- mult(u)
           x <-Risk_sim()$S
           pi <- data.frame(Risk_sim()$pi)
-          names(pi) <- c('a','b','c','d','e')
+          names(pi) <- c('a','b')
           delta <- Risk_sim()$delta
           n <- length(delta)
           e.g <- Risk_sim()$int.S
+          e.p <- Risk_sim()$int.p
           txt <- c("Unneeded action", 
                    paste(100*delta,"% drop" )
           )
           # create a data.frame 
-          #df <- melt(data.frame(S=x,pi),id.vars=('S'),value.name='p')
           # R Base reshape: replace reshape2 tidyr
           df <- reshape(data.frame(S=x,pi),direction='long', idvar='S',varying = names(data.frame(S=x,pi))[-1],
                          v.names='p',timevar='variable',times=names(data.frame(S=x,pi))[-1])
-#          df <- pivot_longer(data.frame(S = x, pi), cols = -S, names_to = "variable", values_to = "p")
           p1 <- ggplot()+
             geom_line(data=df, aes(x=S,y=p,linetype=variable,color=variable, linewidth=variable))+
-            scale_linetype_manual(labels=txt,values=c(1,1,3,4,5))+   
-            scale_linewidth_manual(labels=txt,values=c(1,1,0.5,0.5,0.5))+
-            scale_color_manual(labels=txt,values=c(1,2,3,4,5))+
+            scale_linetype_manual(labels=txt,values=c(1,1))+   
+            scale_linewidth_manual(labels=txt,values=c(1,1))+
+            scale_color_manual(labels=txt,values=c(1,2))+
             scale_x_continuous(expand=c(0, 0), limits=c(0, NA), 
                                labels = label_number(scale = 1 /u),n.breaks = 10,oob=oob_keep) +
             scale_y_continuous(expand=c(0, 0), limits=c(0, 1),n.breaks = 10)+
             xlab(paste('Escapement',mult(u))) + ylab('Proabbility')
-          if(input$RiskC){
+        if(input$RiskC){
             p1 <- p1+
               #  Add custom EG      
               geom_vline(xintercept=input$riskEG*u, color =4, linetype=2,linewidth=1)+
               #  Add custom Risk Prob 
               geom_hline(yintercept = input$riskp, color =7, linetype=2,linewidth=1)      
-          }
+        } else {
+           p1 <- p1+
+            annotate("segment",x=0,y=e.p[1],xend=e.g[1],yend=e.p[1],color = 'gray',linewidth=0.5,linetype=2)+
+            annotate("segment",x=e.g[1],y=0,xend=e.g[1],yend=e.p[1],color = 'gray',linewidth=0.5,linetype=2)
+         }
           return(p1)
         }
 #-------------------------------------------------------------------------------
@@ -272,7 +280,7 @@ Risk_custom <- reactive({
 # Module Outputs: Risk_sim_base, Risk_sim, Plt_Risk, Plt_Risk2 
 #-------------------------------------------------------------------------------
       }    
-      outdata <- list(Risk_sim_base =Risk_sim_base, Risk_sim = Risk_sim, 
+      outdata <- list(Risk_sim_base =Risk_sim_base, Risk_sim = Risk_sim,
                       Plt_risk=Plt_risk,Plt_risk2=Plt_risk2,Risk_custom=Risk_custom)
       return(outdata)      
     } # End function 

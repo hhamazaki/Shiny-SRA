@@ -119,17 +119,20 @@ tabPanel("Escapement Only Analyses",
     sidebarPanel(width = 3,
       conditionalPanel(condition="input.ePanel == 'Percentile Analyses'",  
         p(strong("Percentile Analyses")),
+        (htmlOutput("Txt_Contrast")),    
+        hr(),
         PercentileUI("prcnt"),   # Percentile Analyses Module
-        (htmlOutput("Txt_Tier")),
+        strong(htmlOutput("Txt_Tier")),
               hr(),
-        (htmlOutput("Txt_Note"))
+        strong(htmlOutput("Txt_Note"))
                 ), # End conditionalPanel
       conditionalPanel(condition="input.ePanel == 'Risk Analyses'",                        
         p(strong("Risk Analyses")), 
         strong(textOutput("Txt_Risk_Model")),
               hr(),
         RiskUI("risk"),   # Risk Analyses Module
-        strong(htmlOutput('Txt_Risk'))
+        strong(htmlOutput('Txt_Risk.e')),
+        strong(htmlOutput('Txt_Risk.p')),
                  ) # End conditionalPanel
           ), #End SidbarPanel
 ### Main Panel ======================================================    
@@ -741,23 +744,32 @@ tabPanel("Sim rep Data",
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   tabPanel("Report Output",   
         sidebarPanel(
-          p('Report '), 
+          strong(p('Report ')), 
           downloadButton('downloadReport',label='Download'),
-          p('Table'),
+          strong(p('Table')),
           downloadButton('downloadTable',label='Download'),      
         ),
    mainPanel(
-    h1("Under Construction"),
       textInput("txt_title", label = "Stock Name", value = ""),
       textAreaInput("txt_free", label="Project Description", value="",width='auto'),
-      fluidRow( 
+      conditionalPanel(condition="input.dataType=='Escapement Only'", 
+        fluidRow( 
+          column(3, 
+            h3("Analyses"),
+            checkboxInput("Prcnt", label = "Percentile Analysis", value = TRUE),
+            checkboxInput("Risk", label = "Risk Analysis", value = FALSE)                                 
+             ), 
+        ) # End fluidRow                            
+      ) # End Conditional Panel: Escapement Only
+      , 
+      
+      conditionalPanel(condition="input.dataType!='Escapement Only'", 
+          fluidRow( 
         column(3, 
           h3("Data Input"),
             checkboxInput("Brood_plt", label = "SR plot", value = TRUE),
       conditionalPanel(condition="input.dataType=='Run'",  
-            checkboxInput("Run_plt", label = "Run plot", value = TRUE),
-            checkboxInput("Run_t", label = "Run Table", value = TRUE),
-            checkboxInput("Brood_t", label = "Brood Table", value = TRUE),
+            checkboxInput("Run_plt", label = "Run plot", value = TRUE)
                    ) # End conditionalPanel
                  ), 
         column(3, 
@@ -788,8 +800,11 @@ tabPanel("Sim rep Data",
                       
                   ) # End of Conditional Panel
                  ) #End of Column
-                  ) # End fluidRow
-    
+
+                    ) # End fluidRow
+  
+    ) # End Coonditinal Panel 
+      
                   ) # End main panel 
   ),  # End (Report Output panel)
 

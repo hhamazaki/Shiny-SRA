@@ -1,0 +1,144 @@
+---
+title: "Escapement Only Model Analysis Report"
+author:
+  - name: ''
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+
+output: 
+  word_document:
+    fig_caption: true
+    toc: false
+    number_sections: true
+#   mainfont: Times New Roman
+    reference_docx: template.docx
+    highlight: NULL
+params:
+  title: NA
+  texts: NA
+  file: NA
+  data: NA
+  tbl_data: NA
+  plt_Prcnt: NA
+  Contrast: NA
+  Tier: NA
+  Note: NA
+  Pctgoal: NA
+  Rmodel: NA 
+  dwtest: NA 
+  riskeg: NA 
+  riskyrs: NA
+  riskp: NA 
+  riskC: NA
+  plt_risk: NA 
+  plt_risk.t: NA 
+  tbl_risk: NA 
+  tbl_risk.p: NA
+---
+
+```{r,setup, echo=FALSE,include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  fig.cap = TRUE,
+  comment=NULL, dev='png',message=FALSE,background=NULL)
+```
+
+
+```{r,title, echo=FALSE,include=FALSE}
+  title <- paste(input$txt_title)
+  text <- paste(input$txt_free)
+```
+
+# Project Description 
+## Stock Name : `r params$title`
+ 
+## Project description: 
+`r params$texts`
+
+```{r,datadesciption, echo=FALSE,include=FALSE}
+# Original data year range
+  runyr <- paste(min(params$tbl_data[,1]),'-',max(params$tbl_data[,1]))
+# Original number of years
+  n.yrs <- length(params$tbl_data[,1])
+# Trimmed n.years   
+  rn.yrs <- input$sryears[2]-input$sryears[1]+1
+  dif <- (n.yrs != rn.yrs)
+# Trimmed year range
+  rbyr <- ifelse(dif,paste(input$sryears[1],'-',input$sryears[2]),'No data trimming')
+```
+
+# Data and Model Configurations 
+**Data**  
+**File name:  ** `r params$file`  
+**Data Type:  **  `r params$data`  
+**Year range:  ** `r runyr`
+
+**Data Modification**  
+
+# Analysis Methods
+```{r,text1,echo = FALSE, eval=(input$Prcnt),results='asis'}
+cat("## Percentile Analysis")
+```
+
+```{r,text2,echo = FALSE, eval=(input$Prcnt),results='asis'}
+print(gsub('<b>','',gsub('</b>','',params$Contrast)))
+```
+
+```{r,text3,echo = FALSE, eval=(input$Prcnt),results='asis'}
+cat(gsub("<br/>",' ',params$Tier))
+```
+
+```{r,text4,echo = FALSE, eval=(input$Prcnt),results='asis'}
+print(gsub("<br/>",' ',params$Note))
+```
+
+```{r,text5,echo = FALSE, eval=(input$Prcnt),results='asis'}
+print(gsub("<br/>",' ',params$Pctgoal))
+```
+
+```{r,echo = FALSE, eval=(input$Prcnt),fig.dim = c(12,6),fig.cap = paste0("Figure. Percentile Analysis")}
+params$plt_Prcnt
+```
+
+```{r,echo = FALSE, eval=(input$Risk),results='asis'}
+cat("## Risk Analysis")
+```
+
+```{r,echo = FALSE, eval=(input$Risk),results='asis'}
+cat(gsub("<br/>",' ',params$riskyrs))
+```
+
+
+
+```{r,echo = FALSE, eval=(input$Risk),results='asis'}
+cat(gsub("<br/>",' ',params$riskeg))
+```
+
+```{r,echo = FALSE, eval=(input$Risk),results='asis'}
+cat(gsub("<br/>",' ',params$riskp))
+```
+
+```{r,echo = FALSE, eval=(input$Risk),fig.dim = c(12,6),fig.cap = paste0("Figure. Risk Analysis")}
+params$plt_risk
+```
+
+
+```{r,echo = FALSE, eval=(input$Risk),fig.dim = c(12,6),fig.cap = paste0("Figure. Risk Analysis timeseries ")}
+params$plt_risk.t
+```
+
+```{r,echo = FALSE, eval=(input$Risk),results='asis'}
+if(!is.null(params$riskC)){
+  cat('Probability of risk based on target escapement')
+  kable(params$tbl_risk)
+}
+```
+
+
+```{r,echo = FALSE, eval=(input$Risk),results='asis'}
+if(!is.null(params$riskC)){
+  cat('Escapement based on target risk tolerance')
+  kable(params$tbl_risk.p)
+ }
+```
+
+

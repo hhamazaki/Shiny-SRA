@@ -324,7 +324,6 @@ ss.year <- reactive({
 #  Plot SR data 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Plt_runesc --- Plot Run-Escapement Time series (when data is "Run") ----------
-
   output$Plt_runesc <- renderPlot({plt_runesc()})
 
 ## Plt_srt Plot SR time series ---------------------------------------
@@ -377,6 +376,76 @@ output$Tbl_sum_run.data <- renderTable({tbl_sum_run.data()},rownames=TRUE)
 
 #### Plt_hist.run: run data histogram ------------------------------------------ 
 output$Plt_hist.run <- renderPlot({plt_hist.run()})
+
+#'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#Panel 2: Escapement Only Analyses:  -----   
+#'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#'===============================================================================
+## 2.1 Percentile Analyses ----
+#'===============================================================================
+# Call Percentile Analyses module Server 
+prcntout <- PercentileServer("prcnt",data_esc,as.numeric(unit()),plt)
+
+# Txt_Tier : Tier Definition output  
+txt <- reactive({prcntout$Txt_Tier()})
+output$Txt_Tier <- renderUI({ txt() })
+
+# Txt_Note:  Tier based goal range  
+txt2 <- reactive({prcntout$Txt_Note()})
+
+output$Txt_Note <- renderUI({ txt2() })
+txt3 <- reactive({prcntout$Txt_Contrast()})
+output$Txt_Contrast <- renderUI({txt3()})
+
+EGS <- reactive({prcntout$EGS()})
+
+Tier <- reactive({prcntout$Tier()})
+
+plt_prcnt <- reactive({prcntout$Plt_prcnt()})
+
+#  plt_prcnt_hist <- reactive({prcntout$Plt_prcnt_hist()})
+
+output$Plt_prcnt <- renderPlot({plt_prcnt()})
+#  output$Plt_prcnt_hist <- renderPlot({plt_prcnt_hist()})
+
+#'===============================================================================
+## 2.2   Risk Analyses ----
+#'===============================================================================
+# Call Risk Analyses module Server 
+riskout <- RiskServer("risk",data_esc,as.numeric(unit()),plt)
+
+#'---- UI Output----------------------------------------------------------------------
+
+Risk_sim_base <- reactive({riskout$Risk_sim_base()})
+Risk_sim <- reactive({riskout$Risk_sim()})
+Risk_custom <- reactive({riskout$Risk_custom()})   
+
+output$Tbl_risk <- renderTable({
+  Risk_custom()$EG.p
+},caption= 'Risk based on escapement')
+
+output$Tbl_riskp <- renderTable({
+  (Risk_custom()$Sp)
+},caption='Escapement based on acceptable risk')
+
+# Risk output
+plt_risk <- reactive({riskout$Plt_risk()})
+output$Plt_risk <- renderPlot({plt_risk()}) 
+
+#' Txt_dwtest: Durbin-Watson test results ----------------------------------------
+output$Txt_dwtest <- renderPrint({ Risk_sim_base()$dw})
+
+#' Risk Model  ---------------------------------------------
+output$Txt_Risk_Model <-renderText({Risk_sim_base()$md})
+
+#' Risk Target: Print out Target ------------------------------------------------
+output$Txt_Risk.e <-renderUI({ Risk_sim()$txt.e })
+output$Txt_Risk.p <-renderUI({ Risk_sim()$txt.p })
+#' Plt_risk2 --------------------------------------------------------------------
+plt_risk2 <- reactive({
+  riskout$Plt_risk2()
+})
+output$Plt_risk2 <- renderPlot({plt_risk2()})
 
 
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1846,71 +1915,6 @@ output$altsim.R <- renderPrint({
 
 
 #'===============================================================================
-#  Percentile Analyses ----
-#'===============================================================================
-# Call Percentile Analyses module Server 
-prcntout <- PercentileServer("prcnt",data_esc,as.numeric(unit()),plt)
-
-# Txt_Tier : Tier Definition output  
-  txt <- reactive({prcntout$Txt_Tier()})
-  output$Txt_Tier <- renderUI({ txt() })
-
-# Txt_Note:  Tier based goal range  
-  txt2 <- reactive({prcntout$Txt_Note()})
-
-  output$Txt_Note <- renderUI({ txt2() })
-  
-  EGS <- reactive({prcntout$EGS()})
-  
-  Tier <- reactive({prcntout$Tier()})
-
-  plt_prcnt <- reactive({prcntout$Plt_prcnt()})
-  
-#  plt_prcnt_hist <- reactive({prcntout$Plt_prcnt_hist()})
-  
-  output$Plt_prcnt <- renderPlot({plt_prcnt()})
-#  output$Plt_prcnt_hist <- renderPlot({plt_prcnt_hist()})
-
-#'===============================================================================
-#  Risk Analyses ----
-#'===============================================================================
-# Call Risk Analyses module Server 
-riskout <- RiskServer("risk",data_esc,as.numeric(unit()),plt)
-
-#---- UI Output----------------------------------------------------------------------
-
-Risk_sim_base <- reactive({riskout$Risk_sim_base()})
-Risk_sim <- reactive({riskout$Risk_sim()})
-Risk_custom <- reactive({riskout$Risk_custom()})   
-
-output$Tbl_risk <- renderTable({
-  Risk_custom()$EG.p
-  },caption= 'Risk based on escapement')
-
-output$Tbl_riskp <- renderTable({
-  (Risk_custom()$Sp)
-},caption='Escapement based on acceptable risk')
-
-# Risk output
-plt_risk <- reactive({riskout$Plt_risk()})
-output$Plt_risk <- renderPlot({plt_risk()}) 
-
-# Txt_dwtest: Durbin-Watson test results ----------------------------------------
-output$Txt_dwtest <- renderPrint({ Risk_sim_base()$dw})
-
-# Risk Model  ---------------------------------------------
-output$Txt_Risk_Model <-renderText({Risk_sim_base()$md})
-
-# Risk Target: Print out Target ------------------------------------------------
-output$Txt_Risk <-renderUI({ Risk_sim()$txt })
-
-# Plt_risk2 --------------------------------------------------------------------
-Plt_risk2 <- reactive({
-   riskout$Plt_risk2()
-   })
-output$Plt_risk2 <- renderPlot({Plt_risk2()})
-
-#'===============================================================================
 #  Panel 4: Management Strategy Evaluation  ----  
 #'===============================================================================
 #'-------------------------------------------------------------------------------
@@ -2404,21 +2408,53 @@ output$Plt_freq_mse <- renderPlot({
 #'==============================================================================
 # Create and download report 
 output$downloadReport <- downloadHandler(
-  filename = function(){paste0('SR_Report_',model.name(),'_',Sys.Date(),'.docx')
+  filename = function(){
+    if(input$dataType =="Escapement Only"){ 
+      paste0('Esc_Only_Analysis_Report',Sys.Date(),'.docx')  
+    }else{paste0('SR_Report_',model.name(),'_',Sys.Date(),'.docx')
+    }
     },
   content = function(file) {
-    tempReport <- file.path(tempdir(),"report_officedown.Rmd")
     tempTemplate <- file.path(tempdir(),"template.docx")
-    tempTable <- file.path(tempdir(),"run_table.Rmd")  
-    tempEQ <- file.path(tempdir(),"SR_Equations.Rmd")
-    tempEQR <- file.path(tempdir(),"SR_Equations_Ricker.Rmd")
-    tempEQB <- file.path(tempdir(),"SR_Equations_BH.Rmd")
-    file.copy('Report/report_officedown.Rmd',tempReport,overwrite = TRUE)
     file.copy('Report/template.docx',tempTemplate,overwrite = TRUE) 
+    if(input$dataType =="Escapement Only"){ 
+      tempReport <- file.path(tempdir(),"report_officedown_ESC.Rmd")
+      file.copy('Report/report_officedown_ESC.Rmd',tempReport,overwrite = TRUE)
+      params <- list(
+        title = input$txt_title,   # Text title
+        texts = input$txt_free,    # Free entry 
+        file = filename(),      # Input file name
+        data = input$dataType,
+        tbl_data = data(),
+  # Percentile Analyses output      
+        plt_Prcnt = plt_prcnt(),
+        Contrast = txt3(), 
+        Tier = prcntout$Tier(),
+        Note = txt(),
+        Pctgoal = txt2(),
+  # Risk Analyses output
+        Rmodel = Risk_sim_base()$md,
+        dwtest = Risk_sim_base()$dw,
+        riskeg = Risk_sim()$txt.e,
+        riskp = Risk_sim()$txt.p,
+        riskyrs = Risk_sim()$txt.y,
+        plt_risk = plt_risk(),
+        plt_risk.t = plt_risk2(),
+        riskC = Risk_custom()$RiskC,
+        tbl_risk = Risk_custom()$EG.p,
+        tbl_risk.p = Risk_custom()$Sp
+      )
+      }else{
+      tempReport <- file.path(tempdir(),"report_officedown_SR.Rmd")
+      file.copy('Report/report_officedown_SR.Rmd',tempReport,overwrite = TRUE)
+      tempTable <- file.path(tempdir(),"run_table.Rmd")  
+      tempEQ <- file.path(tempdir(),"SR_Equations.Rmd")
+      tempEQR <- file.path(tempdir(),"SR_Equations_Ricker.Rmd")
+      tempEQB <- file.path(tempdir(),"SR_Equations_BH.Rmd")
     file.copy('Report/run_table.Rmd',tempTable,overwrite = TRUE) 
     file.copy('Report/SR_Equations.Rmd',tempEQ,overwrite = TRUE) 
     file.copy('Report/SR_Equations_Ricker.Rmd',tempEQR,overwrite = TRUE) 
-    file.copy('Report/SR_Equations_BH.Rmd',tempEQB,overwrite = TRUE) 
+    file.copy('Report/SR_Equations_BH.Rmd',tempEQB,overwrite = TRUE)
     params <- list(
 	    title = input$txt_title,   # Text title
       texts = input$txt_free,    # Free entry 
@@ -2427,6 +2463,7 @@ output$downloadReport <- downloadHandler(
       data = input$dataType,
 	    target = input$target,
       JAGS = sim()$output$BUGSoutput,
+	    tbl_data = data(),
       tbl_sumpost = tbl_sumpost(),
 	    tbl_brood = tbl_brood()$brood,
 	    tbl_run = tbl_run(),
@@ -2441,6 +2478,7 @@ output$downloadReport <- downloadHandler(
       plt_msy_prof =plt.msy.prof.fig(),
       plt_max_prof =plt.max.prof.fig()
       )
+     }
     progress <- Progress$new(session, min=1, max=15)
     on.exit(progress$close())
     progress$set(message = 'Generating a report',
@@ -2456,20 +2494,28 @@ output$downloadReport <- downloadHandler(
 
 output$downloadTable <- downloadHandler(
   filename = function(){
-    paste0('SR_Data_', model.name(),'_', Sys.Date(),'.xlsx')
+    if(input$dataType =="Escapement Only"){ 
+    paste0('Data_Output_Esc_Analyses_', Sys.Date(),'.xlsx')  
+      }else{
+    paste0('Data_Output_', model.name(),'_', Sys.Date(),'.xlsx')
+    }
   },
   content = function(file) {
     out.excel <- list()
     out.excel$InputData <- data()
+    if(input$dataType =="Escapement Only"){  
+    out.excel$AnalysisData <- data_esc() 
+     } else{
     if(input$dataType =="Run"){  
       out.excel$Run <- tbl_run()
       out.excel$brood <- tbl_brood()$brood
     }
-    if(SS()){out.excel$Runcv <- tbl_run.cv()}    
+    if(SS()){out.excel$Runcv <- tbl_run.cv()} 
     out.excel$SRdata <- data_sr.0()
     out.excel$SRpred <- SRp()
     out.excel$Summary <- tbl_sumpost()
     out.excel$Profile <-T.Prof()
+     }
     write.xlsx(out.excel,file,rowNames=FALSE)
   }
 ) # End downloadTable

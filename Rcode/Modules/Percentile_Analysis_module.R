@@ -131,12 +131,23 @@ PercentileServer <- function(id,e.data,u,plt){
       }
       
 #,-------------------------------------------------------------------------------
+# Txt_Contrast:  Explanation of Tiers 
+#,-------------------------------------------------------------------------------  
+  Txt_Contrast <- reactive({
+    x <- e.data()
+    contrast <- round(max(x$S,na.rm=TRUE)/min(x$S,na.rm=TRUE),1)
+    txt <- HTML(
+      paste(
+        "<b>Escapement Contrast:</b>","<b>",contrast,"</b>"))
+    return(txt)
+    })
+ 
+#,-------------------------------------------------------------------------------
 # Txt_Note:  Explanation of Tiers 
 #,-------------------------------------------------------------------------------  
   Txt_Note <- reactive({
     x <- e.data()
     EG <- EGS()
-    contrast <- round(max(x$S,na.rm=TRUE)/min(x$S,na.rm=TRUE),1)
         if(input$Tiers == "Tier 1") { e.g <- EG[1,]
         } else if(input$Tiers == "Tier 2") { e.g <- EG[2,]     
         } else if(input$Tiers == "Tier 3") { e.g <- EG[3,]       
@@ -144,17 +155,17 @@ PercentileServer <- function(id,e.data,u,plt){
         
         txt <- HTML(paste(paste("Escapement goal range"),
                           paste0(round(e.g[1],0)," - ",round(e.g[2],0)),
-                          paste("Escapement Contrast:",contrast),
                           sep = '<br/>'))
         return(txt)
       })
       
       Tier <- reactive({input$Tiers})
+
 #,-------------------------------------------------------------------------------
 # Module Outputs: Txt_Tier, Txt_Note, Plt_prcnt 
 #,-------------------------------------------------------------------------------
       outdata <- list(Txt_Tier =Txt_Tier, Tier=Tier, EGS = EGS, 
-                      Txt_Note=Txt_Note, Plt_prcnt=Plt_prcnt)
+                      Txt_Note=Txt_Note, Txt_Contrast=Txt_Contrast,Plt_prcnt=Plt_prcnt)
       return(outdata)      
     } # End function 
   ) # End moduleServer

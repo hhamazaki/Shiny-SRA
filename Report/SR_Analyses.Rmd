@@ -1,78 +1,32 @@
----
-title: "Spawner-Recruit Model Escapement Goal Analysis Report"
-author:
-  - name: '`input$txt_title`'
-date: '`r format(Sys.time(), "%d %B, %Y")`'
-
-output: 
-  word_document:
-    fig_caption: true
-    toc: true
-    number_sections: true
-#   mainfont: Times New Roman
-    reference_docx: template.docx
-params:
-  title: NA
-  texts: NA
-  file: NA
-  add: NA
-  data: NA
-  JAGS: NA
-  target: NA
-  tbl_sum: NA
-  tbl_sumpost: NA
-  tbl_brood: NA
-  tbl_run: NA
-  plt_runesc: NA
-  plt_srt: NA
-  plt_SR: NA
-  plt_yield: NA
-  plt_lnRS: NA
-  plt_lnalphai: NA
-  plt_predict: NA
-  plt_residual: NA
-  plt_msy_prof: NA
-  plt_max_prof: NA
----
-
-```{r,setup, echo=FALSE,include=FALSE}
-knitr::opts_chunk$set(
-  echo = FALSE,
-  fig.cap = TRUE,
-  comment=NULL, dev='png',message=FALSE,background=NULL)
-```
-
-\newpage
-```{r,title, echo=FALSE,include=FALSE}
-  title <- paste(input$txt_title)
-  text <- paste(input$txt_free)
-```
-
-# Project Description 
-## Stock Name : `r params$title`
- 
-## Project description: 
-`r params$texts`
-
-# Analyses Methods
+# Analysis Methods
 ```{r,datadesciption, echo=FALSE,include=FALSE}
-  runyr <- paste(min(params$tbl_run$Year),'-',max(params$tbl_run$Year))
-  byr <- paste(min(data_sr.0()$Yr),'-',max(data_sr.0()$Yr))
-  yrange <- ifelse(params$data =='Run',runyr,byr)
-  nyr <- input$sryears[2]-input$sryears[1]+1
-  o.yrs <- paste(min(data_sr.0()$Yr),'to',max(data_sr.0()$Yr))
-  yrs <- paste(input$sryears[1],'to',input$sryears[2])
-  rbyr <- paste(input$sryears[1],'-',input$sryears[2])
-  o.age <- c(min(o.age()),max(o.age()))
-  r.age <- input$rage 
-  obage <-ifelse(params$data =='Run',paste(o.age[1],'-',o.age[2]),'NA')
-  rbage <-ifelse(params$data =='Run',paste(input$rage[1],'-',input$rage[2]),'NA')
-  pool  <- ifelse(params$data =='Run'& ((o.age[1]-r.age[1])!=0|(o.age[2]-r.age[2])!=0),
-            ifelse(input$combage,
-                   'combined to the next nearest age.',
-                   'dropped and the remaining run age proportions were rescaled.'),
-             '')
-    
+# Original data year range
+runyr <- paste(min(params$tbl_data[,1]),'-',max(params$tbl_data[,1]))
+# Original number of years
+n.yrs <- length(params$tbl_data[,1])
+# Original Brood year range 
+byr <- ifelse(params$data != 'Escapement Only', 
+              paste(min(data_sr.0()$Yr),'-',max(data_sr.0()$Yr)),'NA')
+# Original n Brood year
+n.byrs <- ifelse(params$data != 'Escapement Only',length(data_sr.0()$Yr),'NA')
+# Trimmed n.years   
+rn.yrs <- input$sryears[2]-input$sryears[1]+1
+dif <- ifelse(params$data == 'Escapement Only',n.yrs != rn.yrs,n.byrs != rn.yrs)
+# Trimmed year range
+rbyr <- ifelse(dif,paste(input$sryears[1],'-',input$sryears[2]),'No data trimming')
+# Original Age range 
+obage <-ifelse(params$data =='Run',paste(min(o.age()),'-',max(o.age())),'NA')
+trimage <- params$data =='Run'& ((o.age[1]-input$rage[1])!=0|(o.age[2]-input$rage[2])!=0)
+# Trimmed Age
+r.age <-ifelse(params$data =='Run',ifelse(trimage,paste(input$rage[1],'-',input$rage[2]),
+                                          'No Age data trimming'),'NA')
+# Age Trimming method  
+pool  <- ifelse(trimage,
+                ifelse(input$combage,
+                       'combined to the next nearest age.',
+                       'dropped and the remaining run age proportions were rescaled.'),
+                'NA')
+
 Run <- paste('The brood table (Table 1) and spawner-recruit data were constructed from the input run and age table. The original run ages were trimmed from',o.age[1],'to',o.age[2],'to from',input$rage[1],'to',input$rage[2],'(Table 2). The run proportions of the trimmed ages were',pool)
 run <- ifelse(params$data =='Run',Run,'')
 brood <- paste0(length(data_sr.0()$Yr),'years, ranging from ',o.yrs)
@@ -84,41 +38,45 @@ tg <- ifelse(input$target=='md','Median Target','Mean Target')
 
 ```{r,modeldesciption, echo=FALSE,include=FALSE}
 # Add parameters for data and model descriptions--------------------------------
-  jpar <- params$JAGS
-  madd <- ifelse(params$add=='ar1','AR(1) error',ifelse(params$add=='kf','time-variant alpha',' '))
-  ss <- ifelse(SS(),'state-space','standard')
+jpar <- params$JAGS
+madd <- ifelse(params$add=='ar1','AR(1) error',ifelse(params$add=='kf','time-variant alpha',' '))
+ss <- ifelse(SS(),'state-space','standard')
 # Model priors 
-  change.prior <- paste('The default alpha and beta prior ranges were modified to', input$lnapha[1],'-',input$lnapha[2],'for ln.alpha and',input$beta[1],'-',input$beta[2],'for beta,respectively.')
-  cp <- ifelse(input$Priors,change.prior,'Default')
+change.prior <- paste('The default alpha and beta prior ranges were modified to', input$lnapha[1],'-',input$lnapha[2],'for ln.alpha and',input$beta[1],'-',input$beta[2],'for beta,respectively.')
+cp <- ifelse(input$Priors,change.prior,'Default')
 ```  
 
 ## Data and Model Configurations 
 **Data**  
-**File name:  ** `r params$file`  
+  **File name:  ** `r params$file`  
 **Data Type:  **  `r params$data`  
 **Year range:  ** `r yrange`    
 **Age range:  ** `r obage`   
 
-**Data Modification**  
-**Trimmed Age range:  ** `r rbage`   
-**Pooling Method: ** `r pool`  
+**Brood Data**
+  **Year range: **`r byr`  
 
-**Brood Year range: **`r byr`  
-**Trimmed Brood Year range: **`r rbyr`  
+**Data Modification**  
+  **Trimmed Year range: **`r rbyr`  
+**Trimmed Age range:  ** `r rbage`   
+**Age Pooling Method: ** `r pool`  
+
+
+
 
 **Model**  
-**SR Model:  ** `r input$Model`  
+  **SR Model:  ** `r input$Model`  
 **SR Model Type:  ** `r ss`  
 **SR Model addition:  ** `r madd`  
 
 **Model Configuration**  
-**Total Iteration:  ** `r jpar$n.iter`  
+  **Total Iteration:  ** `r jpar$n.iter`  
 **Burn-in:  ** `r jpar$n.burnin`  
 **Posterior:  ** `r jpar$n.iter-jpar$n.burnin`  
 **Thinning:  ** `r jpar$n.thin`  
 **Chains:  ** `r jpar$n.chains`  
 **Total Posterior Samples: ** `r jpar$n.sims`  
-**Change Default Piors:** `r cp`  
+**Change Default Priors:** `r cp`  
 
 **SR Target ** `r tg` 
 
@@ -292,4 +250,3 @@ kable(round(table[,1:3],0),caption = "Spawner-Rercuit data used for the analyses
 
 ```{r, child=if (input$Model=='Beverton-Holt') 'SR_Equations_BH.Rmd'}
 ```
-

@@ -1,17 +1,89 @@
----
-title: "Escapement goal analysis report"
-author:
-  - name:
-date: '`r format(Sys.time(), "%d %B, %Y")`'
-#output: officedown::rdocx_document
-output: word_document
-reference_docx: template.docx
+```{r,datadesciption, echo=FALSE,include=FALSE}
+# Original data year range
+  runyr <- paste(min(params$tbl_data[,1]),'-',max(params$tbl_data[,1]))
+# Original number of years
+  n.yrs <- length(params$tbl_data[,1])
+# Original Brood year range 
+  byr <- ifelse(params$data != 'Escapement Only', 
+                paste(min(data_sr.0()$Yr),'-',max(data_sr.0()$Yr)),'NA')
+# Original n Brood year
+  n.byrs <- ifelse(params$data != 'Escapement Only',length(data_sr.0()$Yr),'NA')
+  # Trimmed n.years   
+  rn.yrs <- input$sryears[2]-input$sryears[1]+1
+  dif <- ifelse(params$data == 'Escapement Only',n.yrs != rn.yrs,n.byrs != rn.yrs)
+# Trimmed year range
+  rbyr <- ifelse(dif,paste(input$sryears[1],'-',input$sryears[2]),'No data trimming')
+# Original Age range 
+  obage <-ifelse(params$data =='Run',paste(min(o.age()),'-',max(o.age())),'NA')
+  trimage <- params$data =='Run'& ((o.age[1]-input$rage[1])!=0|(o.age[2]-input$rage[2])!=0)
+# Trimmed Age
+  r.age <-ifelse(params$data =='Run',ifelse(trimage,paste(input$rage[1],'-',input$rage[2]),
+                                            'No Age data trimming'),'NA')
+# Age Trimming method  
+  pool  <- ifelse(trimage,
+            ifelse(input$combage,
+                   'combined to the next nearest age.',
+                   'dropped and the remaining run age proportions were rescaled.'),
+             'NA')
+    
+Run <- paste('The brood table (Table 1) and spawner-recruit data were constructed from the input run and age table. The original run ages were trimmed from',o.age[1],'to',o.age[2],'to from',input$rage[1],'to',input$rage[2],'(Table 2). The run proportions of the trimmed ages were',pool)
+run <- ifelse(params$data =='Run',Run,'')
+brood <- paste0(length(data_sr.0()$Yr),'years, ranging from ',o.yrs)
+spr <- ifelse(params$data =='Run','The constructed','The input')
+trim <- paste('In this model analysis, the original data were trimmed to',nyr,'years, ranging from',yrs,'.')
+yy <- ifelse(nyr !=length(data_sr.0()$Yr),trim,'')
+tg <- ifelse(input$target=='md','Median Target','Mean Target')
+```
 
-params:
-Tbl_sumpost: NA
-srplot: NA
 
----
+```{r,modeldesciption, echo=FALSE,include=FALSE}
+# Add parameters for data and model descriptions--------------------------------
+  jpar <- params$JAGS
+  madd <- ifelse(params$add=='ar1','AR(1) error',ifelse(params$add=='kf','time-variant alpha',' '))
+  ss <- ifelse(SS(),'state-space','standard')
+# Model priors 
+  change.prior <- paste('The default alpha and beta prior ranges were modified to', input$lnapha[1],'-',input$lnapha[2],'for ln.alpha and',input$beta[1],'-',input$beta[2],'for beta,respectively.')
+  cp <- ifelse(input$Priors,change.prior,'Default')
+```  
+
+## Data and Model Configurations 
+**Data**  
+**File name:  ** `r params$file`  
+**Data Type:  **  `r params$data`  
+**Year range:  ** `r yrange`    
+**Age range:  ** `r obage`   
+
+**Brood Data**
+**Year range: **`r byr`  
+
+**Data Modification**  
+**Trimmed Year range: **`r rbyr`  
+**Trimmed Age range:  ** `r rbage`   
+**Age Pooling Method: ** `r pool`  
+
+
+
+
+**Model**  
+**SR Model:  ** `r input$Model`  
+**SR Model Type:  ** `r ss`  
+**SR Model addition:  ** `r madd`  
+
+**Model Configuration**  
+**Total Iteration:  ** `r jpar$n.iter`  
+**Burn-in:  ** `r jpar$n.burnin`  
+**Posterior:  ** `r jpar$n.iter-jpar$n.burnin`  
+**Thinning:  ** `r jpar$n.thin`  
+**Chains:  ** `r jpar$n.chains`  
+**Total Posterior Samples: ** `r jpar$n.sims`  
+**Change Default Priors:** `r cp`  
+
+**SR Target ** `r tg` 
+
+## Data
+`r run` `r spr` spawner-recruit data consists of `r brood`. `r yy`
+
+
 
 ```{r,echo=FALSE,include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,comment=NULL, dev='png',fig.dim = c(9,6),dpi=600,message=FALSE,background=NULL)

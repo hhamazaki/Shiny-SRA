@@ -1,0 +1,308 @@
+---
+title: "Model Analysis Report"
+author:
+  - name: '`input$txt_title`'
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+
+output: 
+  word_document:
+    fig_caption: true
+    toc: true
+    number_sections: true
+#   mainfont: Times New Roman
+    reference_docx: template.docx
+params:
+  title: NA
+  texts: NA
+  file: NA
+  add: NA
+  data: NA
+  JAGS: NA
+  target: NA
+  tbl_data: NA
+  tbl_sum: NA
+  tbl_sumpost: NA
+  tbl_brood: NA
+  tbl_run: NA
+  plt_runesc: NA
+  plt_srt: NA
+  plt_SR: NA
+  plt_yield: NA
+  plt_lnRS: NA
+  plt_lnalphai: NA
+  plt_predict: NA
+  plt_residual: NA
+  plt_msy_prof: NA
+  plt_max_prof: NA
+---
+
+```{r,setup, echo=FALSE,include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  fig.cap = TRUE,
+  comment=NULL, dev='png',message=FALSE,background=NULL)
+```
+
+\newpage
+```{r,title, echo=FALSE,include=FALSE}
+  title <- paste(input$txt_title)
+  text <- paste(input$txt_free)
+```
+
+# Project Description 
+## Stock Name : `r params$title`
+ 
+## Project description: 
+`r params$texts`
+
+# Analysis Methods
+```{r,datadesciption, echo=FALSE,include=FALSE}
+# Original data year range
+  runyr <- paste(min(params$tbl_data[,1]),'-',max(params$tbl_data[,1]))
+# Original number of years
+  n.yrs <- length(params$tbl_data[,1])
+# Original Brood year range 
+  byr <- ifelse(params$data != 'Escapement Only', 
+                paste(min(data_sr.0()$Yr),'-',max(data_sr.0()$Yr)),'NA')
+# Original n Brood year
+  n.byrs <- ifelse(params$data != 'Escapement Only',length(data_sr.0()$Yr),'NA')
+  # Trimmed n.years   
+  rn.yrs <- input$sryears[2]-input$sryears[1]+1
+  dif <- ifelse(params$data == 'Escapement Only',n.yrs != rn.yrs,n.byrs != rn.yrs)
+# Trimmed year range
+  rbyr <- ifelse(dif,paste(input$sryears[1],'-',input$sryears[2]),'No data trimming')
+# Original Age range 
+  obage <-ifelse(params$data =='Run',paste(min(o.age()),'-',max(o.age())),'NA')
+  o.age <- c(min(o.age()),max(o.age()))
+  trimage <- ifelse(params$data=='Run'&((min(o.age())-input$rage[1])!=0|(max(o.age())-input$rage[2])!=0),TRUE,FALSE)
+    rbage <-ifelse(params$data =='Run',paste(input$rage[1],'-',input$rage[2]),'NA')
+# Trimmed Age
+  r.age <-ifelse(params$data=='Run',ifelse(trimage,paste(input$rage[1],'-',input$rage[2]),'No Age data trimming'),'NA')
+# Age Trimming method  
+  pool  <- ifelse(trimage,
+            ifelse(input$combage,
+                   'combined to the next nearest age.',
+                   'dropped and the remaining run age proportions were rescaled.'),
+             'NA')
+    
+Run <- paste('The brood table (Table 1) and spawner-recruit data were constructed from the input run and age table. The original run ages were trimmed from',o.age[1],'to',o.age[2],'to from',input$rage[1],'to',input$rage[2],'(Table 2). The run proportions of the trimmed ages were',pool)
+run <- ifelse(params$data =='Run','','')
+brood <- paste0(length(data_sr.0()$Yr),'years, ranging from ','')
+spr <- ifelse(params$data =='Run','The constructed','The input')
+trim <- paste('In this model analysis, the original data were trimmed to','','years, ranging from','','.')
+yy <- ifelse(rn.yrs  !=length(data_sr.0()$Yr),'','')
+tg <- ifelse(input$target=='md','Median Target','Mean Target')
+```
+
+```{r,modeldesciption, echo=FALSE,include=FALSE}
+# Add parameters for data and model descriptions--------------------------------
+  jpar <- params$JAGS
+  madd <- ifelse(params$add=='ar1','AR(1) error',ifelse(params$add=='kf','time-variant alpha',' '))
+  ss <- ifelse(SS(),'state-space','standard')
+# Model priors 
+  change.prior <- paste('The default alpha and beta prior ranges were modified to', input$lnapha[1],'-',input$lnapha[2],'for ln.alpha and',input$beta[1],'-',input$beta[2],'for beta,respectively.')
+  cp <- ifelse(input$Priors,change.prior,'Default')
+```  
+
+## Data and Model Configurations 
+**Data**  
+**File name:  ** `r params$file`  
+**Data Type:  **  `r params$data`  
+**Year range:  ** `r runyr`    
+**Age range:  ** `r obage`   
+
+**Brood Data**
+**Year range: **`r n.byrs`  
+
+**Data Modification**  
+**Trimmed Year range: **`r rbyr`  
+**Trimmed Age range:  ** `r r.age`   
+**Age Pooling Method: ** `r pool`  
+
+**Model**  
+**SR Model:  ** `r input$Model`  
+**SR Model Type:  ** `r ss`  
+**SR Model addition:  ** `r madd`  
+
+**Model Configuration**  
+**Total Iteration:  ** `r jpar$n.iter`  
+**Burn-in:  ** `r jpar$n.burnin`  
+**Posterior:  ** `r jpar$n.iter-jpar$n.burnin`  
+**Thinning:  ** `r jpar$n.thin`  
+**Chains:  ** `r jpar$n.chains`  
+**Total Posterior Samples: ** `r jpar$n.sims`  
+**Change Default Priors:** `r cp`  
+
+**SR Target ** `r tg` 
+
+## Data
+`r run` `r spr` spawner-recruit data consists of `r brood`. `r yy`
+
+## Model Run 
+
+A Bayesian `r madd` `r input$Model` `r ss` Spawner-Recruit model was run using JAGS. The model was run in `r jpar$n.chains` chains.  In each chain, a total of `r jpar$n.iter` iterations was run, of which the first `r jpar$n.burnin` were discarded (burn-in).  From the latter `r jpar$n.iter-jpar$n.burnin` iterations, posterior samples were taken at every `r jpar$n.thin`  iterations.  A total of `r jpar$n.sims` samples were saved for the posterior data analyses.   
+Uniform priors with default rages were used (see Method section Table 1). `r cp`  For each chain the starting value were randomly selected from the prior ranges.
+
+
+
+
+## Model Parameters 
+```{r}
+kable(jpar$summary,caption = "JAGS parameters summary.", digits = c(rep(3,8),0))
+```
+For each parameter, n.eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor (at convergence, Rhat=1).  
+
+DIC info (using the rule, pV = var(deviance)/2)
+pV = `r round(jpar$pV,2)` and DIC = `r round(jpar$DIC,2)` 
+DIC is an estimate of expected predictive error (lower deviance is better).
+
+
+## Biological Reference Parameters 
+From the posteriors key biological reference parameters were calculated (See Method section). 
+
+```{r }
+kable(params$tbl_sumpost,caption = paste0("Spawner Recruit model parameters summary.")) 
+```
+
+
+```{r,results='asis',eval = (input$Remove_out)}
+cat('## Outliers Removal')
+```
+```{r,results='asis',eval = (input$Remove_out)}
+total <- sum(Ref_data_sum()$n,na.rm= TRUE)
+sn <- Ref_data_sum()$n[dim(Ref_data_sum())[1]]
+cat('Out of the total',total,'posterior samples ',sn,'samples were used for the escapement goal analyses')
+kable(Ref_data_sum(),caption = paste0("Summary of posterior samples removed."))
+
+```
+
+\newpage
+# Figures 
+## Spawner and Recruit timeseries 
+
+```{r,echo=FALSE,fig.dim = c(16,8),fig.cap = paste0("Figure 1. Spawner(Escapement) and brood year recruit, and Recruit per Spawner (R/S) ")}
+# Run and Escapement time series plot 
+params$plt_srt+theme(text = element_text(family = "serif"))
+
+```
+
+```{r, results='asis', eval=(params$data=='Run')}
+cat('## Run and Escapement')
+```
+
+```{r,echo=FALSE,eval=(params$data=='Run'),fig.dim = c(16,8),fig.cap = paste0("Figure 1. Run and escapement")}
+# Run and Escapement time series plot 
+params$plt_run+theme(text = element_text(family = "serif"))
+```
+
+\newpage
+
+```{r, results='asis', eval=(input$SR_plt)}
+cat('## Spawner-Recruit Plot')
+```
+```{r,echo=FALSE,fig.dim = c(12,8),eval=(input$SR_plt),fig.cap = paste0("Spawner-recruit curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval.")}
+params$plt_SR
+```
+
+```{r, results='asis', eval=(input$YLD_plt)}
+cat('## Yield Plot')
+```
+```{r,echo=FALSE, eval=(input$YLD_plt),fig.dim = c(12,8),fig.cap = paste0("Yierld curve (sold line: median, dash mean).  Gray shade indicates ", input$CI,"% Bayesian ",input$Li," interval."),fig.id = "Spawner and Yield"}
+params$plt_yield
+```
+
+\newpage
+
+# Model Diagnoses 
+```{r, results='asis', eval=(input$lSR_plt)}
+cat('## ln(R/S) Plot')
+```
+```{r,echo=FALSE,eval=(input$lSR_plt),fig.dim = c(12,8),fig.cap = paste0("ln(R/S)-Spawner linear plot.  Gray shade and dash lines indicate 95% Bayesian credible and prediction interval.")}
+params$plt_lnRS
+```
+
+
+
+```{r, results='asis', eval=(input$Res_plt)}
+cat('## Prediction Plot')
+```
+```{r,echo=FALSE,eval=(input$Res_plt),fig.dim = c(16,8),fig.cap = paste0("Figure . Predicted and observd recruit.")}
+params$plt_predict
+```
+
+```{r, results='asis', eval=(input$Res_plt)}
+cat('## Residual Plot')
+```
+```{r,echo=FALSE,eval=(input$Res_plt),fig.dim = c(16,8),fig.cap = paste0("Figure . Residual plot."),fig.id = "Residual Plot"}
+params$plt_residual
+```
+
+
+```{r, results='asis', eval=(params$add=='kf')}
+cat('## Time variant alpha')
+```
+
+```{r,echo=FALSE,eval=(params$add=='kf'),fig.dim = c(18,8),fig.cap = paste0("Figure 8. Time variant alpha."),fig.id = "Time variant allpha plot"}
+params$plt_lnalphai
+```
+
+
+\newpage
+
+
+```{r, results='asis', eval= (input$MSY_prof)}
+#cat('\\newoage')
+cat('## MSY Profile')
+```
+```{r,echo=FALSE,eval = (input$MSY_prof),fig.dim = c(16,8),fig.cap = paste0("MSY Profile Analyses plot. The lines indicate the probability of a specified escapement producing yield greater than x percent of the MSY.")}
+params$plt_msy_prof
+```
+
+
+```{r, results='asis', eval=(input$MSR_prof)}
+cat('## RMAX Profile')
+```
+```{r,echo=FALSE,eval = (input$MSR_prof) ,fig.dim = c(18,8),fig.cap = paste0("RMAX Profile Analyses plot. The lines indicate the probability of a specified escapement producing recruit greater than x percent of the RMAX.")}
+params$plt_max_prof
+```
+
+
+```{r, results='asis', eval=(input$T_Yld_prof)}
+cat('## Target Yield Profile')
+```
+```{r,echo=FALSE,eval = (input$T_Yld_prof) ,fig.dim = c(18,8),fig.cap = paste0("Target Yield Profile Analyses plot. The line indicate probability of a specified escapement producing yield greater than the target yield.")}
+params$plt_max_prof
+```
+
+
+```{r, results='asis', eval=(input$T_Rec_prof)}
+cat('## Target Recruit Profile')
+```
+```{r,echo=FALSE,eval = (input$T_Rec_prof) ,fig.dim = c(18,8),fig.cap = paste0("Target Recruit Profile Analyses plot. The line indicates a specified escapement producing recruit greater than the target recruit.")}
+params$plt_max_prof
+```
+
+
+\newpage
+# Tables 
+
+## Spawner-Recruit Data 
+
+```{r,echo=FALSE, }
+table <- data_sr()
+names(table)[1:3] <- c('Year','Spawner','Recruit')
+kable(round(table[,1:3],0),caption = "Spawner-Rercuit data used for the analyses.")
+```
+
+```{r, child=if (params$data=='Run') 'run_table.Rmd'}
+```
+
+```{r, child=if (input$SREQ & input$Model=='Ricker') 'SR_Equations_Ricker.Rmd'}
+```
+
+```{r, child=if (input$SREQ) 'SR_Equations.Rmd'}
+```
+
+```{r, child=if (input$Model=='Beverton-Holt') 'SR_Equations_BH.Rmd'}
+```
+
