@@ -1,5 +1,5 @@
 ---
-title: "Model Analysis Report"
+title: "SR Model Analysis Report"
 author:
   - name: '`input$txt_title`'
 date: '`r format(Sys.time(), "%d %B, %Y")`'
@@ -75,7 +75,6 @@ knitr::opts_chunk$set(
   obage <-ifelse(params$data =='Run',paste(min(o.age()),'-',max(o.age())),'NA')
   o.age <- c(min(o.age()),max(o.age()))
   trimage <- ifelse(params$data=='Run'&((min(o.age())-input$rage[1])!=0|(max(o.age())-input$rage[2])!=0),TRUE,FALSE)
-    rbage <-ifelse(params$data =='Run',paste(input$rage[1],'-',input$rage[2]),'NA')
 # Trimmed Age
   r.age <-ifelse(params$data=='Run',ifelse(trimage,paste(input$rage[1],'-',input$rage[2]),'No Age data trimming'),'NA')
 # Age Trimming method  
@@ -84,7 +83,10 @@ knitr::opts_chunk$set(
                    'combined to the next nearest age.',
                    'dropped and the remaining run age proportions were rescaled.'),
              'NA')
-    
+
+rbage <-ifelse(params$data =='Run',paste(input$rage[1],'-',input$rage[2]),'NA')  
+
+
 Run <- paste('The brood table (Table 1) and spawner-recruit data were constructed from the input run and age table. The original run ages were trimmed from',o.age[1],'to',o.age[2],'to from',input$rage[1],'to',input$rage[2],'(Table 2). The run proportions of the trimmed ages were',pool)
 run <- ifelse(params$data =='Run','','')
 brood <- paste0(length(data_sr.0()$Yr),'years, ranging from ','')
@@ -97,71 +99,60 @@ tg <- ifelse(input$target=='md','Median Target','Mean Target')
 ```{r,modeldesciption, echo=FALSE,include=FALSE}
 # Add parameters for data and model descriptions--------------------------------
   jpar <- params$JAGS
-  madd <- ifelse(params$add=='ar1','AR(1) error',ifelse(params$add=='kf','time-variant alpha',' '))
-  ss <- ifelse(SS(),'state-space','standard')
+  madd <- ifelse(params$add=='ar1','AR(1) error',ifelse(params$add=='kf','time-variant alpha','None'))
+  ss <- ifelse(SS(),'state-space',ifelse(RE(),'Measurement Error','standard'))
+  
 # Model priors 
   change.prior <- paste('The default alpha and beta prior ranges were modified to', input$lnapha[1],'-',input$lnapha[2],'for ln.alpha and',input$beta[1],'-',input$beta[2],'for beta,respectively.')
   cp <- ifelse(input$Priors,change.prior,'Default')
 ```  
 
 ## Data and Model Configurations 
-**Data**  
-**File name:  ** `r params$file`  
-**Data Type:  **  `r params$data`  
-**Year range:  ** `r runyr`    
-**Age range:  ** `r obage`   
 
-**Brood Data**
-**Year range: **`r n.byrs`  
+**Input Data**  
+File name: `r params$file`  
+Data Type: `r params$data`   
+Year range:  `r runyr`   
+Brood Year range: `r byr`  
+Age range:   `r obage`   
 
 **Data Modification**  
-**Trimmed Year range: **`r rbyr`  
-**Trimmed Age range:  ** `r r.age`   
-**Age Pooling Method: ** `r pool`  
+Trimmed Brood Year range: `r rbyr`  
+Trimmed Age range: `r r.age`   
+Age Pooling Method: `r pool`  
 
 **Model**  
-**SR Model:  ** `r input$Model`  
-**SR Model Type:  ** `r ss`  
-**SR Model addition:  ** `r madd`  
+SR Model:  `r input$Model`  
+SR Model Type: `r ss`  
+SR Model addition: `r madd`  
 
 **Model Configuration**  
-**Total Iteration:  ** `r jpar$n.iter`  
-**Burn-in:  ** `r jpar$n.burnin`  
-**Posterior:  ** `r jpar$n.iter-jpar$n.burnin`  
-**Thinning:  ** `r jpar$n.thin`  
-**Chains:  ** `r jpar$n.chains`  
-**Total Posterior Samples: ** `r jpar$n.sims`  
-**Change Default Priors:** `r cp`  
+Total Iteration:   `r jpar$n.iter`  
+Burn-in:   `r jpar$n.burnin`  
+Posterior: `r jpar$n.iter-jpar$n.burnin`  
+Thinning:  `r jpar$n.thin`  
+Chains:   `r jpar$n.chains`  
+Total Posterior Samples:  `r jpar$n.sims`  
+Change Default Priors: `r cp`  
 
 **SR Target ** `r tg` 
 
-## Data
-`r run` `r spr` spawner-recruit data consists of `r brood`. `r yy`
-
-## Model Run 
-
-A Bayesian `r madd` `r input$Model` `r ss` Spawner-Recruit model was run using JAGS. The model was run in `r jpar$n.chains` chains.  In each chain, a total of `r jpar$n.iter` iterations was run, of which the first `r jpar$n.burnin` were discarded (burn-in).  From the latter `r jpar$n.iter-jpar$n.burnin` iterations, posterior samples were taken at every `r jpar$n.thin`  iterations.  A total of `r jpar$n.sims` samples were saved for the posterior data analyses.   
-Uniform priors with default rages were used (see Method section Table 1). `r cp`  For each chain the starting value were randomly selected from the prior ranges.
-
-
-
 
 ## Model Parameters 
+
 ```{r}
 kable(jpar$summary,caption = "JAGS parameters summary.", digits = c(rep(3,8),0))
 ```
 For each parameter, n.eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor (at convergence, Rhat=1).  
-
 DIC info (using the rule, pV = var(deviance)/2)
 pV = `r round(jpar$pV,2)` and DIC = `r round(jpar$DIC,2)` 
 DIC is an estimate of expected predictive error (lower deviance is better).
 
 
 ## Biological Reference Parameters 
-From the posteriors key biological reference parameters were calculated (See Method section). 
 
 ```{r }
-kable(params$tbl_sumpost,caption = paste0("Spawner Recruit model parameters summary.")) 
+kable(params$tbl_sumpost,caption = paste0("Spawner Recruit model parameters summary."),digits = c(rep(3,4),0,0,3,0,0),row.names = FALSE) 
 ```
 
 
@@ -284,19 +275,6 @@ params$plt_max_prof
 
 
 \newpage
-# Tables 
-
-## Spawner-Recruit Data 
-
-```{r,echo=FALSE, }
-table <- data_sr()
-names(table)[1:3] <- c('Year','Spawner','Recruit')
-kable(round(table[,1:3],0),caption = "Spawner-Rercuit data used for the analyses.")
-```
-
-```{r, child=if (params$data=='Run') 'run_table.Rmd'}
-```
-
 ```{r, child=if (input$SREQ & input$Model=='Ricker') 'SR_Equations_Ricker.Rmd'}
 ```
 

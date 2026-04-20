@@ -166,14 +166,14 @@ unit <- reactive({
 ## Tbl_data: input data Output ----------------------------------------
  output$Tbl_data <- DT::renderDT(data(),rownames = FALSE)
  
-
 #'==============================================================================
 # 2. Data Modification -----
-#'   Create Brood Table 
+#'   Create a Brood Table 
 #'==============================================================================
 o.age <- reactive({if(input$dataType== "Run"){
   age.out(data())}
 })
+
 #'------------------------------------------------------------------------------
 #'  Create Run Data Modifying UI 
 #'------------------------------------------------------------------------------
@@ -581,7 +581,7 @@ hyper <- reactive({
 
 
 ## Bayesedata --- Create data set for Bayesian modeling -------------------------
-Bayesdata <- reactive({3
+Bayesdata <- reactive({
 model <- list(
   rk = ifelse(input$Model=='Ricker',1,0),
   bh = ifelse(input$Model=='Beverton-Holt',1,0),
@@ -677,12 +677,13 @@ output$download.mc <- downloadHandler(
           }
   )
 
+
 output$download.JAG <- downloadHandler(
   filename = function(){
-    paste0('MCMCdata_', model.name(),'_', Sys.Date(),'.txt')  
+    paste0('MCMCdata_', model.name(),'_', Sys.Date(),'.rds')  
         },
     content = function(file) {
-       dput(sim(), file)  
+       saveRDS(list(input=data(),run=tbl_run(),brood=tbl_brood(),JAGS=sim()), file)  
           }
   )
 
@@ -2511,6 +2512,9 @@ output$downloadTable <- downloadHandler(
       out.excel$brood <- tbl_brood()$brood
     }
     if(SS()){out.excel$Runcv <- tbl_run.cv()} 
+    out.excel$JAGdata <- cbind(rownames(do.call(rbind,lapply(Bayesdata(),`length<-`,max(lengths(Bayesdata()))))), 
+                               do.call(rbind,lapply(Bayesdata(),`length<-`,max(lengths(Bayesdata())))))  
+    out.excel$MCMC  <- MCMC()
     out.excel$SRdata <- data_sr.0()
     out.excel$SRpred <- SRp()
     out.excel$Summary <- tbl_sumpost()

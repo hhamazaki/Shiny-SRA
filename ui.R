@@ -199,8 +199,8 @@ checkboxInput(inputId="Priors", "Modify Priors", FALSE),
       sliderInput(inputId="lnalpha","lnalpha", value=c(-1,4),min=-5,max=10,step=0.1),
       sliderInput(inputId="beta","beta", value=c(-1,5),min=-5,max=10,step=0.1)
     ),
-    p(strong('Download MCMC')),
-    downloadButton("download.mc","Download")                    
+    p(strong('Download JAGS')),
+    downloadButton("download.JAG","Download")                    
    ), # End conditional panel: false
 
  ),  # End conditionalPanel for Bayes Model 

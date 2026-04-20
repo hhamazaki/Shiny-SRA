@@ -3,40 +3,97 @@
 ## Spawner Recruit Model
 The spawner-recruit data are fitted to the **Ricker (1957)** model. 
 
-$$R = \alpha Se^{-\beta S}e^{\varepsilon}$$
+$$R_{y} = \alpha S_{y}e^{-\beta S_{y}}e^{\varepsilon_{}}$$
 **Log-linear form**
-$$R = ln.\alpha -\beta S+ln(S) +\varepsilon $$
-where $ln.\alpha = ln(\alpha)$, $s_{y} = S_{y}\cdot{10}^{-d}$ and $d = Int(log(\bar{S}))$.   
+$$R_{y}= ln.\alpha -\beta S_{y}+ln(S_{y}) +\varepsilon_{iid} $$
+where 
+$ln.\alpha = ln(\alpha)$, $s_{y} = S_{y}\cdot{10}^{-d}$ and $d = Int(log(\bar{S}))$.   
 
 where 
 $$\varepsilon_{iid} \sim N(0,\sigma ^{2})$$
+
+**AR(1) model option** 
+AR(1) model (First-order auto-regressive model) assumes that error is serially correlated or that the value of residual at time *y* is a linear function of the residual at time *y-1*.  
+
+This is modeled as 
+$$R_{y}= ln.\alpha -\beta S_{y}+ln(S_{y}) +\varepsilon_{y} $$
+
+
+$${\varepsilon_{y}}=\phi {\varepsilon_{y-1}}+{\nu_{iid}}$$
+
+where 
+
+$${\nu_{iid}} \sim N(0,{\sigma _{\nu }}^{2})$$
+
+
+**Time variant alpha model **  
+Time variant alpha model assumes that alpha takes random walk process. 
+
+$$R_{y}= ln.\alpha_{y} -\beta S_{y}+ln(S_{y}) +\varepsilon_{iid} $$
+where
+
+$${ln.\alpha_{y}}={ln.\alpha_{y-1}}+{\omega_{iid}}$$
+$${\omega_{iid}} \sim N(0,{\sigma _{\omega }}^{2})$$
+
 ## Model data fitting
 
+**Standard Model**
 In data fitting of the model, recruit ($R_{y}$) derived from the y-th brood year spawner ($S_{y}$) is assumed to be log-normally distributed with mean $\mu_{y}$ and variance ${\sigma}^{2}$
- 
-$$ln(R_{y}) \sim N(\mu_{y},{\sigma}^{2})$$
-where $\mu_{y}$ is a log-linearlized Ricker spawner-recruit model 
 
+**Standard and Time variant alpha models**
+$$ln(R_{y}) \sim N(\mu_{y},{\sigma}^{2})$$
+**AR1 model**
+$$ln(R_{y}) \sim N(\mu_{y},{\sigma _{\nu }}^{2})$$
+where $\mu_{y}$ is a log- linearised Ricker spawner-recruit model 
+
+**Standard Model**
 $$\mu_{y} = ln.\alpha -\beta s_{y}+ln(S_{y})$$
+**AR1 Error Model**
+$$\mu_{y} = ln.\alpha -\beta s_{y}+ln(S_{y})+\phi {\varepsilon_{y-1}}$$
+**Time variant alpha Model**
+$$\mu_{y} = ln.\alpha_{} -\beta s_{y}+ln(S_{y})$$
 
 In the above equations, the conversion from $S$ to $s$ makes $\beta$ to a range similar to the range of $ln.\alpha$.  This is numerically more efficient to estimate parameters. 
 
+## Mean Biass Correction
+Under the assumption of lognormal distribution of recruit (R), 
+$$R \sim LN(\mu,{\sigma}^{2})$$
+
+or
+$$ln(R) \sim N(\mu,{\sigma}^{2})$$
+, $\mu$ is an expected **Median R**  
+Expected **Mean R** is  
+
+$$E(R) = exp\left(\mu + \frac{{\sigma}^{2}}{2}\right)$$
+$$E(R) = exp\left(\mu + \frac{{\sigma_{\nu}}^{2}}{2(1-{\phi}^{2})}\right)$$
+
+
+
+**statistical bias corrected alpha parameters**  
+$$ln.\alpha_{c} = ln.\alpha + \frac{{\sigma}^{2}}{2}$$
+
+$$ln.\alpha_{c} = ln.\alpha + \frac{{\sigma_{\nu}}^{2}}{2(1-\phi^{2})}$$
 
 
 ## Biological Reference Parameters
-Following biological reference parameters are generated from the model 
-* Seq   Spawner abundance expected to produce the same number of recruits
-* Smsy  Spawner abundance expected to produce the maximum number of yield (MSY) 
-* Umsy  Exploitation rate expected to produce MSY
-* Smax  Spawner abundance expected to produce the maximum number of recruits.  
+Following biological reference parameters are generated from the model   
+* Seq   Spawner abundance expected to produce the same number of recruits  
+* Smsy  Spawner abundance expected to produce the maximum number of yield (MSY)   
+* Umsy  Exploitation rate expected to produce MSY  
+* Smax  Spawner abundance expected to produce the maximum number of recruits.    
 * Sgen  Spawner abundance expected to produce recruitment size of Smsy. Sgen is a conservation benchmark used by Department of Ocean Canada (DFO)
 
+Seq  
 $$S_{eq} =  \frac{ln.\alpha}{\beta}$$
-Smsy and Umsy of the Riker model is an approximate where 0 < $ln(\alpha)$ < 3  (Hilbon 1985) 
-$$S_{msy} =  S_{eq}(0.5-0.07ln.\alpha)$$
-$$U_{msy} =  ln.\alpha(0.5-0.07ln.\alpha)$$
+Smsy and Umsy of the Ricker model is an approximate 
+
+where 0 < $ln(\alpha)$ < 3  (Hilbon 1985) 
+
+$$S_{msy} =  \frac{1-W(e^{1-ln.\alpha})}{\beta}$$
+$$U_{msy} =  1-W(e^{1-ln.\alpha})$$
 $$S_{max} =  \frac{1}{\beta}$$
-**Note** 
+**Note**
+For mean biased correction replace $ln.\alpha$ with $ln.\alpha_{c}$ 
 Smax does not **practically** exist when ln.alpha or ln.alpha.c is less than 1.0. This is because the Smax (spawner size that produces RMAX) will be **greater** than Seq 
 
 **Sgen** is approximated by numerically solving $S$ in following equation

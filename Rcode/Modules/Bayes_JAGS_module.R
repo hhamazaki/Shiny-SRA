@@ -295,7 +295,8 @@ jag.model.SR.SS <-function() {
     R <- S*exp(lnalpha-beta*s)
     return(R)
   }
-## BR.CR Ricker Biological Refrence points ----
+
+## BR.CR Ricker Biological Reference points ----
   BR.CR <- function(lnalpha,beta,d){
     get_Sgen.bc <- function(m){
       fun_Sgen.bc <- function(S,m) {S*exp(m[1])*exp(-m[2]*S/(10^d)) - m[3]}
@@ -314,6 +315,7 @@ jag.model.SR.SS <-function() {
     out <- data.frame(Seq,Smsy,Umsy,Smax,Sgen)
     return(out)
   }   
+
 ## SR.BH Beverton-Holt Model  -----  
   SR.BH <- function(lnalpha,beta,S,d){
     s <- S/(10^d)

@@ -3,16 +3,22 @@ Bayesian Analyses estimates **distribution** of model parameters and biological 
 
 #### Parameters based on expected mean recruit 
 Under the assumption of lognormal distribution of recruit (R), $`R \sim LN(ln(\mu),{\sigma}^{2})$ or $ln(`R) \sim N(\mu,{\sigma}^{2})$, $\mu$ is an expected **Median R**, and expected **Mean R** is $\mu = exp(ln(\mu) + {\sigma}^{2}/2)$.
-**statistical bias corrected alpha parameters**  $ln(\alpha.c) = ln(\alpha) + {\sigma}^{2}/2$ and $\alpha.c = \alpha e^{{\sigma}^{2}/2}$
+
+**statistical bias corrected alpha parameters**  
+
+$$ln.\alpha_{c} = ln.\alpha + \frac{{\sigma}^{2}}{2}$$
+**AR 1 model statistical bias corrected alpha parameters**  
+$$ln.\alpha_{c} = ln.\alpha + \frac{{\sigma}^{2}}{2(1-{\phi}^{2})}$$
+
 
 
 **Ricker model**
-$$Mdian(`R) = \alpha Se^{-\beta S}$$
-$$Mean(`R) = \alpha.c Se^{-\beta S}$$
+$$Med(R) = \alpha Se^{-\beta S}$$
+$$E(R) = \alpha_{c} Se^{-\beta S}$$
 
 **Beverton-Holt model** 
-$$Median(`R) = \frac{\alpha S}{1+\beta S}$$
-$$Mean(`R) = \frac{\alpha.c S}{1+\beta S}$$
+$$Med(R) = \frac{\alpha S}{1+\beta S}$$
+$$Med(R) = \frac{\alpha_{c} S}{1+\beta S}$$
 
 
 #### Credible and Prediction Interval 
@@ -21,19 +27,19 @@ On the SR and Yield panel, user can choose to show **credible** of **Prediction*
 Credible Interval is a summary of predicted $R$ from posterior samples parameters (i) at given $S$.  
 
 Ricker Model 
-$$R_{i}^{'}=e^{ln(\alpha_{i}^{'} )-\beta_{i}^{'} S +ln(S)}$$
+$$R_{i}^{'}=e^{ln.\alpha_{i}^{'}-\beta_{i}^{'} S +ln(S)}$$
 
-Beverton_Holt Model
+Beverton-Holt Model
 
-$$R_{i}^{'}=e^{ln(\alpha_{i}^{'} )-ln(1+\beta_{i}^{'} S) +ln(S)}$$
+$$R_{i}^{'}=e^{ln.\alpha_{i}^{'} -ln(1+\beta_{i}^{'} S) +ln(S)}$$
 
 
-Prediction Interval is a summary of $R$ predicted from posterior samples parameters (i) **with error** at given $S$.  
+Prediction Interval is a summary of $R$ predicted from posterior samples parameters (i) plus sample error at given $S$.  
 
 Ricker Model
 $$R_{i}^{'}=e^{ln(\alpha_{i}^{'} )-\beta_{i}^{'} S +ln(S) +\varepsilon_{i}^{'}}$$
 
-Beverton_Holt Model
+Beverton-Holt Model
 
 $$R_{i}^{'}=e^{ln(\alpha_{i}^{'} )-ln(1+\beta_{i}^{'} S)+ln(S)+\varepsilon_{i}^{'}}$$
 
