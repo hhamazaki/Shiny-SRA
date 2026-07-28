@@ -112,6 +112,8 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
     for(y in 1:nyrs){
      lnalphai[y] <- lnalpha+cw[y] 
     }
+# output beta     
+    b <- beta/(10^d)
   }
 
 
@@ -160,6 +162,8 @@ BayesInputServer <- function(id,Bayesdata,Bayesmodel){
     for(y in 1:nyrs){
      lnalphai[y] <- lnalpha+cw[y] 
     }
+    # output beta     
+    b <- beta/(10^d)
   }
 
 #'------------------------------------------------------------------------------
@@ -283,6 +287,8 @@ jag.model.SR.SS <-function() {
     e0 ~ dnorm(0,25)
 #    mk ~ dunif(1,lage-1)
 #    me ~ dunif(fage,lage)
+    # output beta     
+    b <- beta/(10^d)
  }  # End SS.CR model 
 
 
@@ -349,7 +355,7 @@ jag.model.SR.SS <-function() {
 #'==============================================================================  
 ## model_select: Select SR models ------------------------------------------
 model_select <- function(smodel,add,ss=FALSE,re=FALSE){
-base.par <- c('lnalpha','beta','sigma')
+base.par <- c('lnalpha','beta','sigma','b')
 #' State-Space model vs standard option
     if(isTRUE(ss)){
        jagmodel <- jag.model.SR.SS

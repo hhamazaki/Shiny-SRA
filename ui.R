@@ -6,7 +6,6 @@
 #'  Description
 #'  This program is conducts Escapement Goal Analyses using Bayesian SR models
 #'   
-#'
 #'==============================================================================
 # Include required packages 
 library(shiny)

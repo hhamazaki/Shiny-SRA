@@ -23,5 +23,6 @@ Percentile analysis method is first developed by Bue and Hasbrouck (unpublished)
   * High measurement error (aerial or foot surveys)
   * Moderate to high assumed average harvest rate (> 40%)  
 
-* **High harvest rate (> 40%) case: Suggested Goal Range: 25th - >75th percentile**
+* **High harvest rate (> 40%) case: Suggested Goal Range: 25th - 75th percentile**
+  * This is not a recommended goal. 
  

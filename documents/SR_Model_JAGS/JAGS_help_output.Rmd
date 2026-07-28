@@ -58,8 +58,8 @@ The model provides two management target options: Median and Mean target. Major 
 
 * **Statistical Explanation**
 
-Normally, the **mean** is considered as the **expected value** that is the **unbiased** center of a population. When the population is normally distributed, the mean is the center (i.e., **Mean = Median**). However, when the population is **NOT** normally distributed, the mean is not always the center of the population. 
-Traditionally, the Ricker and the Beverton-Holt spawner-recruit model assumes that On the other hand, the spawner-recruit model assumes that the recruit is log-normally distributed ($R \sim LN(ln(\mu),{\sigma}^{2})$ or $ln(`R) \sim N(\mu,{\sigma}^{2})$).  In this case, the $\mu$ derived from the model is **NOT E(`R)**, but the **Median Recruit** (median(`R) = $\mu$). The expected recruit(E(`R)),the **Mean Recruit**,is $mean(`R) = exp(ln(\mu) + {\sigma}^{2}/2)$.  This is called as the **bias of an estimator**.  The **bias corrected** spwaner-recruit model replaces **alpha** with **alpha.c** (See SR model section for details).  This **statistical bias correction** does NOT indicate that the bias uncorrected is wrong. Both bias corrected and uncorrected models are correct, just expected values are different.
+Normally, the **mean** is considered as the **expected value** that is the **unbiased** center of a population. When the population is normally distributed, the mean is the center (i.e., **Mean = Median**). However, when the population is **NOT** normally distributed, the mean is not always the center of the population. Traditionally, the Ricker and the Beverton-Holt spawner-recruit model assume that recruitment is **log-normally distributed**. ($R \sim LN(\mu,{\sigma}^{2})$ or $ln(R) \sim N(\mu,{\sigma}^{2})$).  
+In this case, the exp($\mu$) derived from the model is not Mean (E(R)) but Median (Med(R)). The expected mean recruit (E(R)) is  $E(R) = exp(\mu) + {\sigma}^{2}/2)$.  This is called as the **bias of an estimator**.  The **bias corrected** spawner-recruit model replaces **alpha** with **alpha.c** (See SR model section for details).  This **statistical bias correction** does NOT indicate using bias uncorrected is wrong. Both bias corrected and uncorrected models are correct, just expected values are different.
 
 
 * **Managerial Explanation**
@@ -76,13 +76,13 @@ Simultaneously however, this have many consequences.  Model expected R,productiv
 | beta    |   |   beta  | | beta    | | Same |
 | Seq  |   |Seq  |  | Seq.c  |  | Seq < Seq.c |
 | Smsy  |   |Smsy  |  | Smsy.c  |  | Smsy < Smsy.c |
+| Umsy  |   |Umsy  |  | Umsy.c  |  | Umsy < Umsy.c |
 | Smax    |   |   Smax  | | Smax    | | Same | 
 | Sgen  |   |Sgen  |  | Sgen.c  |  | Sgen > Sgen.c |
 |_________|_|________________|_|________________________|_|________________________|
 ---
 
-Perhaps the biggest difference is a probability of achieving target yield. At any given spawner (escapement) size, the probability of recruit/yield achieving above expected mean is under 50%. For instance, let's consider that expected recruitment at given escapement is 100 for median (bias uncorrected) and 130 for mean (bias corrected), and we achieved the escapement goal for 6 years and recruits were 90, 80, 120, 100, 360, and 70.  The median and mean recruit over 6 years were 95 and 137.  Thus, the mean target goal was achieved but not the median goal was not achieved.  However, the number of years recruit is above the target is 1 year for the mean target and 3 years for the median target. 
-
+Perhaps the biggest difference is a probability of achieving target yield. At any given spawner (escapement) size, the probability of recruit/yield achieving above expected mean is under 50%, or that the expected mean yield is achieved by occasional high recruit events.  Using bias corrected target could lead to overfishing when management is based on harvest rate.
 
 
 

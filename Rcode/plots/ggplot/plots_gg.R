@@ -715,7 +715,7 @@ if(isTRUE(input$show.points)) {
       geom_line(data = df, aes(x = x, y = maxR*y/max(y)), color = okabe[4]) +
       geom_polygon(data = df, aes(x = x, y = maxR*y/max(y)), fill = okabe[4], alpha = 0.2) +
       geom_vline(data = legend_data[grepl("Smax", legend_data$label),], 
-                 aes(xintercept = x,linetype = label),color=4,key_glyph='path') +
+                 aes(xintercept = x,linetype = label),color=okabe[4],key_glyph='path') +
       scale_linetype_manual(values = setNames(legend_data$linetype, legend_data$label))+
       guides(orientation ="horizontal")  
   }
@@ -865,15 +865,17 @@ plt_kobe <- reactive({
     p1 <- ggplot()+
       # Add shades
       annotate("rect", xmin = Smsy$x , xmax = Inf, ymin = 0, ymax = Umsy$x, 
-               fill = okabe[3], alpha = 0.2) +
+               fill = okabe[3], alpha = 0.4) +
       annotate("rect", xmin = 0 , xmax = Smsy$x, ymin = Umsy$x, ymax = 1.0, 
-               fill = okabe[6], alpha = 0.2) +
+               fill = okabe[6], alpha = 0.4) +
       # Add shades
       annotate("rect", xmin = Smsy$x , xmax = Inf, ymin = Umsy$x, ymax = 1.0, 
-               fill = okabe[1], alpha = 0.2) +
+               fill = okabe[1], alpha = 0.4) +
       annotate("rect", xmin = 0 , xmax = Smsy$x, ymin = 0, ymax = Umsy$x, 
-               fill = okabe[4], alpha = 0.2) +
-            geom_point(data=x,aes(x=S,y=ex,color = as.factor(dyear)), size = 3)+
+               fill = okabe[4], alpha = 0.4) +
+      geom_point(data=x,aes(x=S,y=ex,color = as.factor(dyear)), size = 3)+
+      geom_path(data=x,aes(x=S,y=ex),arrow = arrow(angle=15, type = "closed"),
+                linewidth=0.25)+
       scale_color_manual(values = colp,labels=labels)+
       geom_text_repel(data = x, aes(x = S, y = ex, label = as.character(Yr)), 
                       size = 5, nudge_x = 0.1, nudge_y = 0.01, max.overlaps = Inf)+

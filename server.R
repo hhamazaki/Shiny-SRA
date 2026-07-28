@@ -48,7 +48,7 @@ source("Rcode/plots/ggplot/plots_gg.R", local = TRUE)
 }
 
 #'-------------------------------------------------------------------------------
-# Tab Control ---- 
+# 1.0 Tab Control ---- 
 #'-------------------------------------------------------------------------------
 observe({
   if(input$dataType=="Run") {
@@ -98,16 +98,14 @@ observe({
 # Panel 1  Data Input and Submit ----
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #'==============================================================================
-# 1. Data input ----
+## 1. Data input ----
 #' final input data object is data()
 #'==============================================================================
 #' User chooses dataType first (input$DataType)
-##  Input data file reading module ---- 
+### Input data file reading module ---- 
 data.get <-  dataInputServer("datain")
 data.in <- reactive(data.get$df())
 filename <- reactive(ifelse(input$Sample,'Sample File',data.get$fn()))
-
-##  check input file has errors ------
 observe({
       if(datacheck(data.in())>0){
       showModal(modalDialog(
@@ -123,11 +121,8 @@ observe({
         footer = NULL
       ))}
     })
-
-
-## data() input data ---- 
+#' Input sample data data() -----------------------------------------------------
 data <- reactive({
-#' In put sample data ----------------------------------------------------------
   if(input$Sample){
 #'Run data 
   if(input$dataType== "Run"){
@@ -163,21 +158,19 @@ unit <- reactive({
     return(u)
      })
 
-## Tbl_data: input data Output ----------------------------------------
+### Tbl_data: input data Output ----------------------------------------
  output$Tbl_data <- DT::renderDT(data(),rownames = FALSE)
  
 #'==============================================================================
-# 2. Data Modification -----
+## 2. Run Data Modification -----
 #'   Create a Brood Table 
 #'==============================================================================
-o.age <- reactive({if(input$dataType== "Run"){
-  age.out(data())}
-})
-
 #'------------------------------------------------------------------------------
-#'  Create Run Data Modifying UI 
+### 2.1 Create Run Age data  ----
 #'------------------------------------------------------------------------------
-##### UI agerange: Select Age range  -------------------------------------------
+#' original age renage 
+o.age <- reactive({if(input$dataType== "Run"){age.out(data())} })
+#' UI agerange: Select Age range  -------------------------------------------
 output$agerange <- renderUI({
     if(input$dataType== "Run"){
      age <-  age.out(data())
@@ -188,8 +181,7 @@ output$agerange <- renderUI({
         min = fage, max = lage, value = c(fage, lage),step=1,sep = "")
      }
     })
-
-##### UI agecomb  Set Age combining method (pooling vs. omitting) --------------
+#' UI agecomb  Set Age combining method (pooling vs. omitting) --------------
 output$agecomb <- renderUI({
     if(input$dataType== "Run" & (!is.null(input$rage[1]))){
       #  Slider input UI 
@@ -198,10 +190,9 @@ output$agecomb <- renderUI({
         } 
   })
 
-#'------------------------------------------------------------------------------
-#'  Data modifying assembly:  In Data_Assembly.R
-#'------------------------------------------------------------------------------
-#' Create Escapement, Run, Run by age proportion table 
+
+
+#### Tbl_data.run ----- run table ----------------------------------------
 tbl_run <-reactive({
      if(input$dataType== "Run"){
       agedata <- make.age(data(),input$rage[1], input$rage[2],input$combage)
@@ -211,7 +202,12 @@ tbl_run <-reactive({
      }
     })
 
+output$Tbl_data.run <- DT::renderDT(round(tbl_run(),2),rownames = FALSE) 
 
+#'-------------------------------------------------------------------------
+### 2.2 Run CV construction -----------------------------------------
+#'-------------------------------------------------------------------------
+#' tbl_run.cv ---- Add CV -----------------------------------------
 #' Create CV data table when CV columns  exist  
 tbl_run.cv <-  reactive({
 # Check if all cv columns exist 
@@ -221,6 +217,7 @@ tbl_run.cv <-  reactive({
     run_cv(data())}
      }
     })   
+
 # Create SR data with ci
 data_sr.ci <- reactive({
     if(!is.null(tbl_run.cv())){
@@ -228,6 +225,9 @@ data_sr.ci <- reactive({
     }
   })
 
+#'-------------------------------------------------------------------------
+### 2.3 Brood Table construction -----------------------------------------
+#'-------------------------------------------------------------------------
 # create brood table
 tbl_brood <-  reactive({
      if(input$dataType== "Run"){
@@ -246,14 +246,11 @@ tbl_brood.p <- reactive({
     }
    })
 
-##### Tbl_data.run ----- show run table ----------------------------------------
-output$Tbl_data.run <- DT::renderDT(round(tbl_run(),2),rownames = FALSE) 
-
-
 ##### Tbl_data.brood ----- show brood table ------------------------------------
 output$Tbl_data.brood <- DT::renderDT(round(tbl_brood()$brood,0),rownames = FALSE) 
+
 #'==============================================================================
-# 3. Create SR or data ---- 
+## 3. Create SR data ---- 
 # Select analysis year range 
 # This create final data data_sr or data_esc (Escapement only data)
 #'==============================================================================
@@ -282,7 +279,7 @@ data_sr.0 <- reactive({
     return(x)   
   })
 
-### data_esc.0 Original Escapement Only data   -------------------------------  
+#' data_esc.0 Original Escapement Only data   -------------------------------  
  data_esc.0 <- reactive({
    if(input$dataType== "Escapement Only"){
       x <- data()[,c(1:2)]
@@ -291,7 +288,7 @@ data_sr.0 <- reactive({
   })  
 
 
-#### UI yrange UI output to determine data year range --------------------------
+#' UI yrange UI output to determine data year range --------------------------
 output$yrange <- renderUI({
   if(input$dataType== "Escapement Only"){
     name <- 'Calendar'
@@ -312,7 +309,7 @@ output$yrange <- renderUI({
 ### data_sr --- final dataset used for SR analyses --------------------
   data_sr <- reactive({cut.data(data_sr.0(),input$sryears) })
 
-### Reactive ss.data --- final dataset used for percentile risk ----------------
+#' Reactive ss.data --- final dataset used for percentile risk ----------------
 ss.year <- reactive({ 
   min <- input$sryears[1]
   max <- input$sryears[2]+input$rage[2]
@@ -449,7 +446,7 @@ output$Plt_risk2 <- renderPlot({plt_risk2()})
 
 
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#Panel 2: Bayesian Model:  Create JAG data and model-----   
+#Panel 3: Bayesian Model:  Create JAG data and model-----   
 #'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #'==============================================================================
 # 1. Model Selection -----   
@@ -1662,12 +1659,6 @@ output$crg = renderUI({
   v <- numinput(data()[,3],0.25)/u
   numericInput("rg", paste("Min Target Recruit",mult), value=input$r1,min=0, step=v[2])
 })
-
-
-
-#'-------------------------------------------------------------------------------
-## plt_cg_prof: Plot  MSY and Rmax prof at given escapement---- 
-#'-------------------------------------------------------------------------------
 
 
 #'-------------------------------------------------------------------------------

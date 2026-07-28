@@ -5,7 +5,6 @@ The Escapement Only Analyses Methods are based on the assumptions that **a salmo
 To meet this assumption escapement only data should have following qualities: 
 * Data are sufficiently long (e.g., several generations of salmon have returned).
 * Escapement data are accurate with low survey errors. 
-* Escapement has a good contrast (e.g. >4)
 * Escapement has no discernible trends (e.g., increasing, declining)
 * Assumed harvest rates are low to moderate
 
